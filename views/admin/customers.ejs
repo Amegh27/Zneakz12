@@ -1,0 +1,277 @@
+<%- include("../partials/admin/header") %>
+
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Dashboard - Customers</title>
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+  />
+  <style>
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 16px;
+    background-color: #f4f6f8;
+    margin: 0;
+    padding: 0;
+  }
+
+  .content-header {
+    padding: 20px 50px;
+    background-color: #ffffff;
+    border-bottom: 1px solid #e0e0e0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .content-title {
+    font-size: 24px;
+    font-weight: 600;
+    color: #2c3e50;
+    display: flex;
+    align-items: center;
+  }
+
+  .content-title i {
+    margin-right: 10px;
+    color: #007bff;
+  }
+
+  .card-header {
+    background-color: #fff;
+    padding: 20px 50px;
+    border-bottom: 1px solid #e0e0e0;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .input-group {
+    max-width: 500px;
+    margin: 0 auto;
+    display: flex;
+    border: 1px solid #ccc;
+    border-radius: 30px;
+    overflow: hidden;
+    background-color: #fff;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  }
+
+  .input-group input {
+    flex: 1;
+    border: none;
+    padding: 10px 16px;
+    outline: none;
+    font-size: 14px;
+  }
+
+  .input-group button {
+    background-color: #007bff;
+    border: none;
+    color: #fff;
+    padding: 10px 20px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+
+  .input-group button:hover {
+    background-color: #0056b3;
+  }
+
+  .right {
+    padding: 30px 50px;
+    overflow-x: auto;
+  }
+
+  .table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #fff;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  }
+
+  .table thead {
+    background-color: #f8f9fb;
+  }
+
+  .table th,
+  .table td {
+    padding: 16px 20px;
+    text-align: left;
+    font-size: 16px;
+  }
+
+  .table tbody tr:hover {
+    background-color: #f1f4f8;
+  }
+
+  .btn {
+    border: none;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+  }
+
+  .btn-danger {
+    background-color: #e74c3c;
+    color: #fff;
+  }
+
+  .btn-danger:hover {
+    background-color: #c0392b;
+  }
+
+  .btn-success {
+    background-color: #2ecc71;
+    color: #fff;
+  }
+
+  .btn-success:hover {
+    background-color: #27ae60;
+  }
+
+  .pagination {
+    margin-top: 40px;
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .pagination .page-link {
+    padding: 8px 14px;
+    border-radius: 20px;
+    border: 1px solid #ddd;
+    background-color: #fff;
+    color: #007bff;
+    text-decoration: none;
+  }
+
+  .pagination .active .page-link {
+    background-color: #007bff;
+    color: #fff;
+    border-color: #007bff;
+  }
+
+  a.text-white {
+    text-decoration: none;
+    color: white;
+  }
+
+  a.text-white:hover {
+    text-decoration: none;
+  }
+
+  @media (max-width: 768px) {
+    .content-header,
+    .card-header,
+    .right {
+      padding: 20px;
+    }
+
+    .input-group {
+      flex-direction: column;
+      border-radius: 10px;
+    }
+
+    .input-group input,
+    .input-group button {
+      width: 100%;
+      border-radius: 0;
+    }
+
+    .table th,
+    .table td {
+      font-size: 16px;
+    }
+  }
+</style>
+
+</head>
+
+<body>
+  <div class="content-header row">
+  <div class="content-title">
+    <i class="fa-solid fa-users"></i> Customers
+  </div>
+</div>
+
+
+  <header class="card-header text-center">
+    <form action="/admin/users" method="get">
+  <div class="input-group">
+    <input
+      type="text"
+      class="form-control"
+      placeholder="Search customers..."
+      name="search"
+      value="<%= searchQuery %>"
+    />
+    <button class="btn" type="submit">Search</button>
+
+    <% if (searchQuery && searchQuery.trim() !== '') { %>
+      <a href="/admin/users" class="btn">Clear</a>
+    <% } %>
+  </div>
+</form>
+
+  </header>
+
+  <div class="right">
+    <table class="table">
+      <thead>
+        <tr>
+          <th><b>Name</b></th>
+          <th><b>Email</b></th>
+          <th><b>Action</b></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% for (let i = 0; i < users.length; i++) { %>
+        <tr>
+          <td><%= users[i].name %></td>
+          <td><%= users[i].email %></td>
+          <td>
+            <% if (!users[i].isBlocked) { %>
+            <button class="btn btn-danger">
+              <a
+                href="/admin/blockCustomer?id=<%= users[i]._id %>"
+                class="text-white"
+              >Block</a>
+            </button>
+            <% } else { %>
+            <button class="btn btn-success">
+              <a
+                href="/admin/unblockCustomer?id=<%= users[i]._id %>"
+                class="text-white"
+              >Unblock</a>
+            </button>
+            <% } %>
+          </td>
+        </tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="container mt-3">
+    <nav aria-label="Page navigation">
+      <ul class="pagination">
+        <% for (let i = 1; i <= totalPages; i++) { %>
+        <li class="page-item <%= (i === currentPage) ? 'active' : '' %>">
+          <a class="page-link" href="?page=<%= i %>"><%= i %></a>
+        </li>
+        <% } %>
+      </ul>
+    </nav>
+  </div>
+
+  <%- include("../partials/admin/footer") %>

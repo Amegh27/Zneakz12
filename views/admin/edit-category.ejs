@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Edit Category</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"/>
+  <style>
+    body {
+      background-color: #f8f9fa;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    .header {
+      background-color: #343a40;
+      padding: 15px 0;
+      color: white;
+      text-align: center;
+    }
+
+    .footer {
+      background-color: #343a40;
+      color: #ccc;
+      padding: 15px 0;
+      text-align: center;
+      margin-top: 50px;
+    }
+
+    .mt-60 {
+      margin-top: 60px;
+    }
+
+    .form-label {
+      font-weight: 500;
+    }
+
+    .btn-primary {
+      background-color: #007bff;
+      border-color: #007bff;
+    }
+
+    .btn-primary:hover {
+      background-color: #0056b3;
+      border-color: #004b9e;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="header">
+    <h2>Admin Dashboard - Edit Category</h2>
+  </header>
+
+  <!-- Main Content -->
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-md-6 mt-60">
+        <form method="post" action="/admin/editCategory/<%= category._id %>">
+          <div class="mb-4 mt-30">
+            <label for="categoryName" class="form-label">Name</label>
+            <input type="text" id="categoryName" name="categoryName" value="<%= category.name %>" class="form-control border" required />
+          </div>
+
+          <div class="mb-4">
+            <label for="description" class="form-label">Description</label>
+            <textarea id="description" name="description" class="form-control border" required><%= category.description %></textarea>
+          </div>
+
+          <div class="d-grid text-end mt-3">
+            <button class="btn btn-primary" type="submit">Update Category</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <p>&copy; <%= new Date().getFullYear() %> Zneakz Admin Panel. All rights reserved.</p>
+  </footer>
+
+</body>
+</html>

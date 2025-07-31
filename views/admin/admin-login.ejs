@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Login</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/css/bootstrap.min.css" />
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
+      background-image: url('/img/adminlogin.png');
+      background-size: cover;
+      background-position: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+
+    .login-container {
+      background: rgba(255, 255, 255, 0.97);
+      padding: 40px 35px;
+      border-radius: 12px;
+      max-width: 420px;
+      width: 100%;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      text-align: center;
+    }
+
+    .login-container h2 {
+      margin-bottom: 30px;
+      color: #1d3557;
+      font-weight: 600;
+    }
+
+    .form-group {
+      text-align: left;
+      margin-bottom: 20px;
+    }
+
+    .form-label {
+      font-weight: 500;
+      margin-bottom: 6px;
+      display: block;
+      color: #333;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 15px;
+      transition: border 0.3s ease;
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: #0077b6;
+      box-shadow: 0 0 0 2px rgba(0, 119, 182, 0.15);
+    }
+
+    .btn-login {
+      width: 100%;
+      padding: 12px;
+      font-weight: 600;
+      background-color: #0077b6;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      transition: background-color 0.3s ease;
+      font-size: 16px;
+    }
+
+    .btn-login:hover {
+      background-color: #023e8a;
+    }
+
+    .error-message {
+      font-size: 0.85rem;
+      color: #d90429;
+      margin-top: 5px;
+    }
+
+    .form-control::placeholder {
+      color: #999;
+      opacity: 0.8;
+    }
+
+    @media (max-width: 480px) {
+      .login-container {
+        padding: 30px 25px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <h2>Admin Login</h2>
+
+    <% if (message) { %>
+      <div class="error-message"><%= message %></div>
+    <% } %>
+
+    <form id="adminLoginForm" method="POST" action="/admin/login" novalidate>
+      <div class="form-group">
+        <label for="adminEmail" class="form-label">Email</label>
+        <input
+          type="email"
+          class="form-control"
+          id="adminEmail"
+          name="email"
+          placeholder="email"
+          required
+        />
+        <div id="emailError" class="error-message"></div>
+      </div>
+
+      <div class="form-group">
+        <label for="adminPassword" class="form-label">Password</label>
+        <input
+          type="password"
+          class="form-control"
+          id="adminPassword"
+          name="password"
+          placeholder="Minimum 8 characters"
+          required
+        />
+        <div id="passwordError" class="error-message"></div>
+      </div>
+
+      <button type="submit" class="btn btn-login">Log In</button>
+    </form>
+  </div>
+
+  <script>
+    document.getElementById("adminLoginForm").addEventListener("submit", function (e) {
+      const email = document.getElementById("adminEmail");
+      const password = document.getElementById("adminPassword");
+      const emailError = document.getElementById("emailError");
+      const passwordError = document.getElementById("passwordError");
+
+      let valid = true;
+      const emailPattern = /^[^ ]+@[^ ]+\.[a-z]{2,3}$/;
+
+      if (!emailPattern.test(email.value)) {
+        emailError.textContent = "Enter a valid email address.";
+        valid = false;
+      } else {
+        emailError.textContent = "";
+      }
+
+      if (password.value.length < 8) {
+        passwordError.textContent = "Password must be at least 8 characters.";
+        valid = false;
+      } else {
+        passwordError.textContent = "";
+      }
+
+      if (!valid) e.preventDefault();
+    });
+  </script>
+</body>
+</html>
