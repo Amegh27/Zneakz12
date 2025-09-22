@@ -105,16 +105,19 @@ priceRange: req.query.priceRange || ''
 
 
 
-const loadSignup = async(req,res)=>{
+const loadSignup = async (req, res) => {
     try {
-        return res.render('signup')
+        let message = '';
+        if (req.query.blocked === 'true') {
+            message = 'User is blocked by the admin';
+        }
+        return res.render('signup', { message });
     } catch (error) {
-        console.log("Error loading home page",error);
-        res.status(500).send('Server Error')
-        
-        
+        console.log("Error loading signup page", error);
+        res.status(500).send('Server Error');
     }
 }
+
 const generateOtp=()=>{
     return Math.floor(100000+Math.random()*900000).toString()
 }
@@ -168,7 +171,7 @@ const signup = async(req,res)=>{
         req.session.UserData = {name,email,password}
 
         res.render("verify-otp")
-        // console.log("OTP send",otp);
+        
 
     } catch (error) {
         console.error("sigup error",error)
@@ -227,7 +230,7 @@ const resendOtp = async(req,res)=>{
         req.session.userOtp=otp
         const emailSend = await sendVerificationEmail(email,otp)
             if(emailSend){
-                // console.log("Resend OTP: ",otp);
+                
                 res.status(200).json({success:true,message:"OTP send succesffully"})
             }else{
                 res.status(500).json({success:false,message:"Failed to resend OTP,please try again"})

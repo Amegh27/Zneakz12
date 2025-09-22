@@ -74,6 +74,7 @@ const forgotEmailValid = async(req,res)=>{
             if(emailSend){
                 req.session.userOtp = otp
                 req.session.email = email
+                req.session.otpExpiry = Date.now() + 5 * 60 * 1000;
                 res.render("forgotPass-otp")
                 console.log("OTP",otp);
                 
@@ -91,19 +92,38 @@ const forgotEmailValid = async(req,res)=>{
     }
 }
 
-const verifyForgotPassOtp = async(req,res)=>{
-    try {
-        const enteredOtp = req.body.otp
-        if(enteredOtp === req.session.userOtp){
-            res.redirect('/reset-password')
+const verifyForgotPassOtp = async (req, res) => {
+  try {
+    const enteredOtp = String(req.body.otp || "");
+    const storedOtp = String(req.session.userOtp || "");
+    const expiry = req.session.otpExpiry;
 
-        }else{
-            res.json({success:false,message:"OTP not matching"})
-        }
-    } catch (error) {
-        res.status(500).json({success:false,message:'An error occured please try again'})
+    
+
+    if (!storedOtp || !expiry) {
+      return res.json({ success: false, message: "OTP session expired. Please request again." });
     }
+
+    if (Date.now() > expiry) {
+      req.session.userOtp = null;
+      req.session.otpExpiry = null;
+      return res.json({ success: false, message: "OTP has expired. Please request again." });
+    }
+
+  if(enteredOtp === storedOtp){
+    req.session.userOtp = null;
+    req.session.otpExpiry = null;
+    return res.json({ success: true, redirectUrl: '/reset-password' });
+}else{
+    return res.json({ success: false, message: 'Invalid OTP' });
 }
+
+  } catch (error) {
+    console.error("Error verifying OTP:", error);
+    res.status(500).json({ success: false, message: "An error occurred. Please try again." });
+  }
+};
+
 
 const getResetPassPage = async(req,res)=>{
     try {
@@ -116,23 +136,22 @@ const getResetPassPage = async(req,res)=>{
 
 
 const resendOtp = async(req,res)=>{
-    try {
-        const otp = generateOtp()
-        res.session.userOtp = otp
-        const email = req.session.email
-        console.log("Resending OTP to email",email);
-        const emailSend = await sendVerificationEmail(email,otp)
-        if(emailSend){
-            console.log("Resend OTP :",otp);
-            res.status(200).json({success:true,message:"Resend OTP successful"})
+  try {
+    const otp = generateOtp();
+    req.session.userOtp = otp;
+    req.session.otpExpiry = Date.now() + 5 * 60 * 1000; // reset expiry
+    const email = req.session.email;
 
-        }
-    } catch (error) {
-        console.error("Error in resend OTP",error);
-        res.status(500).json({success:false,message:'Internal Server Error'})
-        
+    const emailSend = await sendVerificationEmail(email, otp);
+    if (emailSend) {
+      console.log("Resend OTP:", otp);
+      res.status(200).json({ success: true, message: "Resend OTP successful" });
     }
-}
+  } catch (error) {
+    console.error("Error in resend OTP", error);
+    res.status(500).json({ success: false, message: "Internal Server Error" });
+  }
+};
 
 const postNewPassword = async(req,res)=>{
     try {
@@ -141,10 +160,15 @@ const postNewPassword = async(req,res)=>{
         if(newPass1===newPass2){
             const passwordHash = await securePassword(newPass1)
             await User.updateOne(
-                {email:email},
-                {$set:{password:passwordHash}}
-            )
-            res.redirect('/login')
+    { email: email },
+    { $set: { password: passwordHash } }
+);
+
+
+const user = await User.findOne({ email: email });
+req.session.user = user._id; 
+
+res.redirect('/'); 
         }else{
             res.render('reset-password',{message:"Passwords do not match"})
         }

@@ -7,6 +7,8 @@ const {userAuth,adminAuth} = require('../middlewares/auth')
 const uploads = require('../middlewares/multerConfig')
 const productController = require('../controllers/admin/productController')
 
+
+
 router.get('/pageError',adminController.pageError)
 // Login management
 router.get("/admin-login",adminController.loadLogin)
@@ -39,6 +41,7 @@ router.get('/editproduct',adminAuth,productController.getEditProduct)
 router.post('/editProduct/:id',adminAuth,uploads.array('images',4),productController.editProduct)
 router.post('/deleteImage',adminAuth,productController.deleteSingleImage)
 router.get('/products/delete/:id', adminAuth, productController.softDeleteProduct);
+
 
 
 

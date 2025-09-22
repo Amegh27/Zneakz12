@@ -5,13 +5,13 @@ const User = require('../../models/userSchema')
 
 const searchProducts = async (req, res) => {
   try {
-    const query = req.query.q?.trim() || '';
-    const page = parseInt(req.query.page) || 1;
-    const limit = 4;
-    const skip = (page - 1) * limit;
-    const sortOption = req.query.sort || '';
+    const query=req.query.q?.trim() || '';
+    const page=parseInt(req.query.page) || 1;
+    const limit=4;
+    const skip=(page-1) * limit;
+    const sortOption=req.query.sort || '';
 
-    let sortCriteria = {};
+    let sortCriteria={};
 
     
     switch (sortOption) {
@@ -31,7 +31,7 @@ const searchProducts = async (req, res) => {
         sortCriteria = {}; 
     }
 
-    let filter = {};
+    let filter={};
     if (query) {
       filter = { productName: { $regex: query, $options: 'i' } };
     }
@@ -75,12 +75,7 @@ const productDetails = async (req, res) => {
       return res.redirect('/');
     }
 
- console.log("Looking for related products:");
-    console.log("Category ID:", product.category._id);
-    console.log("Current Product ID:", product._id);
-    console.log("Product Price:", product.price);
-    console.log("Price Range:", product.price - 1000, "to", product.price + 1000);
-
+ 
     const minPrice = product.price - 1000;
 const maxPrice = product.price + 1000;
 

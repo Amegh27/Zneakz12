@@ -38,7 +38,7 @@ const productExists = await Product.findOne({
           const images = [];
 if (req.files && req.files.length > 0) {
    
-    const imageOutputDir = path.join(__dirname, '../../public/uploads/product-images');
+    const imageOutputDir = path.join(__dirname, '../public/uploads/products');
     if (!fs.existsSync(imageOutputDir)) {
         fs.mkdirSync(imageOutputDir, { recursive: true });
     }
@@ -66,6 +66,7 @@ if (req.files && req.files.length > 0) {
                 category: categoryId._id,
                 productImage: images,
                 price:products.price,
+                discountPrice: products.discountPrice || products.price,
                 status: "Available",
                 isPublished
 
@@ -195,9 +196,10 @@ const editProduct = async (req, res) => {
 
     const updateFields = {
       productName: data.productName,
-      description: data.description,
+      description: data.descriptionData,
       quantity: data.quantity,
       price: data.price,
+      discountPrice: data.discountPrice,
       size: data.size
     };
 

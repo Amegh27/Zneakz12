@@ -50,6 +50,10 @@ const productSchema = new Schema({
     required: true,
     min: 0
   },
+  discountPrice: {
+     type: Number,
+      default: 0 
+    },
   // variants: [
   // {
   //   color: String,

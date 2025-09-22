@@ -1,6 +1,9 @@
 const User = require("../../models/userSchema")
 const mongoose = require('mongoose')
-const bcrypt = require('bcrypt')
+const bcrypt = require("bcrypt");
+
+
+
 
 const pageError = async(req,res)=>{
     res.render("error")
@@ -21,9 +24,10 @@ const login = async (req, res) => {
         const admin = await User.findOne({ email, isAdmin: true });
 
         if (admin) {
-            const passwordMatch = bcrypt.compare(password, admin.password);
+            const passwordMatch = await bcrypt.compare(password, admin.password);
             if (passwordMatch) {
                 req.session.admin = true;
+                req.session.adminId = admin._id.toString();
                 req.session.save(err => {
                     if (err) {
                         console.log("Session save error:", err);
@@ -34,8 +38,6 @@ const login = async (req, res) => {
             } else {
                 return res.redirect("/admin/login"); 
             }
-        } else {
-            return res.redirect("/admin/login");
         }
     } catch (error) {
         console.log("Login error", error);
@@ -76,11 +78,36 @@ const logout = async (req, res) => {
   }
 };
 
+const blockUser = async (req, res) => {
+  try {
+    const userId = req.params.id;
+    if (userId === req.session.adminId) {
+      req.flash('error', 'Cannot block yourself');
+      return res.redirect('/admin/users');
+    }
+    const user = await User.findByIdAndUpdate(userId, { isBlocked: true }, { new: true });
+    if (!user) {
+      req.flash('error', 'User not found');
+      return res.redirect('/admin/users');
+    }
+    const store = req.app.get('sessionStore');
+    await destroyUserSessions(userId, store);
+    req.flash('success', 'User blocked and all sessions terminated');
+    res.redirect('/admin/users');
+  } catch (error) {
+    console.error('Block user error:', error);
+    req.flash('error', 'Failed to block user');
+    res.redirect('/admin/users');
+  }
+};
+
+
 
 module.exports = {
     loadLogin,
     login,
     loadDashboard,
     pageError,
-    logout
+    logout,
+    blockUser
 }

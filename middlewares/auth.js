@@ -8,7 +8,6 @@ const userAuth = async (req, res, next) => {
     if (!userId) {
       return res.redirect('/login');
     }
-
     const user = await User.findById(userId);
 
     if (!user || user.isBlocked) {
