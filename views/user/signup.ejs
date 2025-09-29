@@ -91,49 +91,62 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  document.getElementById("signform").addEventListener("submit", function (e) {
+    document.getElementById("error1").textContent = "";
+    document.getElementById("error2").textContent = "";
+    document.getElementById("error3").textContent = "";
+    document.getElementById("error4").textContent = "";
 
-  <script>
-    document.getElementById("signform").addEventListener("submit", function (e) {
-      document.getElementById("error1").textContent = "";
-      document.getElementById("error2").textContent = "";
-      document.getElementById("error3").textContent = "";
-      document.getElementById("error4").textContent = "";
+    let valid = true;
 
-      let valid = true;
+    const name = document.getElementsByName("name")[0].value.trim();
+    const email = document.getElementsByName("email")[0].value.trim();
+    const password = document.getElementsByName("password")[0].value;
+    const cPassword = document.getElementsByName("cPassword")[0].value;
 
-      const name = document.getElementsByName("name")[0].value.trim();
-      const email = document.getElementsByName("email")[0].value.trim();
-      const password = document.getElementsByName("password")[0].value;
-      const cPassword = document.getElementsByName("cPassword")[0].value;
+    //  Name validation
+    if (name === "") {
+      document.getElementById("error1").textContent = "Name is required.";
+      valid = false;
+    } else if (!/^[A-Za-z\s]{2,30}$/.test(name)) {
+      document.getElementById("error1").textContent =
+        "Enter a valid name (letters and spaces only, 2–30 characters).";
+      valid = false;
+    }
 
-      if (name === "") {
-        document.getElementById("error1").textContent = "Name is required.";
-        valid = false;
-      }
+    //  Email validation
+    if (email === "") {
+      document.getElementById("error2").textContent = "Email is required.";
+      valid = false;
+    } else if (!/^\S+@\S+\.\S+$/.test(email)) {
+      document.getElementById("error2").textContent =
+        "Enter a valid email address.";
+      valid = false;
+    }
 
-      if (email === "") {
-        document.getElementById("error2").textContent = "Email is required.";
-        valid = false;
-      } else if (!/\S+@\S+\.\S+/.test(email)) {
-        document.getElementById("error2").textContent = "Enter a valid email address.";
-        valid = false;
-      }
+    //  Strong Password validation
+    const strongPasswordRegex =
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
 
-      if (password.length < 6) {
-        document.getElementById("error3").textContent = "Password must be at least 6 characters.";
-        valid = false;
-      }
+    if (!strongPasswordRegex.test(password)) {
+      document.getElementById("error3").textContent =
+        "Password must be at least 8 characters long, include uppercase, lowercase, number, and special character.";
+      valid = false;
+    }
 
-      if (password !== cPassword) {
-        document.getElementById("error4").textContent = "Passwords do not match.";
-        valid = false;
-      }
+    //  Confirm password
+    if (password !== cPassword) {
+      document.getElementById("error4").textContent = "Passwords do not match.";
+      valid = false;
+    }
 
-      if (!valid) {
-        e.preventDefault();
-      }
-    });
-  </script>
+    if (!valid) {
+      e.preventDefault();
+    }
+  });
+</script>
+
 </body>
 
 </html>

@@ -28,6 +28,11 @@
       background-color: #f3efef;
       color: #edecec;
     }
+    .navbar, .navbar * {
+  position: relative;
+  z-index: 1050;
+}
+
 
     .navbar-top {
       background-color: #1f1f1f;
@@ -202,9 +207,9 @@
 
       <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-          <li class="nav-item"><a class="nav-link" href="#">MEN</a></li>
-          <li class="nav-item"><a class="nav-link" href="#">WOMEN</a></li>
-          <li class="nav-item"><a class="nav-link" href="#">KIDS</a></li>
+          <li class="nav-item"><a class="nav-link" href="/men">MEN</a></li>
+          <li class="nav-item"><a class="nav-link" href="/women">WOMEN</a></li>
+          <li class="nav-item"><a class="nav-link" href="/kids">KIDS</a></li>
         </ul>
 
         <form class="d-flex search-box me-3" action="/#productSection" method="GET">
@@ -278,23 +283,26 @@
     </div>
   </nav>
 
+  <% if (!query || query.trim() === '') { %>
   <!-- Hero Section -->
   <div id="heroCarousel" class="carousel slide" data-bs-ride="carousel">
     <div class="carousel-inner" style="height: 75vh;">
-
       <!-- Slide 1 -->
       <div class="carousel-item active">
-        <img src="/uploads/products/homepage.jpeg" class="d-block w-100 h-100" style="object-fit: contain;"
-          alt="Banner 1">
+        <img src="/uploads/products/homepage.jpeg" class="d-block w-100 h-100" style="object-fit: contain;" alt="Banner 1">
       </div>
 
       <!-- Slide 2 -->
       <div class="carousel-item">
-        <img src="/uploads/products/Homepage_8.jpeg" class="d-block w-100 h-100" style="object-fit: contain;"
-          alt="Banner 2">
+        <img src="/uploads/products/Homepage_8.jpeg" class="d-block w-100 h-100" style="object-fit: contain;" alt="Banner 2">
       </div>
-
     </div>
+   
+  </div>
+
+  
+<% } %>
+
 
     <!-- Prev/Next Controls -->
     <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
@@ -403,45 +411,68 @@
   </div>
 
   <!-- Pagination -->
-  <nav aria-label="Page navigation example">
-    <ul class="pagination justify-content-center mt-4">
-      <% if (currentPage> 1) { %>
-        <li class="page-item">
-          <a class="page-link" href="/?page=<%= currentPage - 1 %>#productSection">Previous</a>
+  <!-- Pagination -->
+<nav aria-label="Page navigation example">
+  <ul class="pagination justify-content-center mt-4">
+    <% 
+      const queryParams = new URLSearchParams({
+        q: query || '',
+        sort: sort || '',
+        ...(Array.isArray(selectedCategory) 
+          ? selectedCategory.reduce((acc, cat) => ({ ...acc, category: cat }), {}) 
+          : selectedCategory ? { category: selectedCategory } : {}),
+        priceRange: priceRange || ''
+      });
+    %>
 
-        </li>
-        <% } else { %>
-          <li class="page-item disabled">
-            <span class="page-link">Previous</span>
-          </li>
-          <% } %>
+    <% if (currentPage > 1) { %>
+      <li class="page-item">
+        <a class="page-link" href="/?page=<%= currentPage - 1 %>&<%= queryParams.toString() %>#productSection">Previous</a>
+      </li>
+    <% } else { %>
+      <li class="page-item disabled">
+        <span class="page-link">Previous</span>
+      </li>
+    <% } %>
 
-            <% for (let i=1; i <=totalPages; i++) { %>
-              <li class="page-item <%= i === currentPage ? 'active' : '' %>">
-                <a class="page-link" href="/?page=<%= i %>#productSection">
-                  <%= i %>
-                </a>
-              </li>
-              <% } %>
+    <% for (let i = 1; i <= totalPages; i++) { %>
+      <li class="page-item <%= i === currentPage ? 'active' : '' %>">
+        <a class="page-link" href="/?page=<%= i %>&<%= queryParams.toString() %>#productSection"><%= i %></a>
+      </li>
+    <% } %>
 
-                <% if (currentPage < totalPages) { %>
-                  <li class="page-item">
-                    <a class="page-link" href="/?page=<%= currentPage + 1 %>#productSection">Next</a>
-                  </li>
-                  <% } else { %>
-                    <li class="page-item disabled">
-                      <span class="page-link">Next</span>
-                    </li>
-                    <% } %>
-    </ul>
-  </nav>
+    <% if (currentPage < totalPages) { %>
+      <li class="page-item">
+        <a class="page-link" href="/?page=<%= currentPage + 1 %>&<%= queryParams.toString() %>#productSection">Next</a>
+      </li>
+    <% } else { %>
+      <li class="page-item disabled">
+        <span class="page-link">Next</span>
+      </li>
+    <% } %>
+  </ul>
+</nav>
+
   <script>
-    function confirmLogout(event) {
-      event.preventDefault(); // Stop the default link behavior
-      if (confirm("Are you sure you want to logout?")) {
-        window.location.href = "/logout";
+  function confirmLogout(event) {
+    event.preventDefault();
+
+    Swal.fire({
+      title: 'Are you sure?',
+      text: "You will be logged out of your account.",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',   // red for logout
+      cancelButtonColor: '#6c757d', // gray for cancel
+      confirmButtonText: 'Yes, Logout',
+      cancelButtonText: 'Cancel'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        window.location.href = '/logout'; // redirect to your logout route
       }
-    }
-  </script>
+    });
+  }
+</script>
+
 
   <%- include("../partials/user/footer") %>

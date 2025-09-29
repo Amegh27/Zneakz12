@@ -9,6 +9,7 @@ const profileController = require('../controllers/user/profileController')
 
 
 
+
 router.get('/pageNotFound',userController.pageNotFound)
 router.get('/',userController.loadHomepage)
 router.get('/signup',userController.loadSignup)
@@ -51,7 +52,24 @@ router.get('/search', productController.searchProducts);
 router.get('/productDetails',userAuth,productController.productDetails)
 router.get('/product-details', productController.productDetails);
 
+// men section
+router.get('/men', productController.getMenProducts);
 
+// women section
+router.get('/women', productController.getWomenProducts);
+
+
+// kids section
+router.get('/kids', productController.getKidsProducts);
+
+// men details
+router.get("/men-details", productController.menDetails);
+
+// women details
+router.get("/women-details", productController.womenDetails);
+
+// kids details
+router.get('/kids-details', productController.kidsDetails);
 
 
 module.exports = router

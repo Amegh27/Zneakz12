@@ -31,76 +31,103 @@ const loadHomepage = async (req, res) => {
       : [];
     const selectedPriceRange = req.query.priceRange || '';
 
-    
-    let filter = {
+    let matchStage = {
       isBlocked: false,
       quantity: { $gt: 0 }
     };
 
-   
     if (query) {
-      filter.productName = { $regex: query, $options: 'i' };
+      matchStage.productName = { $regex: query, $options: 'i' };
     }
 
-    
-   
+    const excludeCategories = await Category.find({
+      name: { $in: ["Men", "Women", "Kids"] }
+    }).distinct("_id");
 
-if (selectedCategory.length > 0) {
-  const categoryDocs = await Category.find({
-    name: { $in: selectedCategory }
-  }).distinct('_id')
+    matchStage.category = { $nin: excludeCategories };
 
-  const categoryIds = categoryDocs.map(cat => cat._id);
-  filter.category = { $in: categoryIds };
-}
+    if (selectedCategory.length > 0) {
+      const categoryDocs = await Category.find({
+        name: { $in: selectedCategory }
+      }).distinct('_id');
 
+      matchStage.category = { $in: categoryDocs };
+    }
 
-   
+    let pipeline = [
+      { $match: matchStage },
+      {
+        $addFields: {
+          effectivePrice: { $ifNull: ["$discountPrice", "$price"] }
+        }
+      }
+    ];
+
     if (selectedPriceRange) {
       const [min, max] = selectedPriceRange.split('-').map(Number);
-      filter.price = { $gte: min, $lte: max };
+      if (!isNaN(min) && !isNaN(max)) {
+        pipeline.push({
+          $match: { effectivePrice: { $gte: min, $lte: max } }
+        });
+      }
     }
 
-    
-    let sortOption = {};
-    if (sort === 'priceAsc') sortOption.price = 1;
-    else if (sort === 'priceDesc') sortOption.price = -1;
-    else if (sort === 'nameAsc') sortOption.productName = 1;
-    else if (sort === 'nameDesc') sortOption.productName = -1;
+    if (sort === 'priceAsc') pipeline.push({ $sort: { effectivePrice: 1 } });
+    else if (sort === 'priceDesc') pipeline.push({ $sort: { effectivePrice: -1 } });
+    else if (sort === 'nameAsc') pipeline.push({ $sort: { productName: 1 } });
+    else if (sort === 'nameDesc') pipeline.push({ $sort: { productName: -1 } });
 
-    const totalProducts = await Product.countDocuments(filter);
+    pipeline.push({ $skip: skip });
+    pipeline.push({ $limit: limit });
+
+    const products = await Product.aggregate(pipeline);
+
+    let countPipeline = [
+      { $match: matchStage },
+      {
+        $addFields: {
+          effectivePrice: { $ifNull: ["$discountPrice", "$price"] }
+        }
+      }
+    ];
+    if (selectedPriceRange) {
+      const [min, max] = selectedPriceRange.split('-').map(Number);
+      if (!isNaN(min) && !isNaN(max)) {
+        countPipeline.push({
+          $match: { effectivePrice: { $gte: min, $lte: max } }
+        });
+      }
+    }
+    countPipeline.push({ $count: "total" });
+    const countResult = await Product.aggregate(countPipeline);
+    const totalProducts = countResult[0] ? countResult[0].total : 0;
     const totalPages = Math.ceil(totalProducts / limit);
 
-    const products = await Product.find(filter)
-      .sort(sortOption)
-      .skip(skip)
-      .limit(limit);
+    const categories = await Category.find({
+      isListed: true,
+      name: { $nin: ["Men", "Women", "Kids"] }
+    });
 
-    const categories = await Category.find({ isListed: true });
     const userData = user ? await User.findById(user) : null;
-   
 
-
-
-
-     res.render("home", {
-  user: userData,
-  products:products,
-  currentPage: page,
-  totalPages,
-  query,
-  sort,
-  categories,  
-  selectedCategory: req.query.category || '',
-priceRange: req.query.priceRange || ''
-
-});
+    res.render("home", {
+      user: userData,
+      products,
+      currentPage: page,
+      totalPages,
+      query,
+      sort,
+      categories,
+      selectedCategory: req.query.category || '',
+      priceRange: req.query.priceRange || ''
+    });
 
   } catch (err) {
     console.error("Error loading homepage:", err);
     res.status(500).send("Internal Server Error");
   }
 };
+
 
 
 
@@ -317,6 +344,7 @@ const logout = async (req, res) => {
 
 
 
+
 module.exports ={
     loadHomepage,
     pageNotFound,
@@ -327,5 +355,6 @@ module.exports ={
     loadLogin,
     login,
     logout,
+    
    
 }

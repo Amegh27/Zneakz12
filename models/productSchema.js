@@ -27,6 +27,10 @@ const productSchema = new Schema({
     required: true,
     min: 0
   },
+  sizes: {
+  type: [String],
+  default: ["6", "7", "8", "9", "10"]
+},
   productImage: {
     type: [String],
     required: true
@@ -54,13 +58,6 @@ const productSchema = new Schema({
      type: Number,
       default: 0 
     },
-  // variants: [
-  // {
-  //   color: String,
-  //   images: [String],
-  //   quantity: Number
-  // }
-// ],
   isDeleted: {
     type: Boolean,
     default: false

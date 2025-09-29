@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= product.productName %> - ZNEAKZ</title>
+  <style>
+    body { font-family: Arial, sans-serif; background:#f8f8f8; margin:0; padding:0; color:#333; }
+    a { text-decoration:none; color: inherit; }
+
+    /* Header */
+    header { background:#fff; border-bottom:1px solid #eee; padding:15px 40px; display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; z-index:1000; }
+    header .logo { font-weight:bold; font-size:22px; letter-spacing:2px; }
+    header nav ul { display:flex; list-style:none; gap:25px; }
+    header nav a { color:#333; font-weight:500; transition:color 0.3s; }
+    header nav a:hover { color:#ff6b6b; }
+    .nav-icons { display:flex; gap:15px; font-size:18px; cursor:pointer; }
+
+    /* Breadcrumb */
+    .breadcrumb { font-size:14px; margin:20px 40px; color:#666; }
+    .breadcrumb a { color:#666; }
+    .breadcrumb a:hover { color:#ff6b6b; }
+
+    /* Product Container */
+    .container { max-width:1200px; margin:20px auto; padding:0 40px; display:grid; grid-template-columns:1fr 1fr; gap:40px; }
+    .product-images { display:flex; flex-direction:column; gap:10px; }
+    .main-image { width:100%; height:450px; border:1px solid #ddd; border-radius:8px; overflow:hidden; display:flex; align-items:center; justify-content:center; background:#fff; }
+    .main-image img { width:100%; height:100%; object-fit:contain; }
+    .thumbnail-list { display:flex; gap:10px; margin-top:10px; }
+    .thumbnail { width:70px; height:70px; border:2px solid #ddd; border-radius:5px; cursor:pointer; overflow:hidden; background:#fff; }
+    .thumbnail.active { border-color:#ff6b6b; }
+    .thumbnail img { width:100%; height:100%; object-fit:contain; }
+
+    .product-info h1 { font-size:26px; margin-bottom:8px; }
+    .price { font-size:22px; color:#ff6b6b; font-weight:bold; margin:15px 0; }
+    .description { color:#555; margin-bottom:15px; line-height:1.5; font-size:15px; }
+    .size-options { display:flex; gap:10px; margin:15px 0; }
+    .size-option { padding:6px 12px; border:1px solid #ddd; border-radius:4px; cursor:pointer; }
+    .size-option.active { background:#ff6b6b; color:white; border-color:#ff6b6b; }
+    .quantity-controls { display:flex; align-items:center; gap:8px; margin:20px 0; }
+    .qty-btn { padding:6px 12px; cursor:pointer; border:1px solid #ddd; background:#fff; }
+    .qty-input { width:50px; text-align:center; border:1px solid #ddd; }
+
+    .rating { font-size: 14px; margin-bottom: 10px; color: #ff9800; }
+    .label { font-size: 14px; margin-right: 8px; font-weight: 600; }
+    .btn-group { display: flex; gap: 10px; margin-top: 15px; }
+    .btn-cart { background: #222; color: #fff; }
+
+    /* Product Grid */
+.product-grid, .related-products {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 20px;
+  justify-content: center; /* Center items if fewer */
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Product Card */
+.product-card, .related-card {
+  max-width: 220px;   /* Prevent cards from stretching too much */
+  background: #fff;
+  border-radius: 8px;
+  padding: 10px;
+  text-align: center;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: transform 0.2s;
+}
+
+.product-card img, .related-card img {
+  max-width: 100%;
+  max-height: 150px; /* Fixed height for images */
+  object-fit: contain;
+}
+
+    .reviews-wrapper { max-width: 1000px; margin: 50px auto; padding: 20px; background: #fff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    .reviews-wrapper h2 { font-size: 20px; margin-bottom: 15px; }
+    .review { border-bottom: 1px solid #eee; padding: 10px 0; }
+    .review:last-child { border-bottom: none; }
+
+    .btn { padding:12px 25px; border:none; border-radius:4px; cursor:pointer; font-weight:bold; margin-right:10px; }
+    .btn-primary { background:#ff6b6b; color:white; }
+    .btn-outline { background:white; border:1px solid #ddd; }
+
+    /* Related Products */
+    .related-wrapper { max-width:1200px; margin:50px auto; padding:0 40px; }
+    .related-wrapper h2 { margin-bottom:20px; font-size:20px; }
+    .related-products { display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:20px; }
+    .related-card { background:white; border-radius:10px; padding:12px; box-shadow:0 2px 6px rgba(0,0,0,0.1); text-align:center; transition:transform 0.2s; }
+.related-price {
+  margin-top: 5px;
+  font-size: 15px;
+}
+
+.related-price .current-price {
+  color: #ff6b6b;       /* Bright color for discounted price */
+  font-weight: bold;
+  margin-right: 8px;
+  font-size: 16px;
+}
+
+.related-price .original-price {
+  color: #888;           /* Muted gray for original price */
+  font-size: 13px;
+  text-decoration: line-through; /* Strike-through */
+}
+
+    .zoom-lens { position: absolute; width: 100px; height: 100px; border: 2px solid rgba(0, 0, 0, 0.3); border-radius: 50%; background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(2px); pointer-events: none; opacity: 0; transition: opacity 0.3s ease; z-index: 10; display: none; }
+
+    .size-chart-link { display: inline-block; margin-top: 8px; font-size: 14px; color: #007bff; cursor: pointer; }
+    .size-chart-link:hover { text-decoration: underline; }
+
+    .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; }
+    .modal-content { background: white; padding: 20px; border-radius: 10px; max-width: 500px; width: 90%; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+    .modal-content h2 { margin-bottom: 15px; font-size: 18px; }
+    .modal-content table { width: 100%; border-collapse: collapse; }
+    .modal-content th, .modal-content td { padding: 10px; border: 1px solid #ddd; text-align: center; }
+    .close { float: right; font-size: 22px; cursor: pointer; }
+
+    /* Footer */
+    footer { background:#111; color:#ccc; padding:40px; margin-top:50px; }
+    footer .footer-container { max-width:1200px; margin:0 auto; display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:20px; }
+    footer h4 { color:#fff; margin-bottom:10px; }
+    footer ul { list-style:none; padding:0; }
+    footer ul li { margin:6px 0; }
+    footer ul a { color:#ccc; font-size:14px; }
+    footer ul a:hover { color:#ff6b6b; }
+    footer p { text-align:center; margin-top:20px; font-size:13px; }
+  </style>
+</head>
+<body>
+
+<!-- Header -->
+<header>
+  <div class="logo">ZNEAKZ</div>
+  <nav>
+    <ul>
+      <li><a href="/">Home</a></li>
+      <li><a href="/about">About</a></li>
+    </ul>
+  </nav>
+  <div class="nav-icons">
+    <span>🔍</span>
+    <span>❤️</span>
+    <span>🛒</span>
+  </div>
+</header>
+
+<!-- Breadcrumb -->
+<div class="breadcrumb">
+  <a href="/">Home</a> / <a href="/women">Women's Collection</a> / <%= product.productName %>
+</div>
+
+<!-- Product Details -->
+<div class="container">
+  <!-- Product Images -->
+  <div class="product-images">
+    <div class="main-image main-image-container">
+      <img id="mainImage" src="/uploads/products/<%= product.productImage[0] %>" alt="<%= product.productName %>">
+      <div class="zoom-lens" id="zoomLens"></div>
+    </div>
+    <div class="thumbnail-list">
+      <% product.productImage.forEach((img,index)=>{ %>
+        <div class="thumbnail <%= index===0?'active':'' %>" onclick="changeMainImage('/uploads/products/<%= img %>',this)">
+          <img src="/uploads/products/<%= img %>" alt="thumb">
+        </div>
+      <% }) %>
+    </div>
+  </div>
+
+  <!-- Product Info -->
+  <div class="product-info">
+    <h1><%= product.productName %></h1>
+    
+    <!-- Rating -->
+    <div class="rating">
+      ⭐⭐⭐⭐☆ <span>(150 Reviews)</span>
+    </div>
+
+    <!-- Price -->
+    <div class="price">
+      <% if(product.discountPrice && product.discountPrice < product.price){ %>
+        <span>₹<%= product.discountPrice %></span>
+        <span style="text-decoration:line-through; color:#999;">₹<%= product.price %></span>
+      <% } else { %>
+        <span>₹<%= product.price %></span>
+      <% } %>
+    </div>
+
+    <!-- Description -->
+    <div class="description"><%= product.description %></div>
+
+    <!-- Sizes -->
+    <% if(product.sizes && product.sizes.length > 0){ %>
+      <div class="size-options">
+        <span class="label">Size:</span>
+        <% product.sizes.forEach((size,index)=>{ %>
+          <div class="size-option <%= index===0?'active':'' %>"><%= size %></div>
+        <% }) %>
+      </div>
+    <% } %>
+
+    <!-- Size Chart Modal -->
+    <div id="sizeChartModal" class="modal">
+      <div class="modal-content">
+        <span class="close" onclick="closeSizeChart()">&times;</span>
+        <h2>Size Chart</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>UK</th>
+              <th>US</th>
+              <th>EU</th>
+              <th>CM</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>3</td><td>5</td><td>36</td><td>22 cm</td></tr>
+            <tr><td>4</td><td>6</td><td>37</td><td>23 cm</td></tr>
+            <tr><td>5</td><td>7</td><td>38</td><td>24 cm</td></tr>
+            <tr><td>6</td><td>8</td><td>39</td><td>25 cm</td></tr>
+            <tr><td>7</td><td>9</td><td>40</td><td>26 cm</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Quantity -->
+    <div class="quantity-controls">
+      <button class="qty-btn" onclick="changeQuantity(-1)">-</button>
+      <input type="text" id="quantity" class="qty-input" value="1" readonly>
+      <button class="qty-btn" onclick="changeQuantity(1)">+</button>
+    </div>
+
+    <!-- Buttons -->
+    <div class="btn-group">
+      <button class="btn btn-primary">Buy Now</button>
+      <button class="btn btn-cart">Add to Cart 🛒</button>
+      <button class="btn btn-outline">♡</button>
+    </div>
+  </div>
+</div>
+
+<!-- Reviews Section -->
+<div class="reviews-wrapper">
+  <h2>Customer Reviews</h2>
+  <div class="review">
+    <p><strong>Ayesha.</strong> ⭐⭐⭐⭐☆</p>
+    <p>Comfortable and stylish sneakers! Perfect for outings.</p>
+  </div>
+  <div class="review">
+    <p><strong>Meera.</strong> ⭐⭐⭐⭐⭐</p>
+    <p>Love the quality and color, goes with every outfit!</p>
+  </div>
+  <a href="#" class="btn btn-outline">Read All Reviews</a>
+</div>
+
+<!-- Related Products -->
+<div class="related-wrapper">
+  <h2 class="related-title">You Might Also Like</h2>
+  <div class="related-products">
+    <% relatedProducts.forEach(function(prod){ %>
+      <a href="/women-details?id=<%= prod._id %>" class="related-card">
+        <div class="related-img-box">
+          <% if(prod.productImage && prod.productImage.length>0){ %>
+            <img src="/uploads/products/<%= prod.productImage[0] %>" alt="<%= prod.productName %>">
+          <% } else { %>
+            <div class="no-img">👟</div>
+          <% } %>
+        </div>
+        <div class="related-info">
+          <h3 class="related-name"><%= prod.productName %></h3>
+          <div class="related-price">
+            <% if(prod.discountPrice && prod.discountPrice < prod.price){ %>
+              <span  class="current-price">₹<%= prod.discountPrice %></span>
+              <span class="original-price">₹<%= prod.price %></span>
+            <% } else { %>
+              <span class="current-price">₹<%= prod.price %></span>
+            <% } %>
+          </div>
+        </div>
+      </a>
+    <% }) %>
+  </div>
+</div>
+
+<!-- Footer -->
+<footer>
+  <div class="footer-container">
+    <div>
+      <h4>About Us</h4>
+      <p>ZNEAKZ brings you the best sneakers and footwear collections for men, women, and kids.</p>
+    </div>
+    <div>
+      <h4>Quick Links</h4>
+      <ul>
+        <li><a href="/">Home</a></li>
+        <li><a href="/men">Men</a></li>
+        <li><a href="/women">Women</a></li>
+        <li><a href="/kids">Kids</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4>Customer Service</h4>
+      <ul>
+        <li><a href="#">FAQ</a></li>
+        <li><a href="#">Returns</a></li>
+        <li><a href="#">Shipping</a></li>
+      </ul>
+    </div>
+  </div>
+  <p>© <%= new Date().getFullYear() %> ZNEAKZ. All Rights Reserved.</p>
+</footer>
+
+<script>
+function changeMainImage(src, thumb){
+  document.getElementById('mainImage').src = src;
+  document.querySelectorAll('.thumbnail').forEach(t=>t.classList.remove('active'));
+  thumb.classList.add('active');
+}
+
+function changeQuantity(delta){
+  let input = document.getElementById('quantity');
+  let qty = parseInt(input.value) + delta;
+  if(qty<1) qty=1;
+  input.value=qty;
+}
+
+function initImageZoom() {
+  const mainImage = document.getElementById('mainImage');
+  const mainImageContainer = document.querySelector('.main-image');
+  const zoomLens = document.getElementById('zoomLens');
+
+  if (!mainImage || !mainImageContainer) return;
+
+  if (window.innerWidth <= 992) {
+    mainImage.style.transform = "scale(1)";
+    if (zoomLens) zoomLens.style.display = 'none';
+    return;
+  }
+
+  mainImage.style.transition = "transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)";
+  mainImageContainer.style.position = "relative";
+  if (zoomLens) zoomLens.style.display = 'block';
+
+  let isZoomEnabled = false;
+
+  mainImageContainer.onmouseenter = () => {
+    mainImageContainer.style.cursor = 'zoom-in';
+    isZoomEnabled = true;
+    if (zoomLens) zoomLens.style.opacity = '1';
+  };
+
+  mainImageContainer.onmousemove = (e) => {
+    if (!isZoomEnabled) return;
+    const x = e.offsetX;
+    const y = e.offsetY;
+
+    const constrainedX = Math.max(50, Math.min(mainImageContainer.clientWidth - 50, x));
+    const constrainedY = Math.max(50, Math.min(mainImageContainer.clientHeight - 50, y));
+
+    mainImage.style.transformOrigin = `${(constrainedX / mainImageContainer.clientWidth) * 100}% ${(constrainedY / mainImageContainer.clientHeight) * 100}%`;
+    mainImage.style.transform = "scale(2.2)";
+
+    if (zoomLens) {
+      zoomLens.style.left = `${constrainedX - zoomLens.offsetWidth / 2}px`;
+      zoomLens.style.top = `${constrainedY - zoomLens.offsetHeight / 2}px`;
+    }
+  };
+
+  mainImageContainer.onmouseleave = () => {
+    isZoomEnabled = false;
+    mainImage.style.transformOrigin = "center center";
+    mainImage.style.transform = "scale(1)";
+    mainImageContainer.style.cursor = 'default';
+    if (zoomLens) zoomLens.style.opacity = '0';
+  };
+}
+
+window.addEventListener('DOMContentLoaded', initImageZoom);
+</script>
+
+</body>
+</html>

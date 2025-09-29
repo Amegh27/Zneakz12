@@ -66,28 +66,28 @@ const productDetails = async (req, res) => {
 
     const product = await Product.findById(productId).populate('category');
 
-    if (
-      !product ||
-      product.isDeleted ||
-      !product.isListed ||
-      product.isBlocked
-    ) {
+    if (!product || product.isDeleted || !product.isListed || product.isBlocked) {
       return res.redirect('/');
     }
 
- 
-    const minPrice = product.price - 1000;
-const maxPrice = product.price + 1000;
+    let relatedProducts = [];
 
-const relatedProducts = await Product.find({
-  category: product.category._id,
-  _id: { $ne: product._id },
-  isDeleted: false,
-  isListed: true,
-  price: { $gte: minPrice, $lte: maxPrice }
-}).limit(4);
+    if (product.category && product.category._id) {
+      relatedProducts = await Product.find({
+        category: product.category._id,
+        _id: { $ne: product._id },
+        isDeleted: false,
+        isListed: true,
+      }).limit(4);
+    }
 
-
+    if (relatedProducts.length === 0) {
+      relatedProducts = await Product.find({
+        _id: { $ne: product._id },
+        isDeleted: false,
+        isListed: true,
+      }).limit(4);
+    }
 
     res.render("product-details", {
       user: userdata,
@@ -103,7 +103,258 @@ const relatedProducts = await Product.find({
 };
 
 
+
+
+
+
+const getMenProducts = async (req, res) => {
+  try {
+    const menCategory = await Category.findOne({ name: "Men" });
+    if (!menCategory) return res.send("Men category not found");
+
+    const perPage = 3;
+    const page = parseInt(req.query.page) || 1;
+
+    const query = req.query.q ? req.query.q.trim() : "";
+    const sort = req.query.sort || "";
+    const priceRange = req.query.priceRange || "";
+
+    let filter = { category: menCategory._id };
+
+    if (query) {
+      filter.productName = { $regex: query, $options: "i" }; 
+    }
+
+    if (priceRange) {
+      const [min, max] = priceRange.split("-").map(Number);
+      if (!isNaN(min) && !isNaN(max)) {
+        filter.price = { $gte: min, $lte: max };
+      }
+    }
+
+    let sortOption = {};
+    if (sort === "priceAsc") sortOption = { effectivePrice: 1 };
+    else if (sort === "priceDesc") sortOption = { effectivePrice: -1 };
+    else if (sort === "nameAsc") sortOption.productName = 1;
+    else if (sort === "nameDesc") sortOption.productName = -1;
+
+   const products = await Product.aggregate([
+  { $match: filter },
+  { $addFields: { effectivePrice: { $ifNull: ["$discountPrice", "$price"] } } },
+  { $sort: sort === 'priceAsc' ? { effectivePrice: 1 } :
+           sort === 'priceDesc' ? { effectivePrice: -1 } : { productName: 1 } },
+  { $skip: (page - 1) * perPage },
+  { $limit: perPage }
+]);
+
+
+    const totalProducts = await Product.countDocuments(filter);
+    const totalPages = Math.ceil(totalProducts / perPage);
+    const categories = await Category.find({ isListed: true });
+
+    res.render("men", {
+      user: req.session.user ? await User.findById(req.session.user) : null,
+      products,
+      currentPage: page,
+      totalPages,
+      query,
+      sort,
+      categories,
+      selectedCategory: ["Men"],
+      priceRange,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Server Error");
+  }
+};
+
+
+
+const getWomenProducts = async (req, res) => {
+  try {
+    const womenCategory = await Category.findOne({ name: 'Women' });
+    if (!womenCategory) return res.send('Women category not found');
+
+
+    const perPage = 3; 
+    const page = parseInt(req.query.page) || 1;
+
+
+    const products = await Product.find({ category: womenCategory._id, isListed: true });
+    const categories = await Category.find({ isListed: true });
+
+    res.render('women', {
+      user: req.session.user ? await User.findById(req.session.user) : null,
+      products,
+      currentPage: 1,
+      totalPages: 1,
+      query: '',
+      sort: '',
+      categories,
+      selectedCategory: ['Women'],
+      priceRange: ''
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server Error');
+  }
+};
+
+
+const getKidsProducts = async (req, res) => {
+  try {
+    const kidsCategory = await Category.findOne({ name: 'Kids' });
+    if (!kidsCategory) return res.send('Kids category not found');
+
+    const perPage = 3; 
+    const page = parseInt(req.query.page) || 1;
+
+    const products = await Product.find({ category: kidsCategory._id, isListed: true });
+    const categories = await Category.find({ isListed: true });
+
+    res.render('kids', {
+      user: req.session.user ? await User.findById(req.session.user) : null,
+      products,
+      currentPage: 1,
+      totalPages: 1,
+      query: '',
+      sort: '',
+      categories,
+      selectedCategory: ['Kids'],
+      priceRange: ''
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server Error');
+  }
+};
+
+
+
+const menDetails = async (req, res) => {
+  try {
+    const userId = req.session.user;
+    const userdata = await User.findById(userId);
+    const productId = req.query.id;
+
+    const product = await Product.findById(productId).populate('category');
+
+    if (!product || product.isDeleted || !product.isListed || product.isBlocked) {
+      return res.redirect('/');
+    }
+
+    const minPrice = product.price - 1000;
+    const maxPrice = product.price + 1000;
+
+    const relatedProducts = await Product.find({
+      category: product.category._id,
+      _id: { $ne: product._id },
+      isDeleted: false,
+      isListed: true,
+      price: { $gte: minPrice, $lte: maxPrice }
+    }).limit(4);
+
+    
+    res.render("men-details", {
+      user: userdata,
+      product,
+      quantity: product.quantity,
+      category: product.category,
+      relatedProducts,
+    });
+  } catch (error) {
+    console.error("Error fetching product details:", error);
+    res.redirect("/pageNotFound");
+  }
+};
+
+
+
+const womenDetails = async (req, res) => {
+  try {
+    const userId = req.session.user;
+    const userdata = await User.findById(userId);
+    const productId = req.query.id;
+
+    const product = await Product.findById(productId).populate('category');
+
+    if (!product || product.isDeleted || !product.isListed || product.isBlocked) {
+      return res.redirect('/');
+    }
+
+    const minPrice = product.price - 1000;
+    const maxPrice = product.price + 1000;
+
+    const relatedProducts = await Product.find({
+      category: product.category._id,
+      _id: { $ne: product._id },
+      isDeleted: false,
+      isListed: true,
+      price: { $gte: minPrice, $lte: maxPrice }
+    }).limit(4);
+
+    res.render("women-details", {
+      user: userdata,
+      product,
+      quantity: product.quantity,
+      category: product.category,
+      relatedProducts,
+    });
+  } catch (error) {
+    console.error("Error fetching women product details:", error);
+    res.redirect("/pageNotFound");
+  }
+};
+
+
+
+const kidsDetails = async (req, res) => {
+  try {
+    const userId = req.session.user;
+    const userdata = await User.findById(userId);
+    const productId = req.query.id;
+
+    const product = await Product.findById(productId).populate('category');
+
+    if (!product || product.isDeleted || !product.isListed || product.isBlocked) {
+      return res.redirect('/');
+    }
+
+    const minPrice = product.price - 1000;
+    const maxPrice = product.price + 1000;
+
+    const relatedProducts = await Product.find({
+      category: product.category._id,
+      _id: { $ne: product._id },
+      isDeleted: false,
+      isListed: true,
+      price: { $gte: minPrice, $lte: maxPrice }
+    }).limit(4);
+
+    res.render("kids-details", {
+      user: userdata,
+      product,
+      quantity: product.quantity,
+      category: product.category,
+      relatedProducts,
+      reviews:[]
+    });
+  } catch (error) {
+    console.error("Error fetching product details:", error);
+    res.redirect("/pageNotFound");
+  }
+};
+
+
+
 module.exports={
     productDetails,
-    searchProducts
+    searchProducts,
+    getMenProducts,
+    getWomenProducts,
+    getKidsProducts,
+    menDetails,
+    womenDetails,
+    kidsDetails
 }

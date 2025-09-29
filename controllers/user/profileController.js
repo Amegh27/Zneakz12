@@ -56,13 +56,14 @@ const securePassword = async(password)=>{
 }
 
 
-const getForgotPassPage = async(req,res)=>{
-    try {
-        res.render('forgot-password')
-    } catch (error) {
-        res.redirect('/pageNotFound')
-    }
-}
+const getForgotPassPage = async (req, res) => {
+  try {
+    res.render("forgot-password", { message: "", email: "" });
+  } catch (error) {
+    res.redirect("/pageNotFound");
+  }
+};
+
 
 const forgotEmailValid = async(req,res)=>{
     try {
@@ -139,7 +140,7 @@ const resendOtp = async(req,res)=>{
   try {
     const otp = generateOtp();
     req.session.userOtp = otp;
-    req.session.otpExpiry = Date.now() + 5 * 60 * 1000; // reset expiry
+    req.session.otpExpiry = Date.now() + 5 * 60 * 1000; 
     const email = req.session.email;
 
     const emailSend = await sendVerificationEmail(email, otp);
@@ -176,6 +177,8 @@ res.redirect('/');
         res.redirect('/pageNotFound')
     }
 }
+
+
 
 module.exports = {
     getForgotPassPage,
