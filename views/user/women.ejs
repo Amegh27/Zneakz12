@@ -353,6 +353,29 @@
             </div>
         </div>
 
+
+         <!-- Search + Sort -->
+<form class="d-flex search-box mb-4" action="/women#productSection" method="GET">
+  <input class="form-control me-2" type="search" name="q" placeholder="Search products..." value="<%= typeof query !== 'undefined' ? query : '' %>">
+  <select class="form-select me-2" name="sort" onchange="this.form.submit()">
+    <option value="">Sort by</option>
+    <option value="priceAsc" <%= sort==='priceAsc' ? 'selected' : '' %>>Price: Low to High</option>
+    <option value="priceDesc" <%= sort==='priceDesc' ? 'selected' : '' %>>Price: High to Low</option>
+    <option value="nameAsc" <%= sort==='nameAsc' ? 'selected' : '' %>>Name: A - Z</option>
+    <option value="nameDesc" <%= sort==='nameDesc' ? 'selected' : '' %>>Name: Z - A</option>
+  </select>
+  <button class="btn btn-dark me-2" type="submit">Search</button>
+
+  <% if(query || sort || priceRange){ %>
+    <a href="/women#productSection" class="btn btn-outline-secondary">Clear</a>
+  <% } %>
+
+  <% if(priceRange){ %>
+    <input type="hidden" name="priceRange" value="<%= priceRange %>">
+  <% } %>
+</form>
+
+
         <!-- Product Grid -->
 <div id="productSection" class="product-grid">
   <% if(products && products.length > 0){ %>
@@ -389,23 +412,37 @@
 
 
         <!-- Pagination -->
-        <div class="pagination">
-  <% if(currentPage > 1) { %>
-    <a href="?page=<%= currentPage - 1 %>">‹</a>
+<div class="pagination">
+  <% if(currentPage > 1){ %>
+    <a href="?page=<%= currentPage-1 %><%= query ? '&q=' + encodeURIComponent(query) : '' %><%= sort ? '&sort=' + sort : '' %>#productSection">‹</a>
   <% } else { %>
     <span>‹</span>
   <% } %>
 
-  <% for(let i = 1; i <= totalPages; i++) { %>
-    <a href="?page=<%= i %>" class="<%= i === currentPage ? 'active' : '' %>"><%= i %></a>
+  <% for(let i=1; i<=totalPages; i++){ %>
+    <a href="?page=<%= i %><%= query ? '&q=' + encodeURIComponent(query) : '' %><%= sort ? '&sort=' + sort : '' %>#productSection" class="<%= i===currentPage?'active':'' %>"><%= i %></a>
   <% } %>
 
-  <% if(currentPage < totalPages) { %>
-    <a href="?page=<%= currentPage + 1 %>">›</a>
+  <% if(currentPage < totalPages){ %>
+    <a href="?page=<%= currentPage+1 %><%= query ? '&q=' + encodeURIComponent(query) : '' %><%= sort ? '&sort=' + sort : '' %>#productSection">›</a>
   <% } else { %>
     <span>›</span>
   <% } %>
 </div>
 
+
     </div>
+
+<script>
+  window.addEventListener('pageshow', (event) => {
+    if (event.persisted) {
+      const searchInput = document.querySelector('input[name="q"]');
+      if (searchInput) searchInput.value = '';
+      const sortSelect = document.querySelector('select[name="sort"]');
+      if (sortSelect) sortSelect.selectedIndex = 0;
+    }
+  });
+</script>
+
+
   <%- include("../partials/user/footer") %>

@@ -176,59 +176,130 @@ const getWomenProducts = async (req, res) => {
     const womenCategory = await Category.findOne({ name: 'Women' });
     if (!womenCategory) return res.send('Women category not found');
 
-
-    const perPage = 3; 
+    const perPage = 3;
     const page = parseInt(req.query.page) || 1;
 
+    const query = req.query.q ? req.query.q.trim() : '';
+    const sort = req.query.sort || '';
+    const priceRange = req.query.priceRange || '';
 
-    const products = await Product.find({ category: womenCategory._id, isListed: true });
+    let filter = { category: womenCategory._id, isListed: true };
+
+    if (query) {
+      filter.productName = { $regex: query, $options: 'i' };
+    }
+
+    if (priceRange) {
+      const [min, max] = priceRange.split('-').map(Number);
+      if (!isNaN(min) && !isNaN(max)) filter.price = { $gte: min, $lte: max };
+    }
+
+    // Default sort if none selected
+    let sortStage = { productName: 1 };
+
+    if (sort === 'priceAsc') sortStage = { effectivePrice: 1 };
+    else if (sort === 'priceDesc') sortStage = { effectivePrice: -1 };
+    else if (sort === 'nameAsc') sortStage = { productName: 1 };
+    else if (sort === 'nameDesc') sortStage = { productName: -1 };
+
+    const products = await Product.aggregate([
+      { $match: filter },
+      { $addFields: { effectivePrice: { $ifNull: ['$discountPrice', '$price'] } } },
+      { $sort: sortStage },
+      { $skip: (page - 1) * perPage },
+      { $limit: perPage },
+    ]);
+
+    const totalProducts = await Product.countDocuments(filter);
+    const totalPages = Math.ceil(totalProducts / perPage);
     const categories = await Category.find({ isListed: true });
 
     res.render('women', {
       user: req.session.user ? await User.findById(req.session.user) : null,
       products,
-      currentPage: 1,
-      totalPages: 1,
-      query: '',
-      sort: '',
+      currentPage: page,
+      totalPages,
+      query,
+      sort,
       categories,
       selectedCategory: ['Women'],
-      priceRange: ''
+      priceRange
     });
   } catch (err) {
     console.error(err);
     res.status(500).send('Server Error');
   }
 };
+
+
 
 
 const getKidsProducts = async (req, res) => {
   try {
-    const kidsCategory = await Category.findOne({ name: 'Kids' });
-    if (!kidsCategory) return res.send('Kids category not found');
+    const kidsCategory = await Category.findOne({ name: "Kids" });
+    if (!kidsCategory) return res.send("Kids category not found");
 
-    const perPage = 3; 
+    const perPage = 3;
     const page = parseInt(req.query.page) || 1;
 
-    const products = await Product.find({ category: kidsCategory._id, isListed: true });
+    const query = req.query.q ? req.query.q.trim() : "";
+    const sort = req.query.sort || "";
+    const priceRange = req.query.priceRange || "";
+
+    let filter = { category: kidsCategory._id, isListed: true };
+
+    if (query) {
+      filter.productName = { $regex: query, $options: "i" };
+    }
+
+    if (priceRange) {
+      const [min, max] = priceRange.split("-").map(Number);
+      if (!isNaN(min) && !isNaN(max)) filter.price = { $gte: min, $lte: max };
+    }
+
+    let sortOption = {};
+    if (sort === "priceAsc") sortOption = { effectivePrice: 1 };
+    else if (sort === "priceDesc") sortOption = { effectivePrice: -1 };
+    else if (sort === "nameAsc") sortOption = { productName: 1 };
+    else if (sort === "nameDesc") sortOption = { productName: -1 };
+
+    const products = await Product.aggregate([
+      { $match: filter },
+      { $addFields: { effectivePrice: { $ifNull: ["$discountPrice", "$price"] } } },
+      { $sort:
+        sort === "priceAsc" ? { effectivePrice: 1 } :
+        sort === "priceDesc" ? { effectivePrice: -1 } :
+        sort === "nameDesc" ? { productName: -1 } :
+        { productName: 1 }
+      },
+      { $skip: (page - 1) * perPage },
+      { $limit: perPage }
+    ]);
+
+    const totalProducts = await Product.countDocuments(filter);
+    const totalPages = Math.ceil(totalProducts / perPage);
     const categories = await Category.find({ isListed: true });
 
-    res.render('kids', {
+    res.render("kids", {
       user: req.session.user ? await User.findById(req.session.user) : null,
       products,
-      currentPage: 1,
-      totalPages: 1,
-      query: '',
-      sort: '',
+      currentPage: page,
+      totalPages,
+      query,
+      sort,
       categories,
-      selectedCategory: ['Kids'],
-      priceRange: ''
+      selectedCategory: ["Kids"],
+      priceRange,
     });
+
   } catch (err) {
     console.error(err);
-    res.status(500).send('Server Error');
+    res.status(500).send("Server Error");
   }
 };
+
+module.exports = { getKidsProducts };
+
 
 
 

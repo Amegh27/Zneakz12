@@ -331,13 +331,30 @@
             <h2>NEW SEASON</h2>
             <h3>FOOTWEAR</h3>
             <button class="hero-btn">SHOP NOW</button>
-            <div class="hero-shoes">
-                <!-- <div class="hero-shoe"></div>
-                <div class="hero-shoe"></div>
-                <div class="hero-shoe"></div>
-                <div class="hero-shoe"></div> -->
-            </div>
+           
         </div>
+
+
+         <!-- Search + Sort -->
+<form class="d-flex search-box mb-4" action="/kids#productSection" method="GET">
+  <input class="form-control me-2" type="search" name="q" placeholder="Search products..." value="<%= typeof query !== 'undefined' ? query : '' %>">
+  <select class="form-select me-2" name="sort" onchange="this.form.submit()">
+    <option value="">Sort by</option>
+    <option value="priceAsc" <%= sort==='priceAsc' ? 'selected' : '' %>>Price: Low to High</option>
+    <option value="priceDesc" <%= sort==='priceDesc' ? 'selected' : '' %>>Price: High to Low</option>
+    <option value="nameAsc" <%= sort==='nameAsc' ? 'selected' : '' %>>Name: A - Z</option>
+    <option value="nameDesc" <%= sort==='nameDesc' ? 'selected' : '' %>>Name: Z - A</option>
+  </select>
+  <button class="btn btn-dark me-2" type="submit">Search</button>
+
+  <% if(query || sort || priceRange){ %>
+<a href="#" onclick="window.location.replace('/kids'); return false;" class="btn btn-outline-secondary">Clear</a>
+  <% } %>
+
+  <% if(priceRange){ %>
+    <input type="hidden" name="priceRange" value="<%= priceRange %>">
+  <% } %>
+</form>
 
            <!-- Product Grid -->
     <div id="productSection" class="product-grid">
@@ -394,4 +411,16 @@
 </div>
 
     </div>
+
+    <script>
+  window.addEventListener('pageshow', (event) => {
+    if (event.persisted) {
+      const searchInput = document.querySelector('input[name="q"]');
+      if (searchInput) searchInput.value = '';
+      const sortSelect = document.querySelector('select[name="sort"]');
+      if (sortSelect) sortSelect.selectedIndex = 0;
+    }
+  });
+</script>
+
   <%- include("../partials/user/footer") %>
