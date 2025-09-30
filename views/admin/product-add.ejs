@@ -65,7 +65,7 @@
                 <div class="col-lg-6">
                     <div class="card mb-4">
                         <div class="card-body">
-                            <form method="post" action="/admin/product-add" enctype="multipart/form-data"
+                            <form id="productForm" method="post" action="/admin/product-add" enctype="multipart/form-data"
                                 onsubmit="return validateForm()">
                                 <div class="mb-4">
                                     <label for="product_name" class="form-label">Product Name</label>
@@ -81,25 +81,26 @@
                                     <div id="description-error" class="error-message"></div>
                                 </div>
 
-                                <div class="col-lg-4">
-                                    <div class="mb-4">
-                                        <label class="form-label">Price (₹)</label>
-                                        <input name="price" type="number" min="0" step="0.01"
-                                            class="form-control border" required />
-                                        <div id="price-error" class="error-message"></div>
-                                    </div>
+<div class="col-lg-4">
+                <div class="mb-4">
+                  <label class="form-label">Price (₹)</label>
+                  <input id="regularPrice" name="price" type="number" min="0" step="0.01"
+                    class="form-control border" required />
+                </div>
+              </div>
+
+             <div class="col-lg-4">
+  <div class="mb-4">
+    <label class="form-label">Discount Price (₹)</label>
+    <input id="salesPrice" name="discountPrice" type="number" min="0" step="0.01"
+      class="form-control border" />
+    <div id="salesPrice-error" class="error-message"></div>
+  </div>
+</div>
+          <div class="mb-3">
+                                     <label for="quantity" class="form-label">Quantity</label>
+                                     <input type="number" class="form-control" id="quantity" name="quantity" min="0" value="0" required>
                                 </div>
-
-                                <div class="col-lg-4">
-                                    <div class="mb-4">
-                                        <label class="form-label">Discount Price (₹)</label>
-                                        <input name="discountPrice" type="number" min="0" step="0.01"
-                                            class="form-control border" />
-                                        <div id="discountPrice-error" class="error-message"></div>
-                                    </div>
-                                </div>
-
-
 
                                 <div class="card mb-4">
                                     <div class="card-body">
@@ -241,6 +242,23 @@
             </div>
         </section>
 
+        <div class="modal fade" id="productSuccessModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Success</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+<p><%= typeof successMessage !== 'undefined' ? successMessage : '' %></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+      </div>
+    </div>
+  </div>
+</div>
+
         <!-- Footer -->
         <footer class="footer mt-auto">
             <div class="container">
@@ -248,95 +266,133 @@
             </div>
         </footer>
 
-        <!-- JS Scripts -->
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/cropperjs/dist/cropper.min.js"></script>
-        <script>
-            let cropper;
-            let currentFileToCrop;
-            const imageInput = document.getElementById('imageInput');
-            const cropImage = document.getElementById('cropImage');
-            const cropModalElement = document.getElementById('imageCropModal');
-            const cropModal = new bootstrap.Modal(cropModalElement);
+<script src="https://cdn.jsdelivr.net/npm/cropperjs/dist/cropper.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-            // Show thumbnails and set up crop click
-            imageInput.addEventListener('change', function (event) {
-                const files = event.target.files;
-                const container = document.getElementById('addedImagesContainer');
-                container.innerHTML = '';
-
-                Array.from(files).forEach((file) => {
-                    const reader = new FileReader();
-                    reader.onload = function (e) {
-                        const thumbnail = document.createElement('img');
-                        thumbnail.src = e.target.result;
-                        thumbnail.classList.add('thumbnail');
-                        thumbnail.style.width = '80px';
-                        thumbnail.style.height = '80px';
-                        thumbnail.style.objectFit = 'cover';
-                        thumbnail.style.cursor = 'pointer';
-
-                        thumbnail.addEventListener('click', () => {
-                            currentFileToCrop = file;
-                            cropImage.src = e.target.result;
-
-                            // Wait for image to load THEN open modal
-                            cropImage.onload = () => {
-                                cropModal.show();
-                            };
-                        });
-
-                        container.appendChild(thumbnail);
-                    };
-                    reader.readAsDataURL(file);
-                });
-            });
-
-            // Initialize Cropper only after modal is visible AND image is loaded
-            cropModalElement.addEventListener('shown.bs.modal', () => {
-                if (cropper) cropper.destroy();
-
-                cropper = new Cropper(cropImage, {
-                    aspectRatio: 1,
-                    viewMode: 1,
-                    autoCropArea: 1,
-                });
-            });
-
-            cropModalElement.addEventListener('hidden.bs.modal', () => {
-                if (cropper) {
-                    cropper.destroy();
-                    cropper = null;
-                }
-            });
-
-            document.getElementById('cropButton').addEventListener('click', () => {
-                if (!cropper) return;
-
-                const canvas = cropper.getCroppedCanvas({ width: 450, height: 450 });
-                canvas.toBlob((blob) => {
-                    const croppedFile = new File([blob], currentFileToCrop.name, {
-                        type: 'image/jpeg',
-                        lastModified: Date.now(),
-                    });
-
-                    // Replace file in FileList
-                    const dt = new DataTransfer();
-                    const allFiles = Array.from(imageInput.files);
-                    allFiles.forEach(file => {
-                        dt.items.add(file === currentFileToCrop ? croppedFile : file);
-                    });
-
-                    imageInput.files = dt.files;
-
-                    // Refresh thumbnails
-                    const event = new Event('change');
-                    imageInput.dispatchEvent(event);
-
-                    cropModal.hide();
-                });
-            });
-        </script>
+<script>
+    <% if (typeof productAdded !== 'undefined' && productAdded) { %>
+    document.addEventListener('DOMContentLoaded', () => {
+      Swal.fire({
+        icon: 'success',
+        title: 'Product Added!',
+        text: 'The product has been added successfully.',
+        confirmButtonColor: '#3085d6',
+        confirmButtonText: 'OK'
+          });
+        });
+     <% } %>
 
 
-        <%- include("../partials/admin/footer") %>
+
+  let cropper;
+  let currentFileToCrop;
+const imageInput = document.getElementById('imageInput');
+const cropImage = document.getElementById('cropImage');
+const cropModalElement = document.getElementById('imageCropModal');
+
+
+  imageInput.addEventListener('change', function (event) {
+      const files = event.target.files;
+      const container = document.getElementById('addedImagesContainer');
+      container.innerHTML = '';
+
+      Array.from(files).forEach((file) => {
+          const reader = new FileReader();
+          reader.onload = function (e) {
+              const thumbnail = document.createElement('img');
+              thumbnail.src = e.target.result;
+              thumbnail.classList.add('thumbnail');
+              thumbnail.style.width = '80px';
+              thumbnail.style.height = '80px';
+              thumbnail.style.objectFit = 'cover';
+              thumbnail.style.cursor = 'pointer';
+
+              thumbnail.addEventListener('click', () => {
+                  currentFileToCrop = file;
+                  cropImage.src = e.target.result;
+                  cropImage.onload = () => cropModal.show();
+              });
+
+              container.appendChild(thumbnail);
+          };
+          reader.readAsDataURL(file);
+      });
+  });
+
+  cropModalElement.addEventListener('shown.bs.modal', () => {
+      if (cropper) cropper.destroy();
+      cropper = new Cropper(cropImage, { aspectRatio: 1, viewMode: 1, autoCropArea: 1 });
+  });
+
+  cropModalElement.addEventListener('hidden.bs.modal', () => {
+      if (cropper) { cropper.destroy(); cropper = null; }
+  });
+
+  document.getElementById('cropButton').addEventListener('click', () => {
+      if (!cropper) return;
+      const canvas = cropper.getCroppedCanvas({ width: 450, height: 450 });
+      canvas.toBlob((blob) => {
+          const croppedFile = new File([blob], currentFileToCrop.name, { type: 'image/jpeg', lastModified: Date.now() });
+          const dt = new DataTransfer();
+          Array.from(imageInput.files).forEach(file => dt.items.add(file === currentFileToCrop ? croppedFile : file));
+          imageInput.files = dt.files;
+          imageInput.dispatchEvent(new Event('change'));
+          cropModal.hide();
+      });
+  });
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const form = document.getElementById("productForm");
+      const regularPriceInput = document.getElementById("regularPrice");
+      const salesPriceInput = document.getElementById("salesPrice");
+
+      form.addEventListener("submit", (e) => {
+        const regularPrice = parseFloat(regularPriceInput.value);
+        const salesPrice = parseFloat(salesPriceInput.value);
+
+        if (!isNaN(regularPrice) && !isNaN(salesPrice) && salesPrice > regularPrice) {
+          e.preventDefault();
+          Swal.fire({
+            icon: "error",
+            title: "Invalid Price",
+            text: "Sales price cannot be greater than regular price!",
+            confirmButtonColor: "#d33",
+          });
+        }
+      });
+    });
+
+    document.addEventListener("DOMContentLoaded", () => {
+    const form = document.getElementById("productForm");
+    const regularPriceInput = document.getElementById("regularPrice");
+    const salesPriceInput = document.getElementById("salesPrice");
+    const salesPriceError = document.getElementById("salesPrice-error");
+
+    form.addEventListener("submit", (e) => {
+      salesPriceError.textContent = ""; 
+
+      const regularPrice = parseFloat(regularPriceInput.value);
+      const salesPrice = parseFloat(salesPriceInput.value);
+
+      if (!isNaN(regularPrice) && !isNaN(salesPrice)) {
+        if (salesPrice > regularPrice) {
+          e.preventDefault();
+          salesPriceError.textContent = "Discount price cannot be greater than regular price.";
+        }
+      }
+    });
+
+    salesPriceInput.addEventListener("input", () => {
+      salesPriceError.textContent = "";
+      const regularPrice = parseFloat(regularPriceInput.value);
+      const salesPrice = parseFloat(salesPriceInput.value);
+
+      if (!isNaN(regularPrice) && !isNaN(salesPrice) && salesPrice > regularPrice) {
+        salesPriceError.textContent = "Discount price cannot be greater than regular price.";
+      }
+    });
+  });
+</script>
+
+<%- include("../partials/admin/footer") %>

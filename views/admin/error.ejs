@@ -45,8 +45,7 @@
 </head>
 
 <body>
-  <h1>Oops! Something went wrong.</h1>
-  <p><%= message || 'An unexpected error occurred. Please try again later.' %></p>
+ <p><%= typeof message !== 'undefined' ? message : 'An unexpected error occurred. Please try again later.' %></p>
   <button onclick="goDashboard()">Go to Dashboard</button>
 
   <script>

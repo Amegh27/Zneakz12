@@ -21,6 +21,7 @@ const getProductAddpage = async (req, res) => {
 const addProducts = async (req, res) => {
     try {
         const products = req.body
+        const quantity = req.body.quantity;
         const isPublished = req.body.isPublished === 'on';
         const categoryId = await Category.findOne({ name: products.category });
 
@@ -63,6 +64,7 @@ if (req.files && req.files.length > 0) {
             const newProduct = new Product({
                 productName: products.productName,
                 description: products.description,
+                quantity: parseInt(quantity) || 0,
                 category: categoryId._id,
                 productImage: images,
                 price:products.price,
@@ -72,8 +74,13 @@ if (req.files && req.files.length > 0) {
 
             })
 
-            await newProduct.save()
-            return res.redirect('/admin/product-add')
+            await newProduct.save();
+  return res.render('product-add', {
+      cat: await Category.find({}),
+      successMessage: 'Product added successfully!',
+      productAdded: true
+    });
+
         } else {
             return res.status(400).json('Product already exists,please try with another name')
         }
