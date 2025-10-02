@@ -6,6 +6,7 @@ const { userAuth,adminAuth,checkUserBlocked } = require('../middlewares/auth')
 const forceLogoutIfBlocked = require("../middlewares/blockCheck");
 const productController = require('../controllers/user/productController')
 const profileController = require('../controllers/user/profileController')
+const cartController = require("../controllers/user/cartController");
 
 
 
@@ -71,5 +72,11 @@ router.get("/women-details", productController.womenDetails);
 // kids details
 router.get('/kids-details', productController.kidsDetails);
 
+// cart management
+router.get('/cart', cartController.viewCart);
+router.get("/cart/load", cartController.loadCart);
+router.post("/cart/add", cartController.addToCart);
+router.post("/cart/update", cartController.updateCart);
+router.post("/cart/remove", cartController.removeFromCart);
 
 module.exports = router

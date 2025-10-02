@@ -76,7 +76,8 @@ const loadHomepage = async (req, res) => {
     else if (sort === 'priceDesc') pipeline.push({ $sort: { effectivePrice: -1 } });
     else if (sort === 'nameAsc') pipeline.push({ $sort: { productName: 1 } });
     else if (sort === 'nameDesc') pipeline.push({ $sort: { productName: -1 } });
-
+    else pipeline.push({ $sort: { createdAt: -1 } });
+    
     pipeline.push({ $skip: skip });
     pipeline.push({ $limit: limit });
 

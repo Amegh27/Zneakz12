@@ -271,128 +271,107 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
-    <% if (typeof productAdded !== 'undefined' && productAdded) { %>
-    document.addEventListener('DOMContentLoaded', () => {
-      Swal.fire({
-        icon: 'success',
-        title: 'Product Added!',
-        text: 'The product has been added successfully.',
-        confirmButtonColor: '#3085d6',
-        confirmButtonText: 'OK'
-          });
+document.addEventListener("DOMContentLoaded", () => {
+  const form = document.getElementById("productForm");
+  const imageInput = document.getElementById("imageInput");
+  const regularPriceInput = document.getElementById("regularPrice");
+  const salesPriceInput = document.getElementById("salesPrice");
+  const salesPriceError = document.getElementById("salesPrice-error");
+  const addedImagesContainer = document.getElementById("addedImagesContainer");
+  const allowedTypes = ["image/jpeg", "image/jpg", "image/png"];
+
+  imageInput.addEventListener("change", (event) => {
+    const files = Array.from(event.target.files);
+    addedImagesContainer.innerHTML = "";
+
+    const validFiles = [];
+    for (let file of files) {
+      if (!allowedTypes.includes(file.type)) {
+        Swal.fire({
+          icon: "error",
+          title: "Invalid file type",
+          text: "Only JPG, JPEG, or PNG images are allowed.",
+          confirmButtonColor: "#d33",
         });
-     <% } %>
-
-
-
-  let cropper;
-  let currentFileToCrop;
-const imageInput = document.getElementById('imageInput');
-const cropImage = document.getElementById('cropImage');
-const cropModalElement = document.getElementById('imageCropModal');
-
-
-  imageInput.addEventListener('change', function (event) {
-      const files = event.target.files;
-      const container = document.getElementById('addedImagesContainer');
-      container.innerHTML = '';
-
-      Array.from(files).forEach((file) => {
-          const reader = new FileReader();
-          reader.onload = function (e) {
-              const thumbnail = document.createElement('img');
-              thumbnail.src = e.target.result;
-              thumbnail.classList.add('thumbnail');
-              thumbnail.style.width = '80px';
-              thumbnail.style.height = '80px';
-              thumbnail.style.objectFit = 'cover';
-              thumbnail.style.cursor = 'pointer';
-
-              thumbnail.addEventListener('click', () => {
-                  currentFileToCrop = file;
-                  cropImage.src = e.target.result;
-                  cropImage.onload = () => cropModal.show();
-              });
-
-              container.appendChild(thumbnail);
-          };
-          reader.readAsDataURL(file);
-      });
-  });
-
-  cropModalElement.addEventListener('shown.bs.modal', () => {
-      if (cropper) cropper.destroy();
-      cropper = new Cropper(cropImage, { aspectRatio: 1, viewMode: 1, autoCropArea: 1 });
-  });
-
-  cropModalElement.addEventListener('hidden.bs.modal', () => {
-      if (cropper) { cropper.destroy(); cropper = null; }
-  });
-
-  document.getElementById('cropButton').addEventListener('click', () => {
-      if (!cropper) return;
-      const canvas = cropper.getCroppedCanvas({ width: 450, height: 450 });
-      canvas.toBlob((blob) => {
-          const croppedFile = new File([blob], currentFileToCrop.name, { type: 'image/jpeg', lastModified: Date.now() });
-          const dt = new DataTransfer();
-          Array.from(imageInput.files).forEach(file => dt.items.add(file === currentFileToCrop ? croppedFile : file));
-          imageInput.files = dt.files;
-          imageInput.dispatchEvent(new Event('change'));
-          cropModal.hide();
-      });
-  });
-
-    document.addEventListener("DOMContentLoaded", () => {
-      const form = document.getElementById("productForm");
-      const regularPriceInput = document.getElementById("regularPrice");
-      const salesPriceInput = document.getElementById("salesPrice");
-
-      form.addEventListener("submit", (e) => {
-        const regularPrice = parseFloat(regularPriceInput.value);
-        const salesPrice = parseFloat(salesPriceInput.value);
-
-        if (!isNaN(regularPrice) && !isNaN(salesPrice) && salesPrice > regularPrice) {
-          e.preventDefault();
-          Swal.fire({
-            icon: "error",
-            title: "Invalid Price",
-            text: "Sales price cannot be greater than regular price!",
-            confirmButtonColor: "#d33",
-          });
-        }
-      });
-    });
-
-    document.addEventListener("DOMContentLoaded", () => {
-    const form = document.getElementById("productForm");
-    const regularPriceInput = document.getElementById("regularPrice");
-    const salesPriceInput = document.getElementById("salesPrice");
-    const salesPriceError = document.getElementById("salesPrice-error");
-
-    form.addEventListener("submit", (e) => {
-      salesPriceError.textContent = ""; 
-
-      const regularPrice = parseFloat(regularPriceInput.value);
-      const salesPrice = parseFloat(salesPriceInput.value);
-
-      if (!isNaN(regularPrice) && !isNaN(salesPrice)) {
-        if (salesPrice > regularPrice) {
-          e.preventDefault();
-          salesPriceError.textContent = "Discount price cannot be greater than regular price.";
-        }
+      } else {
+        validFiles.push(file);
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const img = document.createElement("img");
+          img.src = e.target.result;
+          img.classList.add("thumbnail");
+          img.style.width = "80px";
+          img.style.height = "80px";
+          img.style.objectFit = "cover";
+          img.style.marginRight = "10px";
+          addedImagesContainer.appendChild(img);
+        };
+        reader.readAsDataURL(file);
       }
-    });
+    }
 
-    salesPriceInput.addEventListener("input", () => {
-      salesPriceError.textContent = "";
-      const regularPrice = parseFloat(regularPriceInput.value);
-      const salesPrice = parseFloat(salesPriceInput.value);
-
-      if (!isNaN(regularPrice) && !isNaN(salesPrice) && salesPrice > regularPrice) {
-        salesPriceError.textContent = "Discount price cannot be greater than regular price.";
-      }
-    });
+    const dt = new DataTransfer();
+    validFiles.forEach(f => dt.items.add(f));
+    imageInput.files = dt.files;
   });
+
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+
+    const files = Array.from(imageInput.files);
+
+    if (files.length === 0) {
+      Swal.fire({
+        icon: "error",
+        title: "No images uploaded",
+        text: "Please upload at least one image for the product.",
+        confirmButtonColor: "#d33",
+      });
+      return;
+    }
+
+    if (files.length > 4) {
+      Swal.fire({
+        icon: "error",
+        title: "Too many images",
+        text: "You can upload a maximum of 4 images.",
+        confirmButtonColor: "#d33",
+      });
+      return;
+    }
+
+    for (let file of files) {
+      if (!allowedTypes.includes(file.type)) {
+        Swal.fire({
+          icon: "error",
+          title: "Invalid file type",
+          text: "Only JPG, JPEG, or PNG images are allowed.",
+          confirmButtonColor: "#d33",
+        });
+        return;
+      }
+    }
+
+    const regularPrice = parseFloat(regularPriceInput.value);
+    const salesPrice = parseFloat(salesPriceInput.value);
+    salesPriceError.textContent = "";
+
+    if (!isNaN(regularPrice) && !isNaN(salesPrice) && salesPrice > regularPrice) {
+      salesPriceError.textContent = "Discount price cannot be greater than regular price.";
+      Swal.fire({
+        icon: "error",
+        title: "Invalid Price",
+        text: "Discount price cannot be greater than regular price.",
+        confirmButtonColor: "#d33",
+      });
+      return;
+    }
+
+    form.submit();
+  });
+});
 </script>
+
+
 
 <%- include("../partials/admin/footer") %>

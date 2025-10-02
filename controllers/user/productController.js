@@ -114,46 +114,87 @@ const getMenProducts = async (req, res) => {
 
     const perPage = 3;
     const page = parseInt(req.query.page) || 1;
+    const skip = (page - 1) * perPage;
 
     const query = req.query.q ? req.query.q.trim() : "";
     const sort = req.query.sort || "";
     const priceRange = req.query.priceRange || "";
 
-    let filter = { category: menCategory._id };
+    // ✅ Match only Men category
+    let matchStage = {
+      category: menCategory._id,
+      isBlocked: false,
+      quantity: { $gt: 0 }
+    };
 
     if (query) {
-      filter.productName = { $regex: query, $options: "i" }; 
+      matchStage.productName = { $regex: query, $options: "i" };
     }
 
+    // ✅ Build pipeline
+    let pipeline = [
+      { $match: matchStage },
+      {
+        $addFields: {
+          effectivePrice: { $ifNull: ["$discountPrice", "$price"] }
+        }
+      }
+    ];
+
+    // ✅ Price range filter
     if (priceRange) {
       const [min, max] = priceRange.split("-").map(Number);
       if (!isNaN(min) && !isNaN(max)) {
-        filter.price = { $gte: min, $lte: max };
+        pipeline.push({
+          $match: { effectivePrice: { $gte: min, $lte: max } }
+        });
       }
     }
 
-    let sortOption = {};
-    if (sort === "priceAsc") sortOption = { effectivePrice: 1 };
-    else if (sort === "priceDesc") sortOption = { effectivePrice: -1 };
-    else if (sort === "nameAsc") sortOption.productName = 1;
-    else if (sort === "nameDesc") sortOption.productName = -1;
+    // ✅ Sorting
+    if (sort === "priceAsc") pipeline.push({ $sort: { effectivePrice: 1 } });
+    else if (sort === "priceDesc") pipeline.push({ $sort: { effectivePrice: -1 } });
+    else if (sort === "nameAsc") pipeline.push({ $sort: { productName: 1 } });
+    else if (sort === "nameDesc") pipeline.push({ $sort: { productName: -1 } });
+    else pipeline.push({ $sort: { createdAt: -1 } }); // latest first by default
 
-   const products = await Product.aggregate([
-  { $match: filter },
-  { $addFields: { effectivePrice: { $ifNull: ["$discountPrice", "$price"] } } },
-  { $sort: sort === 'priceAsc' ? { effectivePrice: 1 } :
-           sort === 'priceDesc' ? { effectivePrice: -1 } : { productName: 1 } },
-  { $skip: (page - 1) * perPage },
-  { $limit: perPage }
-]);
+    pipeline.push({ $skip: skip });
+    pipeline.push({ $limit: perPage });
 
+    // ✅ Run aggregation
+    const products = await Product.aggregate(pipeline);
 
-    const totalProducts = await Product.countDocuments(filter);
+    // ✅ Count total products
+    let countPipeline = [
+      { $match: matchStage },
+      {
+        $addFields: {
+          effectivePrice: { $ifNull: ["$discountPrice", "$price"] }
+        }
+      }
+    ];
+    if (priceRange) {
+      const [min, max] = priceRange.split("-").map(Number);
+      if (!isNaN(min) && !isNaN(max)) {
+        countPipeline.push({
+          $match: { effectivePrice: { $gte: min, $lte: max } }
+        });
+      }
+    }
+    countPipeline.push({ $count: "total" });
+
+    const countResult = await Product.aggregate(countPipeline);
+    const totalProducts = countResult[0] ? countResult[0].total : 0;
     const totalPages = Math.ceil(totalProducts / perPage);
+
+    // ✅ Fetch categories for sidebar
     const categories = await Category.find({ isListed: true });
 
+    // ✅ User
+    const userData = req.session.user ? await User.findById(req.session.user) : null;
+
     res.render("men", {
-      user: req.session.user ? await User.findById(req.session.user) : null,
+      user: userData,
       products,
       currentPage: page,
       totalPages,
@@ -163,71 +204,95 @@ const getMenProducts = async (req, res) => {
       selectedCategory: ["Men"],
       priceRange,
     });
+
   } catch (err) {
-    console.error(err);
+    console.error("Error loading Men products:", err);
     res.status(500).send("Server Error");
   }
 };
 
 
 
+
 const getWomenProducts = async (req, res) => {
   try {
-    const womenCategory = await Category.findOne({ name: 'Women' });
-    if (!womenCategory) return res.send('Women category not found');
+    const womenCategory = await Category.findOne({ name: "Women" });
+    if (!womenCategory) return res.send("Women category not found");
 
     const perPage = 3;
     const page = parseInt(req.query.page) || 1;
+    const skip = (page - 1) * perPage;
 
-    const query = req.query.q ? req.query.q.trim() : '';
-    const sort = req.query.sort || '';
-    const priceRange = req.query.priceRange || '';
+    const query = req.query.q ? req.query.q.trim() : "";
+    const sort = req.query.sort || "";
+    const priceRange = req.query.priceRange || "";
 
-    let filter = { category: womenCategory._id, isListed: true };
+    let matchStage = {
+      category: womenCategory._id,
+      isBlocked: false,
+      quantity: { $gt: 0 }
+    };
 
     if (query) {
-      filter.productName = { $regex: query, $options: 'i' };
+      matchStage.productName = { $regex: query, $options: "i" };
     }
+
+    let pipeline = [
+      { $match: matchStage },
+      { $addFields: { effectivePrice: { $ifNull: ["$discountPrice", "$price"] } } }
+    ];
 
     if (priceRange) {
-      const [min, max] = priceRange.split('-').map(Number);
-      if (!isNaN(min) && !isNaN(max)) filter.price = { $gte: min, $lte: max };
+      const [min, max] = priceRange.split("-").map(Number);
+      if (!isNaN(min) && !isNaN(max)) {
+        pipeline.push({ $match: { effectivePrice: { $gte: min, $lte: max } } });
+      }
     }
 
-    // Default sort if none selected
-    let sortStage = { productName: 1 };
+    if (sort === "priceAsc") pipeline.push({ $sort: { effectivePrice: 1 } });
+    else if (sort === "priceDesc") pipeline.push({ $sort: { effectivePrice: -1 } });
+    else if (sort === "nameAsc") pipeline.push({ $sort: { productName: 1 } });
+    else if (sort === "nameDesc") pipeline.push({ $sort: { productName: -1 } });
+    else pipeline.push({ $sort: { createdAt: -1 } });
 
-    if (sort === 'priceAsc') sortStage = { effectivePrice: 1 };
-    else if (sort === 'priceDesc') sortStage = { effectivePrice: -1 };
-    else if (sort === 'nameAsc') sortStage = { productName: 1 };
-    else if (sort === 'nameDesc') sortStage = { productName: -1 };
+    pipeline.push({ $skip: skip }, { $limit: perPage });
 
-    const products = await Product.aggregate([
-      { $match: filter },
-      { $addFields: { effectivePrice: { $ifNull: ['$discountPrice', '$price'] } } },
-      { $sort: sortStage },
-      { $skip: (page - 1) * perPage },
-      { $limit: perPage },
-    ]);
+    const products = await Product.aggregate(pipeline);
 
-    const totalProducts = await Product.countDocuments(filter);
+    let countPipeline = [
+      { $match: matchStage },
+      { $addFields: { effectivePrice: { $ifNull: ["$discountPrice", "$price"] } } }
+    ];
+    if (priceRange) {
+      const [min, max] = priceRange.split("-").map(Number);
+      if (!isNaN(min) && !isNaN(max)) {
+        countPipeline.push({ $match: { effectivePrice: { $gte: min, $lte: max } } });
+      }
+    }
+    countPipeline.push({ $count: "total" });
+
+    const countResult = await Product.aggregate(countPipeline);
+    const totalProducts = countResult[0] ? countResult[0].total : 0;
     const totalPages = Math.ceil(totalProducts / perPage);
-    const categories = await Category.find({ isListed: true });
 
-    res.render('women', {
-      user: req.session.user ? await User.findById(req.session.user) : null,
+    const categories = await Category.find({ isListed: true });
+    const userData = req.session.user ? await User.findById(req.session.user) : null;
+
+    res.render("women", {
+      user: userData,
       products,
       currentPage: page,
       totalPages,
       query,
       sort,
       categories,
-      selectedCategory: ['Women'],
+      selectedCategory: ["Women"],
       priceRange
     });
+
   } catch (err) {
-    console.error(err);
-    res.status(500).send('Server Error');
+    console.error("Error loading Women products:", err);
+    res.status(500).send("Server Error");
   }
 };
 
@@ -241,47 +306,65 @@ const getKidsProducts = async (req, res) => {
 
     const perPage = 3;
     const page = parseInt(req.query.page) || 1;
+    const skip = (page - 1) * perPage;
 
     const query = req.query.q ? req.query.q.trim() : "";
     const sort = req.query.sort || "";
     const priceRange = req.query.priceRange || "";
 
-    let filter = { category: kidsCategory._id, isListed: true };
+    let matchStage = {
+      category: kidsCategory._id,
+      isBlocked: false,
+      quantity: { $gt: 0 }
+    };
 
     if (query) {
-      filter.productName = { $regex: query, $options: "i" };
+      matchStage.productName = { $regex: query, $options: "i" };
     }
+
+    let pipeline = [
+      { $match: matchStage },
+      { $addFields: { effectivePrice: { $ifNull: ["$discountPrice", "$price"] } } }
+    ];
 
     if (priceRange) {
       const [min, max] = priceRange.split("-").map(Number);
-      if (!isNaN(min) && !isNaN(max)) filter.price = { $gte: min, $lte: max };
+      if (!isNaN(min) && !isNaN(max)) {
+        pipeline.push({ $match: { effectivePrice: { $gte: min, $lte: max } } });
+      }
     }
 
-    let sortOption = {};
-    if (sort === "priceAsc") sortOption = { effectivePrice: 1 };
-    else if (sort === "priceDesc") sortOption = { effectivePrice: -1 };
-    else if (sort === "nameAsc") sortOption = { productName: 1 };
-    else if (sort === "nameDesc") sortOption = { productName: -1 };
+    if (sort === "priceAsc") pipeline.push({ $sort: { effectivePrice: 1 } });
+    else if (sort === "priceDesc") pipeline.push({ $sort: { effectivePrice: -1 } });
+    else if (sort === "nameAsc") pipeline.push({ $sort: { productName: 1 } });
+    else if (sort === "nameDesc") pipeline.push({ $sort: { productName: -1 } });
+    else pipeline.push({ $sort: { createdAt: -1 } });
 
-    const products = await Product.aggregate([
-      { $match: filter },
-      { $addFields: { effectivePrice: { $ifNull: ["$discountPrice", "$price"] } } },
-      { $sort:
-        sort === "priceAsc" ? { effectivePrice: 1 } :
-        sort === "priceDesc" ? { effectivePrice: -1 } :
-        sort === "nameDesc" ? { productName: -1 } :
-        { productName: 1 }
-      },
-      { $skip: (page - 1) * perPage },
-      { $limit: perPage }
-    ]);
+    pipeline.push({ $skip: skip }, { $limit: perPage });
 
-    const totalProducts = await Product.countDocuments(filter);
+    const products = await Product.aggregate(pipeline);
+
+    let countPipeline = [
+      { $match: matchStage },
+      { $addFields: { effectivePrice: { $ifNull: ["$discountPrice", "$price"] } } }
+    ];
+    if (priceRange) {
+      const [min, max] = priceRange.split("-").map(Number);
+      if (!isNaN(min) && !isNaN(max)) {
+        countPipeline.push({ $match: { effectivePrice: { $gte: min, $lte: max } } });
+      }
+    }
+    countPipeline.push({ $count: "total" });
+
+    const countResult = await Product.aggregate(countPipeline);
+    const totalProducts = countResult[0] ? countResult[0].total : 0;
     const totalPages = Math.ceil(totalProducts / perPage);
+
     const categories = await Category.find({ isListed: true });
+    const userData = req.session.user ? await User.findById(req.session.user) : null;
 
     res.render("kids", {
-      user: req.session.user ? await User.findById(req.session.user) : null,
+      user: userData,
       products,
       currentPage: page,
       totalPages,
@@ -289,16 +372,15 @@ const getKidsProducts = async (req, res) => {
       sort,
       categories,
       selectedCategory: ["Kids"],
-      priceRange,
+      priceRange
     });
 
   } catch (err) {
-    console.error(err);
+    console.error("Error loading Kids products:", err);
     res.status(500).send("Server Error");
   }
 };
 
-module.exports = { getKidsProducts };
 
 
 

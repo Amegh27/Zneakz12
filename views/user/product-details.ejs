@@ -92,6 +92,7 @@
 
     .action-buttons { display:flex; gap:12px; margin-top:12px; flex-wrap:wrap; }
     .btn-primary { background:var(--primary); color:white; border:none; padding:12px 20px; border-radius:6px; cursor:pointer; font-weight:600; transition:all 0.2s; flex:1; min-width:120px; }
+    .add-to-cart-form { background:var(--primary); color:white; border:none; padding:12px 20px; border-radius:6px; cursor:pointer; font-weight:600; transition:all 0.2s; flex:1; min-width:120px; }
     .btn-primary:hover { background:var(--primary-dark); transform:translateY(-1px); }
     .btn-secondary { background:#f5f5f5; color:var(--text-primary); border:1px solid var(--border); padding:12px 20px; border-radius:6px; cursor:pointer; flex:1; min-width:120px; }
     .btn-secondary:hover { background:var(--primary); color:white; }
@@ -217,23 +218,30 @@
             </div>
           </div>
 
+          <div id="stockIndicator" style="font-weight:bold; margin-bottom:10px;">
+  <% if(product.quantity < 5){ %>
+    <span style="color:red;">Less stocks available: <%= product.quantity %></span>
+  <% } else { %>
+    <span style="color:green;">In stock: <%= product.quantity %></span>
+  <% } %>
+</div>
+
+
           <div class="action-buttons">
             <button class="btn-primary" onclick="buyNow()">Buy Now</button>
-            <button class="btn-secondary" onclick="addToCart()">Add to Cart</button>
+<button class="btn-secondary add-to-cart-btn" data-product-id="<%= product._id %>">Add to Cart</button>
           </div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Related Products -->
   <div class="related-section">
     <h2 class="section-title">You May Also Like</h2>
     <div class="related-grid container">
       <<% if (relatedProducts && relatedProducts.length > 0) { %>
   <div class="related-grid">
     <% relatedProducts.forEach(prod => { %>
-      <!-- card -->
     <% }) %>
   </div>
 <% } else { %>
@@ -243,46 +251,81 @@
     </div>
   </div>
 
-  <script>
-    let selectedSize = null;
-    let quantity = 1;
+<script>
+let selectedSize = null;
+let quantity = 1;
 
-  function changeMainImage(src, thumbnail) {
+function changeMainImage(src, thumbnail) {
   const mainImage = document.getElementById('mainImage');
   mainImage.src = src;
 
-  // Update active thumbnail
   document.querySelectorAll('.thumbnail').forEach(t => t.classList.remove('active'));
   thumbnail.classList.add('active');
 
-  // Re-initialize zoom after changing the image
   initImageZoom();
 }
 
+function selectSize(btn){
+  document.querySelectorAll('.size-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  selectedSize = btn.dataset.size;
+}
 
-    function selectSize(btn){
-      document.querySelectorAll('.size-btn').forEach(b=>b.classList.remove('active'));
-      btn.classList.add('active');
-      selectedSize = btn.dataset.size;
+function increaseQuantity(){ 
+  quantity++; 
+  document.getElementById('quantity').textContent = quantity; 
+}
+
+function decreaseQuantity(){ 
+  if(quantity>1){ 
+    quantity--; 
+    document.getElementById('quantity').textContent = quantity; 
+  } 
+}
+
+function addToCart() {
+  if (!selectedSize) { 
+    alert('Please select a size'); 
+    return; 
+  }
+
+  const quantityValue = quantity; 
+  const productId = document.querySelector('.add-to-cart-btn').dataset.productId;
+
+  fetch('/cart/add', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ productId, quantity: quantityValue, size: selectedSize })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) {
+      let cartIcon = document.querySelector('#cartCount');
+      if (!cartIcon) {
+        cartIcon = document.createElement('span');
+        cartIcon.id = 'cartCount';
+        cartIcon.style.color = 'red';
+        cartIcon.style.fontWeight = 'bold';
+        document.querySelector('a[href="cart"]').appendChild(cartIcon);
+      }
+      cartIcon.textContent = data.cart.items.length;
+
+      Swal.fire({
+        icon: 'success',
+        title: 'Added to Cart',
+        text: 'Product has been added to your cart',
+        timer: 1000,
+        showConfirmButton: false
+      });
     }
+  })
+  .catch(err => console.error(err));
+}
 
-    function increaseQuantity(){ quantity++; document.getElementById('quantity').textContent = quantity; }
-    function decreaseQuantity(){ if(quantity>1){ quantity--; document.getElementById('quantity').textContent = quantity; } }
-
-    function addToCart(){
-      if(!selectedSize){ alert('Please select a size'); return; }
-      alert(`Added ${quantity} item(s) of size ${selectedSize} to cart`);
-    }
-
-    function buyNow(){
-      if(!selectedSize){ alert('Please select a size'); return; }
-      alert(`Buying ${quantity} item(s) of size ${selectedSize}`);
-    }
-
-    document.addEventListener('DOMContentLoaded', ()=>{
-      const firstSizeBtn = document.querySelector('.size-btn');
-      if(firstSizeBtn){ selectedSize = firstSizeBtn.dataset.size; }
-    });
+function buyNow(){
+  if(!selectedSize){ alert('Please select a size'); return; }
+  alert(`Buying ${quantity} item(s) of size ${selectedSize}`);
+}
 
 function initImageZoom() {
   const mainImage = document.getElementById('mainImage');
@@ -291,7 +334,6 @@ function initImageZoom() {
 
   if (!mainImage || !container || !lens) return;
 
-  // Reset previous event listeners (to avoid duplicates)
   container.onmouseenter = null;
   container.onmousemove = null;
   container.onmouseleave = null;
@@ -327,9 +369,39 @@ function initImageZoom() {
   };
 }
 
-// Run zoom on page load
-document.addEventListener('DOMContentLoaded', initImageZoom);
+document.addEventListener('DOMContentLoaded', () => {
+  const firstSizeBtn = document.querySelector('.size-btn');
+  if(firstSizeBtn){ selectedSize = firstSizeBtn.dataset.size; }
 
-  </script>
+  // Attach Add to Cart button click
+  const addBtn = document.querySelector('.add-to-cart-btn');
+  if (addBtn) addBtn.addEventListener('click', addToCart);
+
+  // Initialize zoom
+  initImageZoom();
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+  const addToCartBtn = document.querySelector(".add-to-cart-btn");
+
+  if (addToCartBtn) {
+    addToCartBtn.addEventListener("click", () => {
+      addToCart();
+    });
+  }
+});
+
+  const stockIndicator = document.getElementById('stockIndicator');
+
+
+  function updateStockIndicator(stock) {
+    if(stock < 5){
+      stockIndicator.innerHTML = `<span style="color:red;">Less stocks available: ${stock}</span>`;
+    } else {
+      stockIndicator.innerHTML = `<span style="color:green;">In stock: ${stock}</span>`;
+    }
+  }
+
+</script>
 
   <%- include("../partials/user/footer") %>

@@ -99,6 +99,8 @@
       <% if(product.discountPrice && product.discountPrice < product.price){ %>
         <span>₹<%= product.discountPrice %></span>
         <span style="text-decoration:line-through; color:#999;">₹<%= product.price %></span>
+        <span class="discount-badge"><%= Math.round(((product.price-product.discountPrice)/product.price)*100) %>% OFF</span>
+
       <% } else { %>
         <span>₹<%= product.price %></span>
       <% } %>
@@ -119,6 +121,15 @@
       <input type="text" id="quantity" class="qty-input" value="1" readonly>
       <button class="qty-btn" onclick="changeQuantity(1)">+</button>
     </div>
+
+<div id="stockIndicator" style="font-weight:bold; margin-bottom:10px;">
+  <% if(product.quantity < 5){ %>
+    <span style="color:red;">Less stocks available: <%= product.quantity %></span>
+  <% } else { %>
+    <span style="color:green;">In stock: <%= product.quantity %></span>
+  <% } %>
+</div>
+
 
     <div class="btn-group">
       <button class="btn btn-primary">Buy Now</button>
@@ -231,6 +242,16 @@ function initImageZoom() {
 }
 
 window.addEventListener('DOMContentLoaded', initImageZoom);
+
+  const stockIndicator = document.getElementById('stockIndicator');
+
+  function updateStockIndicator(stock) {
+    if(stock < 5){
+      stockIndicator.innerHTML = `<span style="color:red;">Less stocks available: ${stock}</span>`;
+    } else {
+      stockIndicator.innerHTML = `<span style="color:green;">In stock: ${stock}</span>`;
+    }
+  }
 </script>
 </body>
 </html>
