@@ -154,29 +154,42 @@ const resendOtp = async(req,res)=>{
   }
 };
 
-const postNewPassword = async(req,res)=>{
-    try {
-        const {newPass1,newPass2} = req.body;
-        const email = req.session.email
-        if(newPass1===newPass2){
-            const passwordHash = await securePassword(newPass1)
-            await User.updateOne(
-    { email: email },
-    { $set: { password: passwordHash } }
-);
 
+const postNewPassword = async (req, res) => {
+  try {
+    const { newPass1, newPass2 } = req.body;
+    const email = req.session.email;
 
-const user = await User.findOne({ email: email });
-req.session.user = user._id; 
-
-res.redirect('/'); 
-        }else{
-            res.render('reset-password',{message:"Passwords do not match"})
-        }
-    } catch (error) {
-        res.redirect('/pageNotFound')
+    if (newPass1 !== newPass2) {
+      return res.render("reset-password", { message: "Passwords do not match" });
     }
-}
+
+    const user = await User.findOne({ email: email });
+    if (!user) {
+      return res.render("reset-password", { message: "User not found" });
+    }
+
+    const isSamePassword = await bcrypt.compare(newPass1, user.password);
+    if (isSamePassword) {
+      return res.render("reset-password", { message: "New password cannot be the same as old password" });
+    }
+
+    const passwordHash = await securePassword(newPass1);
+
+    await User.updateOne(
+      { email: email },
+      { $set: { password: passwordHash } }
+    );
+
+    req.session.user = user._id;
+
+    return res.redirect("/");
+  } catch (error) {
+    console.error("Error resetting password:", error);
+    return res.redirect("/pageNotFound");
+  }
+};
+
 
 
 

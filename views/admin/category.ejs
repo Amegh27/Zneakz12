@@ -264,14 +264,12 @@
             <form method="post" action="/admin/addCategory" onsubmit="return handleFormSubmit(event)">
               <div class="mb-4">
                 <label for="product_name" class="form-label">Name</label>
-                <input type="text" name="name" placeholder="Type here" class="form-control" id="product_name"
-                  required />
+                <input type="text" name="name" placeholder="Type here" class="form-control" id="product_name"/>
                 <div id="name-error" class="error-message"></div>
               </div>
               <div class="mb-4">
                 <label class="form-label">Description</label>
-                <textarea placeholder="Type here" name="description" class="form-control" id="descriptionId"
-                  required></textarea>
+                <textarea placeholder="Type here" name="description" class="form-control" id="descriptionId"></textarea>
                 <div id="description-error" class="error-message"></div>
               </div>
               <div class="d-grid">
@@ -374,7 +372,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
   <script>
     function handleFormSubmit(event) {
-      even.preventDefault()
+      event.preventDefault()
       if (!validateForm()) {
         return
       }
@@ -422,14 +420,14 @@
       clearErrorMessages()
       const name = document.getElementsByName("name")[0].value.trim()
       const description = document.getElementById("descriptionId").value.trim()
-      isValid = true
+      let isValid = true
 
 
       if (name === "") {
         displayErrorMessage("name-error", "Please enter a name")
         isValid = false
 
-      } else if (!/^[aa-zA-Z\s]+s/.test(name)) {
+      } else if (!/^[a-zA-Z\s]+$/.test(name)) {
         displayErrorMessage("name-error", "Category name should contain only alphabetic characters")
         isValid = false
       }

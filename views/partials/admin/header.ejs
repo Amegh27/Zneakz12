@@ -17,56 +17,238 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@10.16.6/dist/sweetalert2.min.css">
 <script src="https://kit.fontawesome.com/16d4885483.js" crossorigin="anonymous"></script>
 <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
-<style>
-body {
-    background-color: #ffffff;
-}
-.navbar {
-    background-color: #8da7ab;
-}
+ <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      background-color: #fff;
+      color: #111;
+      font-family: 'Inter', sans-serif;
+      margin: 0;
+    }
+
+    /* Sidebar (navbar-aside) */
 .navbar-aside {
-    background-color: #b0d5de;
+    display: flex;
+    flex-direction: column;
+    width: 260px;
+    background: #f9f9f9;
+    border-right: 1px solid #e5e5e5;
+    min-height: 100vh; /* Full viewport height */
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
 }
-.menu-item a.menu-link {
-    color: #310505;
-}
-.btn-outline-danger {
-  font-weight: 500;
-  padding: 8px 14px;
-  border-radius: 6px;
-  transition: all 0.3s ease-in-out;
-}
-
-.btn-outline-danger:hover {
-  background-color: #dc3545;
-  color: #fff;
+.navbar-aside nav {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
 }
 
-.menu-item a.menu-link:hover,
-.menu-item a.menu-link.active {
-    background-color: #6e7e6e; 
-    color: #ffffff;
-}
-.dropdown-menu {
-    background-color: #bb9aaf;
+    .aside-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 25px 20px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .brand-wrap .logo {
+      max-height: 45px;
+    }
+    nav {
+    flex: 1; /* Fill remaining vertical space */
+    display: flex;
+    flex-direction: column;
 }
 
-.dropdown-item:hover {
-    background-color: #33053d;
-    color: #ffffff;
+.menu-aside {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start; /* Push items to top */
+    flex: 1; /* Fill remaining space */
+    padding: 0;
+    margin: 0;
+    list-style: none;
 }
 
-</style>
+.menu-aside.menu-fill {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    justify-content: space-between; 
+    padding: 0;
+    margin: 0;
+    list-style: none;
+}
+
+    .menu-link {
+      display: flex;
+      align-items: center;
+      padding: 12px 16px;
+      text-decoration: none;
+      color: #222;
+      border-radius: 8px;
+      font-weight: 500;
+      font-size: 1.1rem;
+      transition: all 0.3s ease;
+    }
+
+   
+/* Sidebar menu hover */
+.menu-item .menu-link:hover,
+.menu-item .menu-link.active {
+    background-color: #000 !important; /* Black background */
+    color: #fff !important;            /* White text */
+}
+
+/* Icons inside links */
+.menu-item .menu-link:hover .icon,
+.menu-item .menu-link.active .icon {
+    color: #fff !important;
+}
+
+/* Text span inside links */
+.menu-item .menu-link:hover .text,
+.menu-item .menu-link.active .text {
+    color: #fff !important;
+}
+
+
+.menu-item.logout-item .menu-link {
+    background: #f9f9f9;
+    color: #222;
+    font-weight: 500;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+
+.menu-item.logout-item .menu-link:hover {
+    background-color: #000;
+    color: #fff;
+}
+
+.menu-item.logout-item .menu-link:hover .icon {
+    color: #fff;
+}
+
+.menu-item.logout-item .menu-link:hover .text {
+    color: #fff;
+}
+    /* Header */
+    .main-header.navbar {
+      background: #fff;
+      border-bottom: 1px solid #e5e5e5;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 25px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    }
+
+    .main-header .col-nav {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+  .navbar-title {
+    flex: 1;
+    text-align: center;
+    font-family: 'Playfair Display', serif;
+    font-size: 2.6rem;
+    font-weight: 700;
+    color: #111;
+    letter-spacing: 1px;
+    margin: 0;
+}
+
+.main-header.navbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 25px;
+    position: relative;
+}
+
+.col-search {
+    flex: 1;
+}
+.col-nav {
+    flex: 1;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+
+    /* Buttons */
+    .btn-outline-danger {
+      font-weight: 600;
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: 1px solid #000;
+      color: #000;
+      background-color: transparent;
+      transition: all 0.3s ease;
+    }
+
+    .btn-outline-danger:hover {
+      background-color: #000;
+      color: #fff;
+    }
+
+    /* Dropdown */
+    .dropdown-menu {
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+      border: none;
+    }
+
+    .dropdown-item {
+      color: #222;
+      transition: background 0.3s ease;
+    }
+
+    .dropdown-item:hover {
+      background-color: #000;
+      color: #fff;
+    }
+
+    /* Main wrap adjustments */
+    .main-wrap {
+      margin-left: 260px;
+      transition: all 0.3s ease;
+      background-color: #fff;
+      min-height: 100vh;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .navbar-aside {
+        width: 220px;
+      }
+
+      .main-wrap {
+        margin-left: 220px;
+      }
+    }
+  </style>
 </head>
 <body>
     <div class="screen-overlay"></div>
     <aside class="navbar-aside" id="offcanvas_aside">
         <div class="aside-top">
-            <a href="#" class="brand-wrap">
-                <img src=""  class="logo" alt="ZNEAKZ">
-            </a>
             <div>
-                <button class="btn btn-icon btn-aside-minimize"> <i class="text-muted material-icons md-menu_open"></i> </button>
             </div>
         </div>
         <nav>
@@ -113,6 +295,14 @@ body {
                         <span class="text">Orders</span>
                     </a>
                 </li>
+
+                <li class="menu-item logout-item">
+                <a class="menu-link btn-logout" href="/admin/logout" onclick="return confirmLogout()"> 
+                    <i class="icon material-icons md-exit_to_app"></i>
+                    <span class="text">Logout</span>
+                </a>
+            </li>
+
             </ul>
         </nav>
     </aside>
@@ -120,8 +310,12 @@ body {
         <header class="main-header navbar">
             <div class="col-search">
             </div>
+
+            <div class="navbar-title text-center">
+        ZNEAKZ
+    </div>
+
             <div class="col-nav d-flex justify-content-end align-items-center">
-<a href="/admin/logout" class="btn btn-outline-danger" onclick="return confirmLogout()">Logout</a>
 
 </div>
         </header>

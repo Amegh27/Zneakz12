@@ -30,6 +30,10 @@ const userAuth = async (req, res, next) => {
 
 
 const adminAuth = (req,res,next)=>{
+
+    if (!req.session.admin) {
+    return res.redirect('/admin/login');
+  }
     User.findOne({isAdmin:true})
     .then(data=>{
         if(data){

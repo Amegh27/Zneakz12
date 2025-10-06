@@ -90,8 +90,12 @@ const getUnlistCategory = async (req, res) => {
 const getEditCategory = async(req,res)=>{
     try {
         const id = req.query.id
-        const category = await Category.findOne({_id:id})
-        res.render("edit-category", { category: category });
+   
+        
+        await Category.updateOne({ _id: id }, { $set: { isListed: false } });
+           await Product.updateMany({ category: id }, { $set: { isPublished: false } });
+
+    res.redirect('/admin/category');
     } catch (error) {
         res.redirect('/pageError')
     }

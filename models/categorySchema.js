@@ -7,6 +7,7 @@ const categorySchema ={
          required:true,
         default:true,
     },
+     description: { type: String, default: "" },
     isListed:{
         type:Boolean,
         default:true

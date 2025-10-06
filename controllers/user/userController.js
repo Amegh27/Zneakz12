@@ -333,7 +333,12 @@ const logout = async (req, res) => {
     console.error("Logout error:", error);
     res.status(500).send("Server error during logout");
   }
+
+  
 };
+
+
+  
 
 
 
