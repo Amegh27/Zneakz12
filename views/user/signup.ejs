@@ -105,7 +105,6 @@
     const password = document.getElementsByName("password")[0].value;
     const cPassword = document.getElementsByName("cPassword")[0].value;
 
-    //  Name validation
     if (name === "") {
       document.getElementById("error1").textContent = "Name is required.";
       valid = false;
@@ -135,7 +134,6 @@
       valid = false;
     }
 
-    //  Confirm password
     if (password !== cPassword) {
       document.getElementById("error4").textContent = "Passwords do not match.";
       valid = false;

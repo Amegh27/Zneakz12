@@ -322,19 +322,20 @@
                             <% } %>
                       </td>
                       <td class="text-start">
-                        <% if (category.isListed) { %>
-                          <button class="btn btn-danger" style="width: 70px">
-                            <a href="/admin/unlistCategory?id=<%= category._id %>" class="text-white">Unlist</a>
-                          </button>
-                          <% } else { %>
-                            <button class="btn btn-success" style="width: 70px">
-                              <a href="/admin/listCategory?id=<%= category._id %>" class="text-white">List</a>
-                            </button>
-                            <% } %>
+                    <% if (category.isListed) { %>
+  <button class="btn btn-danger swal-unlist" data-id="<%= category._id %>" style="width: 70px">
+    Unlist
+  </button>
+<% } else { %>
+  <button class="btn btn-success swal-list" data-id="<%= category._id %>" style="width: 70px">
+    List
+  </button>
+<% } %>
+
 
                       </td>
                       <td class="text-start">
-                        <a href="/admin/editCategory?id=<%=category._id%>" class="btn btn-info text-white">Edit</a>
+<a href="edit-category/<%= category._id %>" class="btn btn-primary">Edit</a>
                       </td>
                     </tr>
                     <% }) %>
@@ -454,6 +455,90 @@
       })
     }
 
+
+
+       $(document).on('click', '.swal-unlist', function (e) {
+    e.preventDefault();
+    const categoryId = $(this).data('id');
+
+    Swal.fire({
+      title: 'Unlist Category?',
+      text: 'This category will be hidden from users.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#000',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Yes, Unlist',
+      cancelButtonText: 'Cancel',
+      background: '#fff',
+      customClass: {
+        popup: 'rounded-3 shadow-lg',
+        title: 'fw-bold',
+      }
+    }).then((result) => {
+      if (result.isConfirmed) {
+        fetch(`/admin/unlistCategory?id=${categoryId}`, { method: 'GET' })
+          .then(res => {
+            if (!res.ok) throw new Error();
+            Swal.fire({
+              icon: 'success',
+              title: 'Category Unlisted',
+              showConfirmButton: false,
+              timer: 1000
+            }).then(() => location.reload());
+          })
+          .catch(() => {
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: 'Failed to unlist category.'
+            });
+          });
+      }
+    });
+  });
+
+  // Handle List Confirmation
+  $(document).on('click', '.swal-list', function (e) {
+    e.preventDefault();
+    const categoryId = $(this).data('id');
+
+    Swal.fire({
+      title: 'List Category?',
+      text: 'This category will be visible to users.',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#000',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Yes, List',
+      cancelButtonText: 'Cancel',
+      background: '#fff',
+      customClass: {
+        popup: 'rounded-3 shadow-lg',
+        title: 'fw-bold',
+      }
+    }).then((result) => {
+      if (result.isConfirmed) {
+        fetch(`/admin/listCategory?id=${categoryId}`, { method: 'GET' })
+          .then(res => {
+            if (!res.ok) throw new Error();
+            Swal.fire({
+              icon: 'success',
+              title: 'Category Listed',
+              showConfirmButton: false,
+              timer: 1000
+            }).then(() => location.reload());
+          })
+          .catch(() => {
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: 'Failed to list category.'
+            });
+          });
+      }
+    });
+  });
   </script>
 </body>
 

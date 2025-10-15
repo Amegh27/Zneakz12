@@ -17,7 +17,6 @@ const loadLogin = (req,res)=>{
 }
 
 
-
 const login = async (req, res) => {
   try {
     res.setHeader("Cache-Control", "no-store");
@@ -35,15 +34,17 @@ const login = async (req, res) => {
 
     req.session.admin = true;
     req.session.adminId = admin._id.toString();
+
     req.session.save((err) => {
       if (err) {
-        console.log("Session save error:", err);
+        console.error("Session save error:", err);
         return res.status(500).json({ message: "Server error" });
       }
       return res.status(200).json({ message: "Login successful" });
     });
+
   } catch (error) {
-    console.log("Login error", error);
+    console.error("Login error", error);
     return res.status(500).json({ message: "Server error" });
   }
 };

@@ -9,7 +9,7 @@ const profileController = require('../controllers/user/profileController')
 const cartController = require("../controllers/user/cartController");
 
 
-
+router.use(forceLogoutIfBlocked);
 
 router.get('/pageNotFound',userController.pageNotFound)
 router.get('/',userController.loadHomepage)
@@ -21,17 +21,16 @@ router.get('/logout', userController.logout)
 
 
 router.get('/auth/google',passport.authenticate('google',{scope:['profile','email']}))
-router.get('/auth/google/callback',passport.authenticate('google',{failureRedirect: '/signup?blocked=true',}),(req,res)=>{
-  req.session.user=req.user
-    res.redirect('/')
-})
+router.get('/auth/google/callback', passport.authenticate('google', { failureRedirect: '/login?error=true' }), (req, res) => {  // 👈 Changed to /login for consistency
+  req.session.user = req.user._id.toString(); 
+  res.redirect('/');
+});
 
 
 
 router.get('/login',userController.loadLogin)
 router.post('/login',userController.login)
 
-router.use(forceLogoutIfBlocked);
 
 
 
@@ -44,6 +43,7 @@ router.post('/verify-passForgot-otp',profileController.verifyForgotPassOtp)
 router.get('/reset-password',profileController.getResetPassPage)
 router.post('/resend-forgot-otp',profileController.resendOtp)
 router.post('/reset-password',profileController.postNewPassword)
+
 
 // search
 router.get('/search', productController.searchProducts);

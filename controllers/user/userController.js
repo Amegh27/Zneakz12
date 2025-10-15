@@ -17,6 +17,8 @@ const pageNotFound =  async(req,res)=>{
 
 const loadHomepage = async (req, res) => {
   try {
+    res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, private");
+
     const user = req.session.user;
     const page = parseInt(req.query.page) || 1;
     const limit = 4;
@@ -33,6 +35,7 @@ const loadHomepage = async (req, res) => {
 
     let matchStage = {
       isBlocked: false,
+      isListed:true,
       quantity: { $gt: 0 }
     };
 
@@ -285,57 +288,70 @@ const loadLogin = async(req,res)=>{
 }
 
 const login = async (req, res) => {
-    try {
-        const { email, password } = req.body;
+  try {
+    const { email, password } = req.body;
 
-        const findUser = await User.findOne({ isAdmin: 0, email });
+    const findUser = await User.findOne({ isAdmin: 0, email });
 
-        if (!findUser) {
-            return res.render('login', { message: 'User not found' });
-        }
-
-        if (!findUser.password) {
-            return res.render('login', { message: 'User has no password. Please verify your email via OTP first.' });
-        }
-
-        if (findUser.isBlocked) {
-            return res.render("login", { message: "User is blocked by the admin" });
-        }
-
-        const passwordMatch = await bcrypt.compare(password, findUser.password);
-
-        if (!passwordMatch) {
-            return res.render('login', { message: "Incorrect password" });
-        }
-
-        req.session.user = findUser._id;
-        return res.redirect('/');
-
-    } catch (error) {
-        console.error("Login error", error);
-        return res.render('login', { message: "Login failed, please try again" });
+    if (!findUser) {
+      return res.render('login', { message: 'User not found' });
     }
-}
+
+    if (!findUser.password) {
+      return res.render('login', { message: 'Please verify your email first.' });
+    }
+
+    if (findUser.isBlocked) {
+      return res.render('login', { message: 'User is blocked by the admin' });
+    }
+
+    const passwordMatch = await bcrypt.compare(password, findUser.password);
+
+    if (!passwordMatch) {
+      return res.render('login', { message: 'Incorrect email or password' });
+    }
+
+    req.user = findUser;
+    req.session.user = findUser._id.toString();
+
+    req.session.loginSuccess = true;
+
+    req.session.save((err) => {
+      if (err) {
+        console.error("Error saving session:", err);
+        return res.render('login', { message: "Error creating session" });
+      }
+      return res.redirect('/');
+    });
+
+  } catch (error) {
+    console.error("Login error", error);
+    return res.render('login', { message: "Login failed, please try again" });
+  }
+};
+
+
 const logout = async (req, res) => {
   try {
-    const redirectTo = req.query.blocked === '1' ? '/login?blocked=1' : (req.get("referer") || "/login");
+    if (req.logout) {
+      await new Promise((resolve) => req.logout(resolve));
+    }
 
     req.session.destroy((err) => {
       if (err) {
         console.error("Error destroying session:", err);
-        return res.status(500).send("Unable to log out. Please try again.");
+        return res.status(500).send("Logout failed");
       }
 
       res.clearCookie("connect.sid");
-      res.redirect(redirectTo);
+      res.redirect("/login");
     });
   } catch (error) {
     console.error("Logout error:", error);
-    res.status(500).send("Server error during logout");
+    res.redirect("/login");
   }
-
-  
 };
+
 
 
   

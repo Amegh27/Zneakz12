@@ -28,8 +28,8 @@ router.get('/category',adminAuth,categoryController.categoryInfo)
 router.post('/addCategory',adminAuth,categoryController.addCategory)
 router.get('/listCategory',adminAuth,categoryController.getListCategory)
 router.get('/unlistCategory',adminAuth,categoryController.getUnlistCategory)
-router.get('/editCategory',adminAuth,categoryController.getEditCategory)
-router.post('/editCategory/:id',adminAuth,categoryController.editCategory)
+router.get('/edit-category/:id',adminAuth,categoryController.getEditCategory)
+router.post('/edit-category/:id',adminAuth,categoryController.editCategory)
 
 // product management
 router.get('/product-add',adminAuth,productController.getProductAddpage)

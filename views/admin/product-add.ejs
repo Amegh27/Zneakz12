@@ -85,7 +85,7 @@
                 <div class="mb-4">
                   <label class="form-label">Price (₹)</label>
                   <input id="regularPrice" name="price" type="number" min="0" step="0.01"
-                    class="form-control border" required />
+                    class="form-control border" />
                 </div>
               </div>
 
@@ -276,6 +276,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const imageInput = document.getElementById("imageInput");
   const regularPriceInput = document.getElementById("regularPrice");
   const salesPriceInput = document.getElementById("salesPrice");
+  const productNameInput = document.getElementById("product_name");
+  const descriptionInput = document.getElementById("descriptionid");
+  const quantityInput = document.getElementById("quantity");
+  const categorySelect = document.querySelector("select[name='category']");
   const salesPriceError = document.getElementById("salesPrice-error");
   const addedImagesContainer = document.getElementById("addedImagesContainer");
   const allowedTypes = ["image/jpeg", "image/jpg", "image/png"];
@@ -318,44 +322,35 @@ document.addEventListener("DOMContentLoaded", () => {
   form.addEventListener("submit", (e) => {
     e.preventDefault();
 
-    const files = Array.from(imageInput.files);
-
-    if (files.length === 0) {
-      Swal.fire({
-        icon: "error",
-        title: "No images uploaded",
-        text: "Please upload at least one image for the product.",
-        confirmButtonColor: "#d33",
-      });
-      return;
-    }
-
-    if (files.length > 4) {
-      Swal.fire({
-        icon: "error",
-        title: "Too many images",
-        text: "You can upload a maximum of 4 images.",
-        confirmButtonColor: "#d33",
-      });
-      return;
-    }
-
-    for (let file of files) {
-      if (!allowedTypes.includes(file.type)) {
-        Swal.fire({
-          icon: "error",
-          title: "Invalid file type",
-          text: "Only JPG, JPEG, or PNG images are allowed.",
-          confirmButtonColor: "#d33",
-        });
-        return;
-      }
-    }
-
+    const productName = productNameInput.value.trim();
+    const description = descriptionInput.value.trim();
+    const quantity = quantityInput.value.trim();
+    const category = categorySelect.value.trim();
     const regularPrice = parseFloat(regularPriceInput.value);
     const salesPrice = parseFloat(salesPriceInput.value);
-    salesPriceError.textContent = "";
+    const files = Array.from(imageInput.files);
 
+    if (!productName || !description || !quantity || !category || !regularPrice) {
+      Swal.fire({
+        icon: "error",
+        title: "Missing Fields",
+        text: "Please fill in all required fields before publishing.",
+        confirmButtonColor: "#d33",
+      });
+      return;
+    }
+
+    if (quantity <= 0) {
+      Swal.fire({
+        icon: "error",
+        title: "Invalid Quantity",
+        text: "Quantity must be greater than zero.",
+        confirmButtonColor: "#d33",
+      });
+      return;
+    }
+
+    salesPriceError.textContent = "";
     if (!isNaN(regularPrice) && !isNaN(salesPrice) && salesPrice > regularPrice) {
       salesPriceError.textContent = "Discount price cannot be greater than regular price.";
       Swal.fire({
@@ -367,10 +362,31 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
+    if (files.length === 0) {
+      Swal.fire({
+        icon: "error",
+        title: "No Images Uploaded",
+        text: "Please upload at least one product image.",
+        confirmButtonColor: "#d33",
+      });
+      return;
+    }
+
+    if (files.length > 4) {
+      Swal.fire({
+        icon: "error",
+        title: "Too Many Images",
+        text: "You can upload a maximum of 4 images.",
+        confirmButtonColor: "#d33",
+      });
+      return;
+    }
+
     form.submit();
   });
 });
 </script>
+
 
 
 

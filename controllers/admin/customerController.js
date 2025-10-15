@@ -1,4 +1,6 @@
 const User = require('../../models/userSchema');
+const  { destroyUserSessions } = require('../../helpers/sessionHelper')
+const mongoose = require("mongoose");
 
 const customerInfo = async (req, res) => {
   try {
@@ -50,15 +52,33 @@ const customerInfo = async (req, res) => {
 };
 
 
-const customerBlocked = async(req,res)=>{
-    try {
-        let id = req.query.id
-        await User.updateOne({_id:id},{$set:{isBlocked:true}})
-        res.redirect('/admin/users')
-    } catch (error) {
-        res.redirect('/pageError')
+const customerBlocked = async (req, res) => {
+  try {
+    const id = req.query.id;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.redirect("/admin/users");
     }
-}
+
+    // 1️⃣ Block the user in DB
+    await User.updateOne({ _id: id }, { $set: { isBlocked: true } });
+
+    // 2️⃣ Force logout: destroy all active sessions for this user
+    const store = req.sessionStore;
+    if (store) {
+      await destroyUserSessions(id, store);  // 👈 Now defined and works
+      console.log(`All sessions destroyed for blocked user: ${id}`);
+    }
+
+    // 3️⃣ Redirect back to admin user list
+    return res.redirect("/admin/users");
+
+  } catch (error) {
+    console.error("Error blocking user:", error);
+    return res.redirect("/pageError");
+  }
+};
+
 const customerunBlocked = async(req,res)=>{
     try {
         let id = req.query.id

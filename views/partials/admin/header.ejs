@@ -322,7 +322,43 @@
 
 
 <script>
-  function confirmLogout() {
-    return confirm("Are you sure you want to logout?");
+  function confirmLogout(event) {
+    event.preventDefault(); 
+    Swal.fire({
+      title: 'Logout Confirmation',
+      text: 'Are you sure you want to logout?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#000',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Yes, Logout',
+      cancelButtonText: 'Cancel',
+      background: '#fff',
+      customClass: {
+        title: 'fw-bold',
+        popup: 'rounded-3 shadow-lg',
+        confirmButton: 'px-4 py-2 rounded fw-semibold',
+        cancelButton: 'px-4 py-2 rounded fw-semibold'
+      }
+    }).then((result) => {
+      if (result.isConfirmed) {
+        Swal.fire({
+          icon: 'success',
+          title: 'Logged out successfully!',
+          showConfirmButton: false,
+          timer: 1000
+        }).then(() => {
+          window.location.href = '/admin/logout';
+        });
+      }
+    });
   }
+
+  document.addEventListener("DOMContentLoaded", function() {
+    const logoutBtn = document.querySelector(".btn-logout");
+    if (logoutBtn) {
+      logoutBtn.addEventListener("click", confirmLogout);
+    }
+  });
 </script>
+

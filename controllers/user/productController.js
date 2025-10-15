@@ -120,7 +120,6 @@ const getMenProducts = async (req, res) => {
     const sort = req.query.sort || "";
     const priceRange = req.query.priceRange || "";
 
-    // ✅ Match only Men category
     let matchStage = {
       category: menCategory._id,
       isBlocked: false,
@@ -131,7 +130,6 @@ const getMenProducts = async (req, res) => {
       matchStage.productName = { $regex: query, $options: "i" };
     }
 
-    // ✅ Build pipeline
     let pipeline = [
       { $match: matchStage },
       {
@@ -141,7 +139,6 @@ const getMenProducts = async (req, res) => {
       }
     ];
 
-    // ✅ Price range filter
     if (priceRange) {
       const [min, max] = priceRange.split("-").map(Number);
       if (!isNaN(min) && !isNaN(max)) {
@@ -151,20 +148,17 @@ const getMenProducts = async (req, res) => {
       }
     }
 
-    // ✅ Sorting
     if (sort === "priceAsc") pipeline.push({ $sort: { effectivePrice: 1 } });
     else if (sort === "priceDesc") pipeline.push({ $sort: { effectivePrice: -1 } });
     else if (sort === "nameAsc") pipeline.push({ $sort: { productName: 1 } });
     else if (sort === "nameDesc") pipeline.push({ $sort: { productName: -1 } });
-    else pipeline.push({ $sort: { createdAt: -1 } }); // latest first by default
+    else pipeline.push({ $sort: { createdAt: -1 } }); 
 
     pipeline.push({ $skip: skip });
     pipeline.push({ $limit: perPage });
 
-    // ✅ Run aggregation
     const products = await Product.aggregate(pipeline);
 
-    // ✅ Count total products
     let countPipeline = [
       { $match: matchStage },
       {
@@ -187,10 +181,8 @@ const getMenProducts = async (req, res) => {
     const totalProducts = countResult[0] ? countResult[0].total : 0;
     const totalPages = Math.ceil(totalProducts / perPage);
 
-    // ✅ Fetch categories for sidebar
     const categories = await Category.find({ isListed: true });
 
-    // ✅ User
     const userData = req.session.user ? await User.findById(req.session.user) : null;
 
     res.render("men", {

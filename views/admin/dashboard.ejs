@@ -1,3 +1,72 @@
-
 <%- include("../partials/admin/header") %>
+
+<div class="flex h-screen bg-gray-100">
+  
+    <!-- Dashboard content -->
+    <main class="flex-1 p-6 overflow-y-auto">
+      <!-- Stats cards -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <div class="bg-white p-6 rounded shadow">
+          <h2 class="text-gray-500">Total Users</h2>
+          <p class="text-3xl font-bold text-gray-800">1,234</p>
+        </div>
+        
+
+      <!-- Placeholder table -->
+      <div class="bg-white p-6 rounded shadow">
+        <h2 class="text-xl font-semibold mb-4">Recent Orders</h2>
+        <table class="w-full table-auto border-collapse">
+          <thead>
+            <tr class="bg-gray-200 text-left">
+              <th class="p-2">Order ID</th>
+              <th class="p-2">User</th>
+              <th class="p-2">Amount</th>
+              <th class="p-2">Status</th>
+            </tr>
+          </thead>
+  
+        </table>
+      </div>
+    </main>
+  </div>
+</div>
+<!-- Graph / Chart -->
+<div class="bg-white p-6 rounded shadow mb-6">
+  <h2 class="text-xl font-semibold mb-4">Monthly Revenue</h2>
+  <canvas id="revenueChart" class="w-full h-64"></canvas>
+</div>
+
+<!-- Chart.js script -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const ctx = document.getElementById('revenueChart').getContext('2d');
+  const revenueChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
+      datasets: [{
+        label: 'Revenue ($)',
+        data: [1200, 1900, 3000, 2500, 4000, 3200, 4500],
+        borderColor: 'rgba(59, 130, 246, 1)',
+        backgroundColor: 'rgba(59, 130, 246, 0.2)',
+        fill: true,
+        tension: 0.4
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {
+          display: true
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true
+        }
+      }
+    }
+  });
+</script>
+
 <%- include("../partials/admin/footer") %>

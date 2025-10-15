@@ -2,34 +2,36 @@ const User = require("../models/userSchema");
 
 async function forceLogoutIfBlocked(req, res, next) {
   try {
-    
     if (req.session.adminId) return next();
 
-    
-    let userId = req.user?._id?.toString() || req.session.user;
+    const userId = (req.user?._id || req.session?.user || '').toString();
+    if (!userId) return next();
 
-    if (userId) {
-      const user = await User.findById(userId).lean();
+    const user = await User.findById(userId).lean();
+    if (!user) {
+      req.session.user = null;
+      return res.redirect("/login");
+    }
 
-      if (user?.isBlocked) {
+    if (user.isBlocked) {
+      console.log(`Force logout: ${user.email} is blocked`);
+
+      if (req.logout) {
         try {
-          if (req.logout) await req.logout(); 
+          await new Promise((resolve) => req.logout(resolve));
         } catch (e) {
-          console.warn("Logout failed:", e);
+          console.warn("Logout error:", e);
         }
-
-        req.session.destroy(() => {
-          res.clearCookie("connect.sid");
-          return res.redirect("/login?blocked=true");
-        });
-        return; 
       }
+
+      req.session.user = null;
+      return res.redirect("/login?blocked=true");
     }
 
     next();
   } catch (err) {
     console.error("Force logout check failed:", err);
-    return res.status(500).send("Server error");
+    next();
   }
 }
 

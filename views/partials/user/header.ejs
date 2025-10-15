@@ -1,123 +1,140 @@
-<!DOCTYPE html>
-<html lang="zxx">
-<head>
-   <meta charset="UTF-8">
-   <meta name="description" content="Male_Fashion Template">
-   <meta name="keywords" content="Male_Fashion, unica, creative, html">
-   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-   <meta http-equiv="X-UA-Compatible" content="ie=edge">
-   <title>ZNEAKZ</title>
+<style>
+a.btn:hover {
+  background-color: #111 !important;
+  color: #fff !important;
+  transform: scale(1.05);
+}
+</style>
 
-   <!-- Google Fonts -->
-   <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+<!-- Top Announcement Bar -->
+<div class="navbar-top text-center py-2 text-white" style="background-color: #000000; font-size: 14px; letter-spacing: 0.5px;">
+  Summer Sale And Free Express Delivery - OFF 50%!
+  <a href="#" class="text-warning text-decoration-underline">Shop Now by ZNEAKZ</a>
+</div>
 
-   <!-- Stylesheets (fixed paths) -->
-   <link rel="stylesheet" href="/css/bootstrap.min.css" type="text/css">
-   <link rel="stylesheet" href="/css/font-awesome.min.css" type="text/css">
-   <link rel="stylesheet" href="/css/elegant-icons.css" type="text/css">
-   <link rel="stylesheet" href="/css/magnific-popup.css" type="text/css">
-   <link rel="stylesheet" href="/css/nice-select.css" type="text/css">
-   <link rel="stylesheet" href="/css/owl.carousel.min.css" type="text/css">
-   <link rel="stylesheet" href="/css/slicknav.min.css" type="text/css">
-   <link rel="stylesheet" href="/css/style.css" type="text/css">
-   <link rel="stylesheet" href="/user-assets/css/maind134.css" type="text/css">
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg bg-white shadow-sm">
+  <div class="container">
+<a class="navbar-brand" href="/" 
+  style="
+    font-family: 'Orbitron', sans-serif;
+    font-size: 2rem;
+    letter-spacing: 4px;
+    color: #0f0f0f;
+    text-transform: uppercase;
+    font-weight: 700;
+    padding-bottom: 2px;
+  ">
+  ZNEAKZ
+</a>
 
-   <!-- Font Awesome CDN -->
-   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
 
-   <!-- Custom Styles -->
-   <style>
-       .header__nav__option .sign-in-link {
-           font-size: 16px;
-           color: #333;
-           margin-right: 15px;
-           text-decoration: none;
-           font-weight: 600;
-       }
-       .header__nav__option .sign-in-link:hover {
-           color: #ff7f50;
-       }
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <li class="nav-item"><a class="nav-link" href="/men">MEN</a></li>
+        <li class="nav-item"><a class="nav-link" href="/women">WOMEN</a></li>
+        <li class="nav-item"><a class="nav-link" href="/kids">KIDS</a></li>
+      </ul>
 
-       .dropdown {
-           position: relative;
-           display: inline-block;
-       }
-       .dropdown-content {
-           display: none;
-           position: absolute;
-           background-color: white;
-           min-width: 160px;
-           box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-           z-index: 1000;
-           right: 0;
-       }
+      <!-- Search Form -->
+   <form class="d-flex align-items-center bg-white shadow-sm px-3 py-2 rounded-pill"
+      action="/#productSection" method="GET"
+      style="max-width: 480px; transition: all 0.3s ease; border: 1px solid #ddd;">
+  
+  <!-- Search input -->
+  <input class="form-control border-0 shadow-none me-2"
+         type="search"
+         name="q"
+         placeholder="Search sneakers"
+         value="<%= typeof query !== 'undefined' ? query : '' %>"
+         style="font-size: 0.95rem; flex: 1; background: transparent;">
+  
+  <!-- Sort dropdown -->
+  <select class="form-select border-0 bg-transparent me-2 text-muted"
+          name="sort"
+          onchange="this.form.submit()"
+          style="font-size: 0.9rem; width: 150px;">
+    <option value="">Sort</option>
+    <option value="priceAsc" <%=sort==='priceAsc' ? 'selected' : '' %>>Price: Low → High</option>
+    <option value="priceDesc" <%=sort==='priceDesc' ? 'selected' : '' %>>Price: High → Low</option>
+    <option value="nameAsc" <%=sort==='nameAsc' ? 'selected' : '' %>>Name: A–Z</option>
+    <option value="nameDesc" <%=sort==='nameDesc' ? 'selected' : '' %>>Name: Z–A</option>
+  </select>
+  
+  <!-- Search button -->
+  <button class="btn btn-dark rounded-circle d-flex align-items-center justify-content-center"
+          type="submit"
+          style="width: 38px; height: 38px;">
+    <i class="bi bi-search"></i>
+  </button>
 
-       .dropdown-content a {
-           color: black;
-           padding: 12px 16px;
-           text-decoration: none;
-           display: block;
-           width: 100%;
-       }
-       .dropdown-content a:hover {
-           background-color: #f1f1f1;
-       }
-       .dropdown:hover .dropdown-content {
-           display: block;
-       }
-
-       .header {
-           position: relative;
-           z-index: 500;
-       }
-   </style>
-</head>
-
-<body>
-   <header class="header">
-       <div class="container">
-           <div class="row">
-               <div class="col-lg-3 col-md-3">
-                   <div class="header__logo">
-                       <a href="#"><img src="img/logo.png" alt=""></a>
-                   </div>
-               </div>
-               <div class="col-lg-6 col-md-6">
-                   <nav class="header__menu mobile-menu">
-                       <ul>
-                           <li class="active"><a href="#">Home</a></li>
-                           <li><a href="/shop">Shop</a></li>
-                       </ul>
-                   </nav>
-               </div>
-               <div class="col-lg-3 col-md-3">
-                   <div class="header__nav__option">
-                       <%if(locals.user){%>
-                           <div class="dropdown">
-                               <a href="#" class="sign-in-link"><%=locals.user.name%></a>
-                               <div class="dropdown-content">
+  <!-- Clear button -->
+  <% if (typeof query !== 'undefined' && query.trim() !== '') { %>
+    <a href="/" class="btn btn-outline-secondary ms-2 rounded-circle d-flex align-items-center justify-content-center"
+       style="width: 38px; height: 38px;">
+      <i class="bi bi-x-lg"></i>
+    </a>
+  <% } %>
+</form>
 
 
-                                   <a href="/userProfile">Profile</a>
-                                   <a href="/logout">Logout</a>
+      <!-- Wishlist + Cart -->
+      <a href="#"><i class="bi bi-heart fs-5 me-3"></i></a>
+      <a href="/cart" class="position-relative me-4">
+        <i class="bi bi-cart fs-5"></i>
+        <span id="cartCount" class="position-absolute badge rounded-pill bg-danger">0</span>
+      </a>
 
+      <!-- User Section -->
+      <% if (typeof user !== 'undefined' && user) { %>
+        <div class="dropdown">
+          <a class="d-flex align-items-center text-decoration-none dropdown-toggle" href="#" role="button"
+            id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+            <span><%= user.name %></span>
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+            <li><a class="dropdown-item" href="/profile">Profile</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item text-danger" href="#" onclick="confirmLogout(event)">Logout</a></li>
+          </ul>
+        </div>
+      <% } else { %>
+        <a href="/signup" 
+   class="btn btn-outline-dark me-2 fw-semibold"
+   style="border-radius: 50px; padding: 8px 22px; transition: all 0.3s;">
+  Sign Up
+</a>
+<a href="/login" 
+   class="btn btn-outline-dark fw-semibold"
+   style="border-radius: 50px; padding: 8px 22px; transition: all 0.3s;">
+  Log In
+</a>
+      <% } %>
+    </div>
+  </div>
+</nav>
 
-                               </div>
-
-
-                           </div>
-                       <%}else {%>
-
-
-                       <a href="/signup" class="sign-in-link">Sign Up</a>
-                       <a href="/login" class="sign-in-link">Log in</a>
-                       <%}%>
-                       <a href="/wishlist"><img src="img/icon/heart.png" alt=""></a>
-                       <a href="/cart"><img src="img/icon/cart.png" alt=""> <span>0</span></a>
-                   </div>
-               </div>
-           </div>
-           <div class="canvas__open"><i class="fa fa-bars"></i></div>
-       </div>
-   </header>
-
+<!-- SweetAlert2 Logout Script -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
+<script>
+  function confirmLogout(event) {
+    event.preventDefault();
+    Swal.fire({
+      title: 'Are you sure?',
+      text: "You will be logged out of your account.",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: 'Yes, Logout',
+      cancelButtonText: 'Cancel'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        window.location.href = '/logout';
+      }
+    });
+  }
+</script>

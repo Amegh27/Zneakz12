@@ -2,171 +2,164 @@
 <html lang="zxx">
 <head>
     <meta charset="UTF-8" />
-    <meta name="description" content="Male_Fashion Template" />
-    <meta name="keywords" content="Male_Fashion, unica, creative, html" />
+    <meta name="description" content="Zneakz Email Verification" />
+    <meta name="keywords" content="Zneakz, OTP, Verification" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>Zneakz</title>
-    <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;600;700;800;900&display=swap" rel="stylesheet" />
+    <title>Zneakz - Email Verification</title    <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;600;700;800;900&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="css/bootstrap.min.css" type="text/css" />
-    <link rel="stylesheet" href="css/font-awesome.min.css" type="text/css" />
-    <link rel="stylesheet" href="css/elegant-icons.css" type="text/css" />
-    <link rel="stylesheet" href="css/magnific-popup.css" type="text/css" />
-    <link rel="stylesheet" href="css/nice-select.css" type="text/css" />
-    <link rel="stylesheet" href="css/owl.carousel.min.css" type="text/css" />
-    <link rel="stylesheet" href="css/slicknav.min.css" type="text/css" />
-    <link rel="stylesheet" href="css/style.css" type="text/css" />
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+
     <style>
-body, html {
-    height: 100%;
-    margin: 0;
-    font-family: "Nunito Sans", sans-serif;
-    background: linear-gradient(135deg, #f7f8fa, #eceff1);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
+        body, html {
+            height: 100%;
+            margin: 0;
+            font-family: "Nunito Sans", sans-serif;
+            background: linear-gradient(135deg, #f7f8fa, #eceff1);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
 
-.container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100%;
-}
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+        }
 
-.login_wrap {
-    width: 100%;
-    max-width: 420px;
-    padding: 35px 30px;
-    border-radius: 12px;
-    background: #ffffff;
-    box-shadow: 0 6px 25px rgba(0, 0, 0, 0.1);
-    text-align: center;
-    transition: 0.3s ease-in-out;
-}
+        .login_wrap {
+            width: 100%;
+            max-width: 420px;
+            padding: 35px 30px;
+            border-radius: 12px;
+            background: #ffffff;
+            box-shadow: 0 6px 25px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            transition: 0.3s ease-in-out;
+        }
 
-.login_wrap:hover {
-    transform: translateY(-5px);
-}
+        .login_wrap:hover {
+            transform: translateY(-5px);
+        }
 
-.heading_s1 h3 {
-    font-size: 26px;
-    font-weight: 700;
-    margin-bottom: 20px;
-    color: #333;
-}
+        .heading_s1 h3 {
+            font-size: 26px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: #333;
+        }
 
-.form-group label {
-    font-size: 15px;
-    font-weight: 600;
-    margin-bottom: 8px;
-    display: block;
-    text-align: left;
-    color: #555;
-}
+        .form-group label {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: block;
+            text-align: left;
+            color: #555;
+        }
 
-.form-control {
-    border: 2px solid #ddd;
-    border-radius: 8px;
-    padding: 12px;
-    font-size: 16px;
-    transition: all 0.2s;
-    width: 100%;
-}
+        .form-control {
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 16px;
+            transition: all 0.2s;
+            width: 100%;
+        }
 
-.form-control:focus {
-    border-color: #007bff;
-    box-shadow: 0 0 6px rgba(0, 123, 255, 0.4);
-    outline: none;
-}
+        .form-control:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 6px rgba(0, 123, 255, 0.4);
+            outline: none;
+        }
 
-.otp-timer {
-    display: inline-flex;
-    justify-content: center;
-    align-items: center;
-    margin: 15px auto;
-    font-size: 16px;
-    width: 65px;
-    height: 65px;
-    border-radius: 50%;
-    background: #f8f9fa;
-    border: 2px solid #ddd;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-}
+        .otp-timer {
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            margin: 15px auto;
+            font-size: 16px;
+            width: 65px;
+            height: 65px;
+            border-radius: 50%;
+            background: #f8f9fa;
+            border: 2px solid #ddd;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
 
-#timerValue {
-    font-size: 20px;
-    font-weight: 700;
-    color: #333;
-}
+        #timerValue {
+            font-size: 20px;
+            font-weight: 700;
+            color: #333;
+        }
 
-#timerValue.expired {
-    font-size: 14px;
-    color: red;
-}
+        #timerValue.expired {
+            font-size: 14px;
+            color: red;
+        }
 
-.btn {
-    display: block;
-    width: 100%;
-    padding: 12px;
-    font-size: 16px;
-    font-weight: 600;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: 0.3s;
-}
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
 
-.btn-primary {
-    background-color: #d64541;
-    color: #fff;
-    border: none;
-}
+        .btn-primary {
+            background-color: #d64541;
+            color: #fff;
+            border: none;
+        }
 
-.btn-primary:hover {
-    background-color: #b93736;
-}
+        .btn-primary:hover {
+            background-color: #b93736;
+        }
 
-.btn-secondary {
-    background-color: #6c757d;
-    color: #fff;
-    margin-top: 10px;
-    border: none;
-}
+        .btn-secondary {
+            background-color: #6c757d;
+            color: #fff;
+            margin-top: 10px;
+            border: none;
+            display: none; /* hidden by default */
+        }
 
-.btn-secondary:hover {
-    background-color: #5a6268;
-}
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
 
-.alert-danger {
-    margin-top: 15px;
-    font-size: 14px;
-    padding: 10px;
-    border-radius: 6px;
-    text-align: center;
-    background: #ffe6e6;
-    color: #d64541;
-}
+        .alert-danger {
+            margin-top: 15px;
+            font-size: 14px;
+            padding: 10px;
+            border-radius: 6px;
+            text-align: center;
+            background: #ffe6e6;
+            color: #d64541;
+        }
 
-.text-muted {
-    margin-top: 20px;
-    font-size: 14px;
-    color: #777;
-}
+        .text-muted {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #777;
+        }
 
-.text-muted a {
-    color: #007bff;
-    font-weight: 600;
-    text-decoration: none;
-}
+        .text-muted a {
+            color: #007bff;
+            font-weight: 600;
+            text-decoration: none;
+        }
 
-.text-muted a:hover {
-    text-decoration: underline;
-}
-
+        .text-muted a:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
+
 <body>
 <div class="container">
     <div class="login_wrap">
@@ -174,96 +167,126 @@ body, html {
             <div class="heading_s1">
                 <h3>Email Verification Page</h3>
             </div>
+
             <form id="otpForm" action="/verify-otp" method="post" onsubmit="return validateOtpForm()">
                 <div class="form-group">
                     <label for="otp">Enter OTP:</label>
                     <input type="text" id="otp" name="otp" class="form-control" required maxlength="6" pattern="\d*" />
                 </div>
-                <button type="submit" class="btn btn-primary">Verify Email</button>
+
+                <button type="submit" class="btn btn-primary">Verify OTP</button>
+
                 <div class="form-group text-center">
                     <div id="otpTimer" class="otp-timer">
                         <span id="timerValue">60</span>
                     </div>
                     <button type="button" class="btn btn-secondary" onclick="resendOtp()">Resend OTP</button>
                 </div>
+
                 <% if (locals.message && message.length > 0) { %>
                 <div class="alert alert-danger"><%= message %></div>
                 <% } %>
             </form>
+
             <div class="text-muted text-center pt-25">
                 Already verified? <a href="/login">Login now</a>
             </div>
         </div>
     </div>
 </div>
+
 <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-    document.getElementById("otp").focus();
+document.getElementById("otp").focus();
 
 let timer = 60;
 let timerInterval;
+let resendCount = 0;
+const maxResends = 3;
+
+const timerValue = document.getElementById("timerValue");
+const resendBtn = document.querySelector(".btn-secondary");
+const otpInput = document.getElementById("otp");
 
 function startTimer() {
-    clearInterval(timerInterval); 
+    clearInterval(timerInterval);
     timer = 60;
-    document.getElementById("timerValue").textContent = timer;
-    document.getElementById("timerValue").classList.remove("expired");
-    document.getElementById("otp").disabled = false;
+    timerValue.textContent = timer;
+    timerValue.classList.remove("expired");
+    otpInput.disabled = false;
+    resendBtn.style.display = "none"; 
 
     timerInterval = setInterval(() => {
         timer--;
-        document.getElementById("timerValue").textContent = timer;
+        timerValue.textContent = timer;
 
         if (timer <= 0) {
             clearInterval(timerInterval);
-            document.getElementById("timerValue").textContent = "Expired";
-            document.getElementById("timerValue").classList.add("expired");
-            document.getElementById("otp").disabled = true;
+            timerValue.textContent = "Expired";
+            timerValue.classList.add("expired");
+            otpInput.disabled = true;
+            if (resendCount < maxResends) {
+                resendBtn.style.display = "block"; 
+            }
         }
     }, 1000);
 }
 
-    startTimer();
+startTimer(); 
 
-    function validateOtpForm(){
-        const otpInput = document.getElementById("otp").value
+function validateOtpForm() {
+    const otpInputVal = otpInput.value;
 
-        $.ajax({
-            type:"POST",
-            url:"verify-otp",
-            data:{otp:otpInput},
-            success:function(response){
-                if(response.success){
-                    Swal.fire({
-                        icon:"success",
-                        title:"OTP verified successfully",
-                        showConfirmationButton:false,
-                        timer:1500,
-                    }).then(()=>{
-                        window.location.href = response.redirectUrl
-                    })
-                }else{
-                    Swal.fire({
-                        icon:"error",
-                        title:"Error",
-                        text:response.message,
-
-                    })
-                }
-            },
-            error: function(){
+    $.ajax({
+        type: "POST",
+        url: "verify-otp",
+        data: { otp: otpInputVal },
+        success: function (response) {
+            if (response.success) {
                 Swal.fire({
-                    icon:"error",
-                    title:"Invalid OTP",
-                    text:"Please try again"
-                })
+                    icon: "success",
+                    title: "OTP verified successfully",
+                    showConfirmButton: false,
+                    timer: 1500,
+                }).then(() => {
+                    window.location.href = response.redirectUrl;
+                });
+            } else {
+                Swal.fire({
+                    icon: "error",
+                    title: "Error",
+                    text: response.message,
+                });
             }
-        })
-        return false
+        },
+        error: function () {
+            Swal.fire({
+                icon: "error",
+                title: "Invalid OTP",
+                text: "Please try again",
+            });
+        },
+    });
+
+    return false;
+}
+
+function resendOtp() {
+    if (resendCount >= maxResends) {
+        Swal.fire({
+            icon: "error",
+            title: "Resend Limit Reached",
+            text: "You have reached the maximum number of OTP resend attempts. Please try again later or contact support.",
+        });
+        resendBtn.style.display = "none";
+        return;
     }
-    function resendOtp() {
+
+    resendCount++;
+    resendBtn.style.display = "none"; 
     startTimer(); 
+
     $.ajax({
         type: "POST",
         url: "/resend-otp",
@@ -291,12 +314,8 @@ function startTimer() {
             });
         },
     });
-
-    return false;
 }
-
 </script>
-
 
 </body>
 </html>

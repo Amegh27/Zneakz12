@@ -56,29 +56,54 @@
   <div class="container">
     <div class="row justify-content-center">
       <div class="col-md-6 mt-60">
-        <form method="post" action="/admin/editCategory/<%= category._id %>">
-          <div class="mb-4 mt-30">
-            <label for="categoryName" class="form-label">Name</label>
-            <input type="text" id="categoryName" name="categoryName" value="<%= category.name %>" class="form-control border" required />
-          </div>
+<form id="editCategoryForm">
+  <div class="mb-4 mt-30">
+    <label for="categoryName" class="form-label">Name</label>
+    <input type="text" id="categoryName" name="categoryName" value="<%= category.name %>" class="form-control border" />
+  </div>
 
-          <div class="mb-4">
-            <label for="description" class="form-label">Description</label>
-            <textarea id="description" name="description" class="form-control border" required><%= category.description %></textarea>
-          </div>
+  <div class="mb-4">
+    <label for="description" class="form-label">Description</label>
+    <textarea id="description" name="description" class="form-control border"><%= category.description %></textarea>
+  </div>
 
-          <div class="d-grid text-end mt-3">
-            <button class="btn btn-primary" type="submit">Update Category</button>
-          </div>
-        </form>
+  <div class="d-grid text-end mt-3">
+    <button class="btn btn-primary" type="submit">Update Category</button>
+  </div>
+</form>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
+<script>
+const categoryId = "<%= category._id %>";
+
+document.getElementById("editCategoryForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const categoryName = document.getElementById("categoryName").value;
+  const description = document.getElementById("description").value;
+
+  try {
+    const res = await fetch(`/admin/edit-category/${categoryId}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ categoryName, description })
+    });
+    const data = await res.json();
+
+    if (res.ok) {
+      Swal.fire("Success", data.message, "success").then(() => {
+        window.location.href = "/admin/category";  // ✅ fixed absolute redirect
+      });
+    } else {
+      Swal.fire("Error", data.error, "error");
+    }
+  } catch (err) {
+    Swal.fire("Error", "Something went wrong. Please try again.", "error");
+  }
+});
+</script>
+
+
       </div>
     </div>
   </div>
 
-  <!-- Footer -->
-  <footer class="footer">
-    <p>&copy; <%= new Date().getFullYear() %> Zneakz Admin Panel. All rights reserved.</p>
-  </footer>
-
-</body>
-</html>
