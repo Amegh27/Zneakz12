@@ -120,38 +120,43 @@ const getEditCategory = async (req, res) => {
 
 const editCategory = async (req, res) => {
   try {
-    const id = req.params.id;
+    const id = req.params.id.trim();
     const { categoryName, description } = req.body;
 
     if (!categoryName || !description) {
-      return res.status(400).json({ error: "All fields are required" });
+      return res.status(400).json({ error: "All fields are required." });
     }
 
     const existingCategory = await Category.findOne({
-      name: categoryName,
-      _id: { $ne: id } 
+      name: { $regex: new RegExp(`^${categoryName}$`, "i") },
+      _id: { $ne: id }
     });
 
     if (existingCategory) {
-      return res.status(400).json({ error: "Category already exists" });
+      return res.status(400).json({ error: "Category name already exists." });
     }
 
-    const updated = await Category.findByIdAndUpdate(
+    const updatedCategory = await Category.findByIdAndUpdate(
       id,
-      { name: categoryName, description },
+      {
+        name: categoryName.trim(),
+        description: description.trim(),
+      },
       { new: true }
     );
 
-    if (!updated) {
-      return res.status(404).json({ error: "Category not found" });
+    if (!updatedCategory) {
+      return res.status(404).json({ error: "Category not found." });
     }
 
-    return res.status(200).json({ message: "Category updated successfully" });
+    return res.status(200).json({ message: "Category updated successfully!" });
+
   } catch (error) {
     console.error("Edit category error:", error);
-    return res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: "Internal server error." });
   }
 };
+
 
 
 

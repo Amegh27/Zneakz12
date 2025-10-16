@@ -20,74 +20,62 @@ const getProductAddpage = async (req, res) => {
 
 const addProducts = async (req, res) => {
   try {
-    const products = req.body
+    const products = req.body;
     const quantity = req.body.quantity;
     const isPublished = req.body.isPublished === 'on';
     const categoryId = await Category.findOne({ name: products.category });
 
     if (!categoryId) {
-      return res.status(400).json('Invalid category name');
+      return res.status(400).json({ error: 'Invalid category name' });
     }
 
     const productExists = await Product.findOne({
       productName: products.productName.trim(),
-
-      category: categoryId._id,
+      category: categoryId._id
     });
 
-    if (!productExists) {
-      const images = [];
-      if (req.files && req.files.length > 0) {
-
-        const imageOutputDir = path.join(__dirname, '../public/uploads/products');
-        if (!fs.existsSync(imageOutputDir)) {
-          fs.mkdirSync(imageOutputDir, { recursive: true });
-        }
-
-        for (let i = 0; i < req.files.length; i++) {
-          const originalImagePath = req.files[i].path;
-          const resizedImagepath = path.join(imageOutputDir, req.files[i].filename);
-          await sharp(originalImagePath)
-            .resize({ width: 450, height: 450 })
-            .toFile(resizedImagepath);
-          images.push(req.files[i].filename);
-        }
-      }
-
-      const categoryId = await Category.findOne({ name: products.category })
-
-      if (!categoryId) {
-        return res.status(400).json('Invalid category name')
-      }
-
-      const newProduct = new Product({
-        productName: products.productName,
-        description: products.description,
-        quantity: parseInt(quantity) || 0,
-        category: categoryId._id,
-        productImage: images,
-        price: products.price,
-        discountPrice: products.discountPrice || products.price,
-        status: "Available",
-        isPublished
-
-      })
-
-      await newProduct.save();
-      return res.render('product-add', {
-        cat: await Category.find({}),
-        successMessage: 'Product added successfully!',
-        productAdded: true
-      });
-
-    } else {
-      return res.status(400).json('Product already exists,please try with another name')
+    if (productExists) {
+      return res.status(400).json({ error: 'Product already exists' });
     }
+
+    const images = [];
+    if (req.files && req.files.length > 0) {
+      const imageOutputDir = path.join(__dirname, '../public/uploads/products');
+      if (!fs.existsSync(imageOutputDir)) {
+        fs.mkdirSync(imageOutputDir, { recursive: true });
+      }
+
+      for (let i = 0; i < req.files.length; i++) {
+        const originalImagePath = req.files[i].path;
+        const resizedImagepath = path.join(imageOutputDir, req.files[i].filename);
+        await sharp(originalImagePath)
+          .resize({ width: 450, height: 450 })
+          .toFile(resizedImagepath);
+        images.push(req.files[i].filename);
+      }
+    }
+
+    const newProduct = new Product({
+      productName: products.productName,
+      description: products.description,
+      quantity: parseInt(quantity) || 0,
+      category: categoryId._id,
+      productImage: images,
+      price: products.price,
+      discountPrice: products.discountPrice || products.price,
+      status: 'Available',
+      isPublished
+    });
+
+    await newProduct.save();
+
+    return res.status(200).json({ message: 'Product added successfully!' });
   } catch (error) {
-    console.error('Error saving product', error)
-    return res.redirect('/admin/pageError')
+    console.error('Error saving product:', error);
+    return res.status(500).json({ error: 'Internal server error' });
   }
-}
+};
+
 
 const getAllProducts = async (req, res) => {
   try {

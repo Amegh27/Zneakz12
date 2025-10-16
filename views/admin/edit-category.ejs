@@ -91,7 +91,7 @@ document.getElementById("editCategoryForm").addEventListener("submit", async (e)
 
     if (res.ok) {
       Swal.fire("Success", data.message, "success").then(() => {
-        window.location.href = "/admin/category";  // ✅ fixed absolute redirect
+        window.location.href = "/admin/category";  
       });
     } else {
       Swal.fire("Error", data.error, "error");

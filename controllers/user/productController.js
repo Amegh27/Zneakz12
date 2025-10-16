@@ -78,7 +78,7 @@ const productDetails = async (req, res) => {
         _id: { $ne: product._id },
         isDeleted: false,
         isListed: true,
-      }).limit(4);
+      }).limit(3);
     }
 
     if (relatedProducts.length === 0) {
@@ -86,7 +86,7 @@ const productDetails = async (req, res) => {
         _id: { $ne: product._id },
         isDeleted: false,
         isListed: true,
-      }).limit(4);
+      }).limit(3);
     }
 
     res.render("product-details", {
@@ -109,6 +109,7 @@ const productDetails = async (req, res) => {
 
 const getMenProducts = async (req, res) => {
   try {
+    
     const menCategory = await Category.findOne({ name: "Men" });
     if (!menCategory) return res.send("Men category not found");
 
