@@ -1,6 +1,10 @@
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
+const walletSchema = new Schema({
+  balance: { type: Number, default: 0 }
+});
+
 const userSchema = new Schema({
   name: {
     type: String,
@@ -19,6 +23,34 @@ const userSchema = new Schema({
     type: String,
     required: false
   },
+  phone: {
+    type: String,
+    default: ''
+  },
+  gender: {
+    type: String,
+    enum: ['Male', 'Female', 'Other'],
+    default: ''
+  },
+  avatar: {
+    type: String,
+    default: '/images/user-avatar.png'
+  },
+  address: {
+    type: [
+      {
+        name: String,
+        city: String,
+        state: String,
+        pincode: String,
+      }
+    ],
+    default: []  
+  },
+  wallet: {
+    type: walletSchema,
+    default: {}
+  },
   isBlocked: {
     type: Boolean,
     default: false
@@ -27,7 +59,7 @@ const userSchema = new Schema({
     type: Boolean,
     default: false
   }
-}, { timestamps: true });  
+}, { timestamps: true });
 
-const User = mongoose.model("User", userSchema);
+const User = mongoose.model('User', userSchema);
 module.exports = User;

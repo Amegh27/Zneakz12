@@ -7,7 +7,7 @@
     <title>Add New Product</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.css" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet" />
 
     <style>
       /* Prevent layout shift when modal toggles scrollbar */
@@ -40,6 +40,11 @@
         border: 1px solid #dee2e6;
         background: #fff;
         flex-shrink: 0;
+        cursor: pointer;
+        transition: transform 0.2s;
+      }
+      .thumb:hover {
+        transform: scale(1.05);
       }
       .thumb img {
         width: 100%;
@@ -51,7 +56,7 @@
         position: absolute;
         inset: auto 4px 4px 4px;
         display: flex;
-        justify-content: space-between;
+        justify-content: flex-end;
         gap: 4px;
       }
       .thumb-btn {
@@ -63,12 +68,139 @@
         cursor: pointer;
         background: rgba(0, 0, 0, 0.7);
         color: #fff;
+        transition: background 0.2s;
       }
       .thumb-btn:hover { background: rgba(0, 0, 0, 0.85); }
 
-      /* Crop modal image fit */
-      #cropImage { max-width: 100%; display: block; margin: 0 auto; }
-      .img-container { width: 100%; max-height: 60vh; }
+      /* Modern crop modal styling - full screen for larger image preview */
+      #cropModal .modal-dialog {
+        margin: 0;
+      }
+      #cropModal .modal-dialog .modal-fullscreen {
+        width: 100vw;
+        height: 100vh;
+      }
+      #cropModal .modal-content {
+        border: none;
+        border-radius: 0;
+        box-shadow: none;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+      #cropModal .modal-header {
+        background: linear-gradient(135deg, #343a40 0%, #2c3034 100%);
+        color: white;
+        border: none;
+        padding: 15px 20px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+      #cropModal .modal-header .btn-close {
+        filter: brightness(0) invert(1);
+        opacity: 0.7;
+        transition: opacity 0.2s;
+      }
+      #cropModal .modal-header .btn-close:hover {
+        opacity: 1;
+      }
+      #cropModal .modal-title {
+        font-weight: 700;
+        font-size: 1.5rem;
+        letter-spacing: 0.5px;
+      }
+      #cropModal .modal-body {
+        background-color: #f8f9fa;
+        padding: 10px;
+        flex: 1;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+      }
+
+      /* Full-size crop container for bigger image */
+      .crop-container {
+        flex: 1;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #ffffff;
+        border-radius: 0;
+        border: none;
+        box-shadow: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .crop-container img {
+        max-width: 100%;
+        max-height: 100%;
+        display: block;
+      }
+
+      /* Modern crop controls styling - adjusted for full screen */
+      .crop-controls {
+        display: flex;
+        gap: 12px;
+        justify-content: flex-end;
+        flex-wrap: wrap;
+        padding: 10px;
+        background: #f8f9fa;
+        border-top: 1px solid #dee2e6;
+      }
+      .crop-controls button {
+        min-width: 140px;
+        font-weight: 600;
+        border-radius: 6px;
+        padding: 10px 20px;
+        font-size: 14px;
+        transition: all 0.3s ease;
+        border: none;
+      }
+      .crop-controls .btn-secondary {
+        background-color: #6c757d;
+        color: white;
+      }
+      .crop-controls .btn-secondary:hover {
+        background-color: #5a6268;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      }
+      .crop-controls .btn-primary {
+        background-color: #0d6efd;
+        color: white;
+      }
+      .crop-controls .btn-primary:hover {
+        background-color: #0b5ed7;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(13, 110, 253, 0.3);
+      }
+
+      /* Cropper.js styling */
+      #cropModal .cropper-container {
+        background: #ffffff;
+      }
+      #cropModal .cropper-modal {
+        background: rgba(0, 0, 0, 0.4);
+      }
+      #cropModal .cropper-guides {
+        opacity: 0.6;
+      }
+      #cropModal .cropper-center {
+        background-color: rgba(13, 110, 253, 0.3);
+      }
+      #cropModal .cropper-face {
+        background-color: rgba(13, 110, 253, 0.15);
+        border: 2px solid #0d6efd;
+      }
+      #cropModal .cropper-line {
+        background-color: #0d6efd;
+      }
+      #cropModal .cropper-box {
+        border: 2px solid #0d6efd;
+      }
+      #cropModal .cropper-point {
+        background-color: #0d6efd;
+      }
     </style>
   </head>
 
@@ -153,33 +285,6 @@
                     <div id="images-error" class="error-message"></div>
                     <div id="addedImagesContainer" class="thumbnails-container"></div>
                   </div>
-
-                  <div class="modal fade" id="imageCropModal" tabindex="-1" aria-labelledby="cropModalLabel" aria-hidden="true">
-                    <div class="modal-dialog modal-lg modal-dialog-centered">
-                      <div class="modal-content">
-                        <div class="modal-header">
-                          <h5 class="modal-title" id="cropModalLabel">Crop Image</h5>
-                          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                          <div class="img-container">
-                            <img id="cropImage" src="/placeholder.svg" alt="Image to crop" />
-                          </div>
-                        </div>
-                        <div class="modal-footer">
-                          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                          <div class="btn-group">
-                            <button type="button" class="btn btn-outline-secondary" id="rotateLeftBtn">Rotate -90°</button>
-                            <button type="button" class="btn btn-outline-secondary" id="rotateRightBtn">Rotate +90°</button>
-                            <button type="button" class="btn btn-outline-secondary" id="flipHBtn">Flip H</button>
-                            <button type="button" class="btn btn-outline-secondary" id="flipVBtn">Flip V</button>
-                          </div>
-                          <button type="button" class="btn btn-primary" id="cropButton">Crop & Save</button>
-                          <div id="cropError" class="error-message" style="margin-left: 12px;"></div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
                 </div>
 
                 <div class="form-check mb-3">
@@ -196,6 +301,27 @@
         </div>
       </div>
     </section>
+
+    <!-- Modern crop modal with full screen for larger image preview -->
+    <div class="modal fade" id="cropModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-fullscreen">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Crop Image</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="crop-container">
+              <img id="cropImage" src="/placeholder.svg" alt="crop" />
+            </div>
+            <div class="crop-controls">
+              <button type="button" class="btn btn-secondary" id="resetCropBtn">Reset</button>
+              <button type="button" class="btn btn-primary" id="applyCropBtn">Apply Crop</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <div class="modal fade" id="productSuccessModal" tabindex="-1" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered">
@@ -221,8 +347,8 @@
     </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
@@ -236,28 +362,21 @@ document.addEventListener('DOMContentLoaded', () => {
   const categorySelect = document.querySelector("select[name='category']");
   const regularPriceInput = document.getElementById('regularPrice');
   const salesPriceInput = document.getElementById('salesPrice');
-  const salesPriceError = document.getElementById('salesPrice-error');
-
-  const cropModalEl = document.getElementById('imageCropModal');
-  const cropImageEl = document.getElementById('cropImage');
-  const cropButton = document.getElementById('cropButton');
-  const rotateLeftBtn = document.getElementById('rotateLeftBtn');
-  const rotateRightBtn = document.getElementById('rotateRightBtn');
-  const flipHBtn = document.getElementById('flipHBtn');
-  const flipVBtn = document.getElementById('flipVBtn');
-  const cropError = document.getElementById('cropError');
 
   const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
   const selectedFiles = [];
-  let croppingIndex = -1;
-  let cropper = null;
   let isUpdatingFiles = false;
+
+  let cropper = null;
+  let currentCropIndex = -1;
+  const cropModal = new bootstrap.Modal(document.getElementById('cropModal'));
+  const cropImage = document.getElementById('cropImage');
+  const resetCropBtn = document.getElementById('resetCropBtn');
+  const applyCropBtn = document.getElementById('applyCropBtn');
 
   const freshInput = imageInput.cloneNode(true);
   imageInput.parentNode.replaceChild(freshInput, imageInput);
   imageInput = freshInput;
-
-  const bsCropModal = new bootstrap.Modal(cropModalEl, { backdrop: 'static', keyboard: false });
 
   function renderThumbnails() {
     addedImagesContainer.innerHTML = '';
@@ -273,17 +392,17 @@ document.addEventListener('DOMContentLoaded', () => {
       const actions = document.createElement('div');
       actions.className = 'thumb-actions';
 
-      const cropBtn = document.createElement('button');
-      cropBtn.type = 'button';
-      cropBtn.className = 'thumb-btn';
-      cropBtn.textContent = 'Crop';
-      cropBtn.dataset.action = 'crop';
-
       const removeBtn = document.createElement('button');
       removeBtn.type = 'button';
       removeBtn.className = 'thumb-btn';
       removeBtn.textContent = '×';
       removeBtn.dataset.action = 'remove';
+
+      const cropBtn = document.createElement('button');
+      cropBtn.type = 'button';
+      cropBtn.className = 'thumb-btn';
+      cropBtn.textContent = 'crop';
+      cropBtn.dataset.action = 'crop';
 
       actions.appendChild(cropBtn);
       actions.appendChild(removeBtn);
@@ -300,6 +419,57 @@ document.addEventListener('DOMContentLoaded', () => {
     imageInput.files = dt.files;
     setTimeout(() => { isUpdatingFiles = false; }, 0);
   }
+
+  function initCropper(file, index) {
+    currentCropIndex = index;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      cropImage.src = e.target.result;
+      
+      if (cropper) {
+        cropper.destroy();
+      }
+      
+      cropper = new Cropper(cropImage, {
+        aspectRatio: NaN,
+        viewMode: 1,
+        autoCropArea: 1,
+        responsive: true,
+        restore: true,
+        guides: true,
+        center: true,
+        highlight: true,
+        cropBoxMovable: true,
+        cropBoxResizable: true,
+        toggleDragModeOnDblclick: true,
+      });
+      
+      cropModal.show();
+    };
+    reader.readAsDataURL(file);
+  }
+
+  resetCropBtn.addEventListener('click', () => {
+    if (cropper) {
+      cropper.reset();
+    }
+  });
+
+  applyCropBtn.addEventListener('click', () => {
+    if (cropper && currentCropIndex >= 0) {
+      const canvas = cropper.getCroppedCanvas();
+      canvas.toBlob((blob) => {
+        const croppedFile = new File([blob], selectedFiles[currentCropIndex].name, {
+          type: 'image/png',
+          lastModified: Date.now(),
+        });
+        selectedFiles[currentCropIndex] = croppedFile;
+        renderThumbnails();
+        syncInputFilesFromState();
+        cropModal.hide();
+      });
+    }
+  });
 
   imageInput.addEventListener('change', (e) => {
     if (isUpdatingFiles) return;
@@ -341,89 +511,16 @@ document.addEventListener('DOMContentLoaded', () => {
     if (Number.isNaN(idx)) return;
 
     const action = btn.dataset.action;
+    if (action === 'crop') {
+      initCropper(selectedFiles[idx], idx);
+      return;
+    }
     if (action === 'remove') {
       selectedFiles.splice(idx, 1);
       renderThumbnails();
       syncInputFilesFromState();
       return;
     }
-
-    if (action === 'crop') {
-      croppingIndex = idx;
-      cropImageEl.src = URL.createObjectURL(selectedFiles[croppingIndex]);
-      cropError.textContent = '';
-      bsCropModal.show();
-    }
-  });
-
-  cropModalEl.addEventListener('shown.bs.modal', () => {
-    if (cropper) { try { cropper.destroy(); } catch {} cropper = null; }
-    cropper = new Cropper(cropImageEl, {
-      viewMode: 1,
-      dragMode: 'move',
-      autoCropArea: 1,
-      responsive: true,
-      background: false,
-      checkOrientation: true,
-      aspectRatio: 1,
-      zoomOnWheel: true,
-      zoomOnTouch: true,
-    });
-  });
-
-  cropModalEl.addEventListener('hidden.bs.modal', () => {
-    if (cropper) { cropper.destroy(); cropper = null; }
-    cropImageEl.src = '';
-    croppingIndex = -1;
-  });
-
-  rotateLeftBtn.addEventListener('click', () => { if (cropper) cropper.rotate(-90); });
-  rotateRightBtn.addEventListener('click', () => { if (cropper) cropper.rotate(90); });
-  let flippedH = false, flippedV = false;
-  flipHBtn.addEventListener('click', () => {
-    if (!cropper) return;
-    flippedH = !flippedH;
-    cropper.scaleX(flippedH ? -1 : 1);
-  });
-  flipVBtn.addEventListener('click', () => {
-    if (!cropper) return;
-    flippedV = !flippedV;
-    cropper.scaleY(flippedV ? -1 : 1);
-  });
-
-  cropButton.addEventListener('click', () => {
-    if (!cropper || croppingIndex < 0) return;
-
-    const canvas = cropper.getCroppedCanvas({
-      maxWidth: 2048,
-      maxHeight: 2048,
-      imageSmoothingEnabled: true,
-      imageSmoothingQuality: 'high',
-    });
-
-    if (!canvas) {
-      cropError.textContent = 'Unable to create cropped image.';
-      return;
-    }
-
-    canvas.toBlob((blob) => {
-      if (!blob) {
-        cropError.textContent = 'Unable to save cropped image.';
-        return;
-      }
-
-      const original = selectedFiles[croppingIndex];
-      const mime = blob.type || 'image/jpeg';
-      const base = original.name.replace(/\.[^.]+$/, '');
-      const ext = mime === 'image/png' ? 'png' : 'jpg';
-      const newFile = new File([blob], `${base}-cropped.${ext}`, { type: mime, lastModified: Date.now() });
-
-      selectedFiles[croppingIndex] = newFile;
-      syncInputFilesFromState();
-      renderThumbnails();
-
-      bsCropModal.hide();
-    }, 'image/jpeg', 0.92);
   });
 
   form.addEventListener('submit', async (e) => {
@@ -495,7 +592,6 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 </script>
-
 
     <%- include("../partials/admin/footer") %>
   </body>

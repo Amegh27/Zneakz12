@@ -1,0 +1,22 @@
+<div class="col-lg-3">
+  <div class="profile-sidebar shadow-sm">
+    <div class="user-box d-flex align-items-center">
+      <div class="profile-avatar">
+        <img id="sidebarAvatar" src="<%= user.avatar || '/images/user-avatar.png' %>" alt="" class="rounded-circle" style="width: 56px; height: 56px; object-fit: cover;">        
+      </div>
+      <div>
+        <div class="small-muted">Hello</div>
+        <div class="fw-bold" style="font-size:1.05rem;"><%= user.name || 'User' %></div>
+      </div>
+    </div>
+
+    <div class="list-group">
+      <a href="/profile" class="list-group-item list-group-item-action active" data-tab="profile">Profile</a>
+      <a href="#" class="list-group-item list-group-item-action" data-tab="wallet">Wallet</a>
+      <a href="/address" class="list-group-item list-group-item-action" data-tab="address">Address</a>
+      <a href="#" class="list-group-item list-group-item-action text-danger" data-tab="delete">Delete Account</a>
+      <a href="/help" class="list-group-item list-group-item-action">Help</a>
+      <a href="/logout" class="list-group-item list-group-item-action">Logout</a>
+    </div>
+  </div>
+</div>

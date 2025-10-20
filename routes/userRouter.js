@@ -4,11 +4,10 @@ const userController = require('../controllers/user/userController')
 const passport = require('passport')
 const { userAuth,adminAuth,checkUserBlocked } = require('../middlewares/auth')
 const forceLogoutIfBlocked = require("../middlewares/blockCheck");
+const profileUpload = require('../middlewares/profileUpload');
 const productController = require('../controllers/user/productController')
 const profileController = require('../controllers/user/profileController')
 const cartController = require("../controllers/user/cartController");
-
-
 router.use(forceLogoutIfBlocked);
 
 router.get('/pageNotFound',userController.pageNotFound)
@@ -21,7 +20,7 @@ router.get('/logout', userController.logout)
 
 
 router.get('/auth/google',passport.authenticate('google',{scope:['profile','email']}))
-router.get('/auth/google/callback', passport.authenticate('google', { failureRedirect: '/login?error=true' }), (req, res) => {  // 👈 Changed to /login for consistency
+router.get('/auth/google/callback', passport.authenticate('google', { failureRedirect: '/login?error=true' }), (req, res) => {  
   req.session.user = req.user._id.toString(); 
   res.redirect('/');
 });
@@ -71,6 +70,18 @@ router.get("/women-details", productController.womenDetails);
 
 // kids details
 router.get('/kids-details', productController.kidsDetails);
+
+
+
+// Profile management
+
+router.get('/profile', userAuth, profileController.getProfilePage);
+router.get('/profile/edit', userAuth, profileController.getEditProfilePage); 
+router.post('/profile/edit', userAuth, profileUpload.single('avatar'), profileController.postEditProfile); 
+router.get('/change-password', userAuth, profileController.getChangePasswordPage);
+router.post('/change-password', userAuth, profileController.postChangePassword);
+router.get('/address', userAuth, profileController.getAddressPage);
+router.post('/address', userAuth, profileController.postAddAddress);
 
 // cart management
 router.get('/cart', cartController.viewCart);

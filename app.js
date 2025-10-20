@@ -3,6 +3,7 @@ const app = express()
 const path = require('path')
 const env = require('dotenv')
 const session = require('express-session')
+const flash = require('connect-flash');
 const MongoStore = require('connect-mongo')
 const passport = require('./config/passport');
 const db = require("./config/db")
@@ -52,6 +53,9 @@ app.use(
     },
   })
 );
+
+app.use(flash());
+
 
 app.use((req, res, next) => {
   res.set('Cache-Control', 'no-store');

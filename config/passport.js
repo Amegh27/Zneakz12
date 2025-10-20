@@ -23,7 +23,7 @@ passport.use(
         } else {
           const email =
             profile.emails && profile.emails.length > 0 ? profile.emails[0].value : '';
-
+          
           user = new User({
             name: profile.displayName,
             email: email,

@@ -351,10 +351,68 @@
         </div>
     </header>
 
-    <!-- Breadcrumb -->
-    <div class="breadcrumb">
-        <a href="/">Home</a> / <span>Cart</span>
-    </div>
+ <!-- Breadcrumb -->
+<div class="breadcrumb">
+  <a href="/">Home</a> / <span>Cart</span>
+</div>
 
+<!-- 🛒 Cart Section -->
+<div class="container">
+  <div class="cart-table">
+    <table>
+      <thead>
+        <tr>
+          <th>Product</th>
+          <th>Price</th>
+          <th>Quantity</th>
+          <th>Total</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+  <% if (cart && cart.items && cart.items.length > 0) { %>
+    <% cart.items.forEach(item => { %>
+      <tr class="<%= item.product.stock === 0 ? 'text-muted opacity-50' : '' %>">
+        <td class="product-info">
+          <img src="<%= item.product.images[0] %>" class="product-img" alt="">
+          <div>
+            <strong><%= item.product.name %></strong><br>
+            <small><%= item.product.brand %></small>
+          </div>
+        </td>
 
-  <%- include("../partials/user/footer") %>
+        <td>₹<%= item.product.discountPrice || item.product.price %></td>
+
+        <td>
+          <% if (item.product.stock === 0) { %>
+            <span class="badge bg-danger">Out of Stock</span>
+          <% } else { %>
+            <div class="quantity-input">
+              <button class="decrease-btn" data-id="<%= item.product._id %>">−</button>
+              <input type="text" value="<%= item.quantity %>" readonly>
+              <button class="increase-btn" data-id="<%= item.product._id %>">+</button>
+            </div>
+          <% } %>
+        </td>
+
+        <td>₹<%= (item.product.discountPrice || item.product.price) * item.quantity %></td>
+
+        <td>
+          <button class="btn btn-sm btn-outline-danger remove-btn" data-id="<%= item.product._id %>">
+            <i class="fa fa-trash"></i>
+          </button>
+        </td>
+      </tr>
+    <% }) %>
+  <% } else { %>
+    <tr>
+      <td colspan="5" class="text-center">Your cart is empty</td>
+    </tr>
+  <% } %>
+</tbody>
+
+    </table>
+  </div>
+</div>
+
+<%- include("../partials/user/footer") %>

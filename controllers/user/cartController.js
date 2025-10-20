@@ -36,11 +36,6 @@ function addToCart() {
     });
 }
 
-
-
-
-
-
 const viewCart = async (req, res) => {
   try {
     const userId = req.session.user;
