@@ -201,10 +201,10 @@ const postNewPassword = async (req, res) => {
 
 const getProfilePage = async (req, res) => {
   try {
-    const userId = req.session.user?._id; // Fixed: assume session.user is object with _id
+    const userId = req.session.user?._id; 
     if (!userId) return res.redirect('/login');
 
-    const user = await User.findById(userId).populate('wallet'); // Add .populate if wallet is ref
+    const user = await User.findById(userId).populate('wallet');
     res.render('profile', { user, message: null });
   } catch (error) {
     console.error('Error loading profile page:', error);
@@ -214,7 +214,7 @@ const getProfilePage = async (req, res) => {
 
 const getEditProfilePage = async (req, res) => {
   try {
-    const userId = req.session.user?._id; // Fixed
+    const userId = req.session.user?._id;
     const user = await User.findById(userId);
 
     if (!user) {
@@ -230,15 +230,14 @@ const getEditProfilePage = async (req, res) => {
 
 const postEditProfile = async (req, res) => {
   try {
-    const userId = req.session.user?._id; // Fixed
-    const { name, email, phone, gender, remove_avatar } = req.body; // Add remove_avatar
+    const userId = req.session.user?._id; 
+    const { name, email, phone, gender, remove_avatar } = req.body; 
 
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
 
-    // Update text fields
     user.name = name || user.name;
     user.email = email || user.email;
     user.phone = phone || user.phone;
@@ -265,7 +264,6 @@ const postEditProfile = async (req, res) => {
     }
 
     await user.save();
-    console.log('User saved:', user); 
 
     res.json({ success: true, message: 'Profile updated successfully!' });
   } catch (error) {
@@ -368,23 +366,31 @@ const postAddAddress = async (req, res) => {
 
     if (!Array.isArray(user.address)) user.address = [];
 
-    if (user.address.length > 0) {
-      user.address[0] = { name, city, state, pincode };
-    } else {
-      user.address.push({ name, city, state, pincode });
+    const exists = user.address.find(addr =>
+      addr.name === name &&
+      addr.city === city &&
+      addr.state === state &&
+      addr.pincode === pincode
+    );
+
+    if (exists) {
+      return res.json({ success: true, message: 'This address already exists!' });
     }
+
+    user.address.push({ name, city, state, pincode });
 
     await user.save();
 
     return res.json({
       success: true,
-      message: user.address.length > 1 ? 'Address updated successfully!' : 'Address saved successfully!'
+      message: 'Address saved successfully!'
     });
   } catch (error) {
     console.error('Error saving address:', error);
     return res.status(500).json({ success: false, message: 'Server error while saving address.' });
   }
 };
+
 
 
 

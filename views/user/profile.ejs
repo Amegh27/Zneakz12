@@ -128,8 +128,9 @@
           <a href="#" class="list-group-item list-group-item-action" data-tab="wallet">Wallet</a>
           <a href="/address" class="list-group-item list-group-item-action" data-tab="address">Address</a>
           <a href="#" class="list-group-item list-group-item-action text-danger" data-tab="delete">Delete Account</a>
-          <a href="/help" class="list-group-item list-group-item-action">Help</a>
-          <a href="/logout" class="list-group-item list-group-item-action">Logout</a>
+          <a href="#" class="list-group-item list-group-item-action">Orders</a>
+          <a href="/logout" id="logout-link" class="list-group-item list-group-item-action">Logout</a>
+
         </div>
       </div>
     </div>
@@ -312,4 +313,23 @@ document.querySelectorAll('.profile-sidebar .list-group-item').forEach(link => {
       submitBtn.textContent = 'Save changes';
     }
   });
+
+  document.getElementById("logout-link").addEventListener("click", function(event) {
+  event.preventDefault(); 
+
+  Swal.fire({
+    title: 'Are you sure?',
+    text: "You will be logged out.",
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#d33',
+    confirmButtonText: 'Yes, logout',
+    cancelButtonText: 'Cancel'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      window.location.href = "/logout"; 
+    }
+  });
+});
 </script>

@@ -21,7 +21,6 @@ const getProductAddpage = async (req, res) => {
 const addProducts = async (req, res) => {
   try {
     const products = req.body;
-    const quantity = req.body.quantity;
     const isPublished = req.body.isPublished === 'on';
     const categoryId = await Category.findOne({ name: products.category });
 
@@ -54,18 +53,27 @@ const addProducts = async (req, res) => {
         images.push(req.files[i].filename);
       }
     }
+const sizesInput = products.sizes || [];
+const sizes = sizesInput.map(s => ({
+  size: s.size,
+  stock: parseInt(s.stock, 10) || 0
+}));
 
-    const newProduct = new Product({
-      productName: products.productName,
-      description: products.description,
-      quantity: parseInt(quantity) || 0,
-      category: categoryId._id,
-      productImage: images,
-      price: products.price,
-      discountPrice: products.discountPrice || products.price,
-      status: 'Available',
-      isPublished
-    });
+const totalQuantity = sizes.reduce((acc, s) => acc + s.stock, 0);
+
+const newProduct = new Product({
+  productName: products.productName,
+  description: products.description,
+  quantity: totalQuantity,  // ← update here
+  category: categoryId._id,
+  productImage: images,
+  price: products.price,
+  discountPrice: products.discountPrice || products.price,
+  sizes,                     // ← include sizes
+  status: 'Available',
+  isPublished
+});
+
 
     await newProduct.save();
 
@@ -77,16 +85,17 @@ const addProducts = async (req, res) => {
 };
 
 
+
 const getAllProducts = async (req, res) => {
   try {
-    const search = req.query.search || "";
+    const searchQuery = req.query.search || ""; // <-- store search query
     const page = parseInt(req.query.page) || 1;
     const limit = 7;
 
     const productData = await Product.find({
       isDeleted: { $ne: true },
       $or: [
-        { productName: { $regex: new RegExp(".*" + search + ".*", "i") } }
+        { productName: { $regex: new RegExp(".*" + searchQuery + ".*", "i") } }
       ]
     })
       .limit(limit)
@@ -97,7 +106,7 @@ const getAllProducts = async (req, res) => {
     const count = await Product.countDocuments({
       isDeleted: { $ne: true },
       $or: [
-        { productName: { $regex: new RegExp(".*" + search + ".*", "i") } }
+        { productName: { $regex: new RegExp(".*" + searchQuery + ".*", "i") } }
       ]
     });
 
@@ -108,7 +117,8 @@ const getAllProducts = async (req, res) => {
         data: productData,
         currentPage: page,
         totalPages: Math.ceil(count / limit),
-        cat: category
+        cat: category,
+        searchQuery // <-- pass it here
       });
     } else {
       res.render("page-404");
@@ -118,6 +128,7 @@ const getAllProducts = async (req, res) => {
     res.redirect('/pageError');
   }
 };
+
 
 const blockProduct = async (req, res) => {
   try {
@@ -163,15 +174,18 @@ const editProduct = async (req, res) => {
       return res.status(404).send('Product not found');
     }
 
+    // Check duplicate product name
     const existingProduct = await Product.findOne({
-      productName: data.productName,
+      productName: data.productName.trim(),
       _id: { $ne: id },
     });
-
     if (existingProduct) {
-      return res.status(400).json({ error: 'Product with this name already exists. Please try with another name' });
+      return res.status(400).json({
+        error: 'Product with this name already exists. Please try with another name',
+      });
     }
 
+    // Handle new uploaded images
     let newImages = [];
     if (req.files && req.files.length > 0) {
       const imageOutputDir = path.join(__dirname, '../../public/uploads/products');
@@ -187,16 +201,35 @@ const editProduct = async (req, res) => {
       }
     }
 
+    // Process sizes 6–10 and calculate total quantity
+   // ✅ Handle sizes from form inputs (e.g. size[] and stock[])
+let sizes = [];
+let totalQuantity = 0;
+
+if (data.size && data.stock) {
+  const sizeArray = Array.isArray(data.size) ? data.size : [data.size];
+  const stockArray = Array.isArray(data.stock) ? data.stock : [data.stock];
+
+  sizes = sizeArray.map((s, i) => {
+    const stock = parseInt(stockArray[i], 10) || 0;
+    totalQuantity += stock;
+    return { size: s, stock };
+  });
+}
+
+
+    // Prepare fields to update
     const updateFields = {
       productName: data.productName.trim(),
       description: data.description,
-      quantity: parseInt(data.quantity) || 0,
+      quantity: totalQuantity, // total stock calculated
       price: parseFloat(data.price) || 0,
-      discountPrice: parseFloat(data.discountPrice) || data.price,
-      size: data.size,
+      discountPrice: parseFloat(data.discountPrice) || parseFloat(data.price) || 0,
+      sizes, // updated sizes
     };
 
-     if (data.category) {
+    // Handle category
+    if (data.category) {
       const categoryDoc = await Category.findOne({ name: data.category });
       if (!categoryDoc) {
         return res.status(400).json({ error: 'Invalid category selected' });
@@ -204,10 +237,12 @@ const editProduct = async (req, res) => {
       updateFields.category = categoryDoc._id;
     }
 
+    // Merge new images
     if (newImages.length > 0) {
       updateFields.productImage = [...product.productImage, ...newImages];
     }
 
+    // Update the product
     await Product.findByIdAndUpdate(id, updateFields, { new: true });
 
     res.redirect('/admin/products');
@@ -216,6 +251,7 @@ const editProduct = async (req, res) => {
     res.status(500).send('Error: ' + error.message);
   }
 };
+
 
 const deleteSingleImage = async (req, res) => {
   try {

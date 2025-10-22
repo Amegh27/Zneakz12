@@ -301,14 +301,23 @@
     <div class="description"><%= product.description %></div>
 
     <!-- Sizes -->
-    <% if(product.sizes && product.sizes.length > 0){ %>
-      <div class="size-options">
-        <span class="label">Size:</span>
-        <% product.sizes.forEach((size,index)=>{ %>
-          <div class="size-option <%= index===0?'active':'' %>"><%= size %></div>
-        <% }) %>
+<% if (product.sizes && product.sizes.length > 0) { %>
+  <div class="size-options">
+    <span class="label">Size:</span>
+    <% product.sizes.forEach((s, index) => { %>
+      <div 
+        class="size-option <%= index === 0 ? 'active' : '' %>"
+        data-stock="<%= s.stock %>"
+        onclick="selectSize(this)"
+      >
+        <%= s.size %>
       </div>
-    <% } %>
+    <% }) %>
+  </div>
+<% } else { %>
+  <div>No sizes available</div>
+<% } %>
+
 
     <!-- Size Chart Modal -->
     <div id="sizeChartModal" class="modal">
@@ -344,12 +353,20 @@
 
 
 <div id="stockIndicator" style="font-weight:bold; margin-bottom:10px;">
-  <% if(product.quantity < 5){ %>
-    <span style="color:red;">Less stocks available: <%= product.quantity %></span>
+  <% if (product.sizes && product.sizes.length > 0) { %>
+    <% const firstStock = product.sizes[0].stock || 0; %>
+    <% if (firstStock === 0) { %>
+      <span style="color:red;">No stock available</span>
+    <% } else if (firstStock < 5) { %>
+      <span style="color:red;">Less stocks available: <%= firstStock %></span>
+    <% } else { %>
+      <span style="color:green;">In stock: <%= firstStock %></span>
+    <% } %>
   <% } else { %>
-    <span style="color:green;">In stock: <%= product.quantity %></span>
+    <span style="color:red;">No size data available</span>
   <% } %>
 </div>
+
 
 
   

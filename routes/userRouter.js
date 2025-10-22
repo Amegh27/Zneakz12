@@ -8,6 +8,8 @@ const profileUpload = require('../middlewares/profileUpload');
 const productController = require('../controllers/user/productController')
 const profileController = require('../controllers/user/profileController')
 const cartController = require("../controllers/user/cartController");
+const checkoutController = require("../controllers/user/checkoutController");
+
 router.use(forceLogoutIfBlocked);
 
 router.get('/pageNotFound',userController.pageNotFound)
@@ -89,5 +91,12 @@ router.get("/cart/load", cartController.loadCart);
 router.post("/cart/add", cartController.addToCart);
 router.post("/cart/update", cartController.updateCart);
 router.post("/cart/remove", cartController.removeFromCart);
+
+
+router.get("/checkout", checkoutController.checkoutPage);
+router.post("/checkout/place-order", checkoutController.placeOrder);
+router.get('/order-success',checkoutController.orderSuccessPage);
+
+router.get('/orders/:id',checkoutController.viewOrderDetails);
 
 module.exports = router

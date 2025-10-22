@@ -6,6 +6,8 @@ const env = require('dotenv').config()
 const nodemailer = require('nodemailer')
 const bcrypt = require('bcrypt')
 const mongoose = require("mongoose");
+const Cart = require("../../models/cartSchema");
+
 
 const pageNotFound =  async(req,res)=>{
     try {
@@ -33,11 +35,15 @@ const loadHomepage = async (req, res) => {
       : [];
     const selectedPriceRange = req.query.priceRange || '';
 
-    let matchStage = {
-      isBlocked: false,
-      isListed:true,
-      quantity: { $gt: 0 }
-    };
+   let matchStage = {
+  isBlocked: false,
+  isListed: true,
+  $or: [
+    { quantity: { $gt: 0 } },                    
+    { "sizes.stock": { $gt: 0 } }                 
+  ]
+};
+
 
     if (query) {
       matchStage.productName = { $regex: query, $options: 'i' };

@@ -1,277 +1,170 @@
 <%- include("../partials/admin/header") %>
 
-    <style>
-        .thumbnails-container {
-            display: flex;
-            overflow-x: auto;
-        }
+<style>
+    .thumbnails-container {
+        display: flex;
+        overflow-x: auto;
+    }
 
-        .thumbnail {
-            margin-right: 10px;
-        }
+    .thumbnail {
+        margin-right: 10px;
+    }
 
-        .input-upload {
-            position: relative;
-        }
+    .input-upload {
+        position: relative;
+    }
 
-        .error-message {
-            color: red;
-            display: none;
-        }
-    </style>
+    .error-message {
+        color: red;
+        display: none;
+    }
+</style>
 
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cropperjs/dist/cropper.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cropperjs/dist/cropper.min.css">
 
-    </head>
-
-    <section class="content-main">
-        <div class="row">
-            <div class="col-9">
-                <div class="content-header">
-                    <h2 class="content-title">Edit Product</h2>
-                </div>
+<section class="content-main">
+    <div class="row">
+        <div class="col-9">
+            <div class="content-header">
+                <h2 class="content-title">Edit Product</h2>
             </div>
-
-            <div class="col-lg-6">
-                <div class="card mb-4">
-                    <div class="card-body">
-                        <form id="editProductForm" method="post" action="/admin/editProduct/<%= product._id %>" enctype="multipart/form-data">
-                            <div class="mb-4">
-                                <label for="product_name" class="form-label">Product Name</label>
-                                <input type="text" name="productName" value="<%= product.productName %>"
-                                    class="form-control border" id="product_name">
-                                <div id="productName-error" class="error-message"></div>
-                            </div>
-
-                            <div class="mb-4">
-                                <label class="form-label">Full description</label>
-                                <textarea name="descriptionData" class="form-control border"
-                                    rows="4" id="description"><%= product.description %></textarea>
-                                <div id="description-error" class="error-message"></div>
-                            </div>
-                            <div class="form-group mb-4">
-                                <label for="price">Regular Price (₹)</label>
-                                <input type="number" class="form-control" name="price" id="price"
-                                    value="<%= product.price %>" required min="1" step="0.01" />
-                                <div id="price-error" class="error-message"></div>
-                            </div>
-
-                            <div class="form-group mb-4">
-                                <label for="discountPrice">Discount Price (₹)</label>
-                                <input type="number" class="form-control" name="discountPrice" id="discountPrice"
-                                    value="<%= product.discountPrice || 0 %>" min="0" step="0.01" />
-                                <div id="discountPrice-error" class="error-message"></div>
-                            </div>
-
-                            <div class="mb-4">
-                                <label class="form-label">Quantity</label>
-                                <input name="quantity" type="text" value="<%= product.quantity %>"
-                                    class="form-control border" id="quantity">
-                                <div id="quantity-error" class="error-message"></div>
-                            </div>
-
-                            <div class="mb-4">
-                                <label class="form-label">Category</label>
-                                <select class="form-select border" name="category" id="category">
-                                    <% for (let i=0; i < cat.length; i++) { %>
-                                        <option value="<%= cat[i].name %>" <%=product.category===cat[i].name
-                                            ? "selected" : "" %>><%= cat[i].name %>
-                                        </option>
-                                        <% } %>
-                                </select>
-                                <div id="category-error" class="error-message"></div>
-                            </div>
-<div class="card mb-4">
-  <div class="card-header">
-    <h4>Existing Images</h4>
-  </div>
-  <div class="card-body d-flex flex-wrap gap-3">
-    <% if (product.productImage && product.productImage.length > 0) { %>
-      <% product.productImage.forEach((img) => { %>
-        <div class="position-relative" style="display:inline-block;">
-          <img src="/uploads/products/<%= img %>"
-               alt="Product Image"
-               style="width:100px; height:100px; object-fit:cover; border:1px solid #ccc; border-radius:4px;" />
-          <button type="button"
-                  class="btn btn-sm btn-danger position-absolute top-0 end-0"
-                  style="padding:2px 6px; font-size:12px;"
-                  onclick="deleteSingleImage('<%= img %>', '<%= product._id %>')">✕</button>
         </div>
-      <% }) %>
-    <% } else { %>
-      <p class="text-muted">No images uploaded for this product.</p>
-    <% } %>
+
+        <div class="col-lg-6">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <form id="editProductForm" method="post" action="/admin/editProduct/<%= product._id %>" enctype="multipart/form-data">
+                        <div class="mb-4">
+                            <label for="product_name" class="form-label">Product Name</label>
+                            <input type="text" name="productName" value="<%= product.productName %>"
+                                class="form-control border" id="product_name">
+                            <div id="productName-error" class="error-message"></div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label">Full description</label>
+                            <textarea name="descriptionData" class="form-control border"
+                                rows="4" id="description"><%= product.description %></textarea>
+                            <div id="description-error" class="error-message"></div>
+                        </div>
+
+                        <div class="form-group mb-4">
+                            <label for="price">Regular Price (₹)</label>
+                            <input type="number" class="form-control" name="price" id="price"
+                                value="<%= product.price %>" required min="1" step="0.01" />
+                            <div id="price-error" class="error-message"></div>
+                        </div>
+
+                        <div class="form-group mb-4">
+                            <label for="discountPrice">Discount Price (₹)</label>
+                            <input type="number" class="form-control" name="discountPrice" id="discountPrice"
+                                value="<%= product.discountPrice || 0 %>" min="0" step="0.01" />
+                            <div id="discountPrice-error" class="error-message"></div>
+                        </div>
+
+                      <div class="mb-4">
+  <label class="form-label">Sizes & Stock</label>
+
+  <div class="row">
+    <% const sizeOptions = [6, 7, 8, 9, 10]; %>
+    <% sizeOptions.forEach((sizeNum) => {
+      const existingSize = product.sizes?.find(s => s.size == sizeNum);
+    %>
+      <div class="col-md-2 mb-2">
+        <label>Size <%= sizeNum %></label>
+        <input type="hidden" name="size" value="<%= sizeNum %>">
+        <input
+          type="number"
+          name="stock"
+          min="0"
+          class="form-control"
+          value="<%= existingSize ? existingSize.stock : 0 %>"
+        />
+      </div>
+    <% }); %>
   </div>
 </div>
 
-<div class="card mb-2">
-  <div class="card-header">
-    <h4>Upload New Images</h4>
-  </div>
-  <input class="form-control mb-3" type="file" name="images" id="imageInput" multiple
-         accept="image/png, image/jpeg, image/jpg" />
-  <div id="images-error" class="error-message">
-    <% if (typeof errorMessage !=="undefined" ) { %>
-      <%= errorMessage %>
-    <% } %>
-  </div>
-  <div id="addedImagesContainer" class="thumbnails-container"></div>
-</div>
 
-                            <div>
-                                <button class="btn btn-md rounded font-sm hover-up" id="updatebtn"
-                                    type="submit">Update</button>
+                        <div class="mb-4">
+                            <label class="form-label">Category</label>
+                            <select class="form-select border" name="category" id="category">
+                                <% for (let i=0; i < cat.length; i++) { %>
+                                    <option value="<%= cat[i].name %>" <%= product.category === cat[i].name ? "selected" : "" %>>
+                                        <%= cat[i].name %>
+                                    </option>
+                                <% } %>
+                            </select>
+                            <div id="category-error" class="error-message"></div>
+                        </div>
+
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h4>Existing Images</h4>
                             </div>
-                        </form>
-                    </div>
+                            <div class="card-body d-flex flex-wrap gap-3">
+                                <% if (product.productImage && product.productImage.length > 0) { %>
+                                    <% product.productImage.forEach((img) => { %>
+                                        <div class="position-relative" style="display:inline-block;">
+                                            <img src="/uploads/products/<%= img %>"
+                                                 alt="Product Image"
+                                                 style="width:100px; height:100px; object-fit:cover; border:1px solid #ccc; border-radius:4px;" />
+                                            <button type="button"
+                                                    class="btn btn-sm btn-danger position-absolute top-0 end-0"
+                                                    style="padding:2px 6px; font-size:12px;"
+                                                    onclick="deleteSingleImage('<%= img %>', '<%= product._id %>')">✕</button>
+                                        </div>
+                                    <% }) %>
+                                <% } else { %>
+                                    <p class="text-muted">No images uploaded for this product.</p>
+                                <% } %>
+                            </div>
+                        </div>
+
+                        <div class="card mb-2">
+                            <div class="card-header">
+                                <h4>Upload New Images</h4>
+                            </div>
+                            <input class="form-control mb-3" type="file" name="images" id="imageInput" multiple
+                                   accept="image/png, image/jpeg, image/jpg" />
+                            <div id="images-error" class="error-message">
+                                <% if (typeof errorMessage !=="undefined" ) { %>
+                                    <%= errorMessage %>
+                                <% } %>
+                            </div>
+                            <div id="addedImagesContainer" class="thumbnails-container"></div>
+                        </div>
+
+                        <div>
+                            <button class="btn btn-md rounded font-sm hover-up" id="updatebtn"
+                                type="submit">Update</button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
-    </section>
+    </div>
+</section>
 
-    <script src="https://cdn.jsdelivr.net/npm/cropperjs/dist/cropper.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/cropperjs/dist/cropper.min.js"></script>
+<script>
+    const productId = '<%= product._id %>';
+    const form = document.getElementById('editProductForm');
 
-        <script>
-            const productId = '<%= product._id %>';
-            const form = document.getElementById('editProductForm');
-            const productNameInput = document.getElementById('product_name');
-            const descriptionInput = document.getElementById('description');
-            const priceInput = document.getElementById('price');
-            const discountPriceInput = document.getElementById('discountPrice');
-            const quantityInput = document.getElementById('quantity');
-            const categorySelect = document.getElementById('category');
-            const imageInput = document.getElementById('imageInput');
+    async function deleteSingleImage(imageName, productId) {
+        if (!confirm("Are you sure you want to delete this image?")) return;
+        fetch('/admin/deleteImage', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ imageNameToServer: imageName, productIdToServer: productId })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status) location.reload();
+            else alert(data.message || "Failed to remove image");
+        })
+        .catch(err => console.error("Error:", err));
+    }
+</script>
 
-            function clearErrorMessages() {
-                const errorElements = document.querySelectorAll('.error-message');
-                errorElements.forEach(el => {
-                    el.innerText = '';
-                    el.style.display = 'none';
-                });
-            }
-
-            function displayErrorMessage(elementId, message) {
-                const errorElement = document.getElementById(elementId);
-                errorElement.innerText = message;
-                errorElement.style.display = 'block';
-            }
-
-            async function checkDuplicateName(name, currentId) {
-                try {
-                    const response = await fetch('/admin/checkProductName', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ name, id: currentId })
-                    });
-                    const data = await response.json();
-                    return data.exists;
-                } catch (error) {
-                    console.error('Error checking duplicate name:', error);
-                    return false; 
-                }
-            }
-
-            async function validateForm() {
-                clearErrorMessages();
-
-                const name = productNameInput.value.trim();
-                const description = descriptionInput.value.trim();
-                const quantity = quantityInput.value.trim();
-                const regularPrice = parseFloat(priceInput.value);
-                const discountPrice = parseFloat(discountPriceInput.value) || 0;
-                const category = categorySelect.value.trim();
-
-                let isValid = true;
-
-                if (name === "") {
-                    displayErrorMessage('productName-error', 'Please enter a product name.');
-                    isValid = false;
-                } else {
-                    const exists = await checkDuplicateName(name, productId);
-                    if (exists) {
-                        displayErrorMessage('productName-error', 'Product name already exists. Please choose a different name.');
-                        isValid = false;
-                    }
-                }
-
-                if (description === '') {
-                    displayErrorMessage('description-error', 'Please enter a product description.');
-                    isValid = false;
-                }
-
-                if (isNaN(regularPrice) || regularPrice <= 0) {
-                    displayErrorMessage('price-error', 'Please enter a valid regular price greater than 0.');
-                    isValid = false;
-                }
-
-                if (!isNaN(discountPrice) && discountPrice > regularPrice) {
-                    displayErrorMessage('discountPrice-error', 'Discount price cannot exceed the regular price.');
-                    isValid = false;
-                }
-
-                if (quantity === '' || !/^\d+$/.test(quantity) || parseInt(quantity) < 1) {
-                    displayErrorMessage('quantity-error', 'Quantity must be greater than zero.');
-                    isValid = false;
-                }
-
-                if (category === '') {
-                    displayErrorMessage('category-error', 'Please select a category.');
-                    isValid = false;
-                }
-
-                if (imageInput.files.length > 0) {
-                    const allowedTypes = ["image/jpeg", "image/jpg", "image/png"];
-                    for (let i = 0; i < imageInput.files.length; i++) {
-                        const file = imageInput.files[i];
-                        if (!allowedTypes.includes(file.type)) {
-                            displayErrorMessage("images-error", "Only JPG and PNG image files are allowed.");
-                            isValid = false;
-                            break;
-                        }
-                    }
-                }
-
-                return isValid;
-            }
-
-            form.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                if (await validateForm()) {
-                    form.submit();
-                }
-            });
-
-            productNameInput.addEventListener('blur', async () => {
-                const name = productNameInput.value.trim();
-                if (name && name !== '<%= product.productName %>') { 
-                    const exists = await checkDuplicateName(name, productId);
-                    if (exists) {
-                        displayErrorMessage('productName-error', 'Product name already exists. Please choose a different name.');
-                    } else {
-                        clearErrorMessages(); 
-                    }
-                }
-            });
-
-            function deleteSingleImage(imageName, productId) {
-                if (!confirm("Are you sure you want to delete this image?")) return;
-
-                fetch('/admin/deleteImage', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ imageNameToServer: imageName, productIdToServer: productId })
-                })
-                .then(res => res.json())
-                .then(data => {
-                  if (data.status) {
-                    location.reload();
-                  } else {
-                    alert(data.message || "Failed to remove image");
-                  }
-                })
-                .catch(err => console.error("Error:", err));
-              }
-
-        </script>
-
-            <%- include("../partials/admin/footer") %>
+<%- include("../partials/admin/footer") %>

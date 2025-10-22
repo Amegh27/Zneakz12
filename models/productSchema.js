@@ -21,16 +21,12 @@ const productSchema = new Schema({
   type: Boolean,
   default: true,
 },
-  quantity: {
-    type: Number,
-    default: 0, 
-    required: true,
-    min: 0
-  },
-  sizes: {
-  type: [String],
-  default: ["6", "7", "8", "9", "10"]
-},
+ sizes: [
+    {
+      size: { type: String, required: true },  
+      stock: { type: Number, default: 0, min: 0 }
+    }
+  ],
   productImage: {
     type: [String],
     required: true

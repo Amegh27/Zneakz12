@@ -254,12 +254,20 @@
                     </div>
                   </div>
 
-                  <div class="col-lg-4">
-                    <div class="mb-4">
-                      <label for="quantity" class="form-label">Quantity</label>
-                      <input type="number" class="form-control border" id="quantity" name="quantity" min="1" value="1"  />
-                    </div>
-                  </div>
+                 <div class="card mb-4">
+  <div class="card-header"><h4>Size & Stock</h4></div>
+  <div class="card-body row">
+    <% const availableSizes = ["6","7","8","9","10"]; %>
+    <% availableSizes.forEach((size, index) => { %>
+      <div class="col-lg-2 mb-3">
+        <label class="form-label">Size <%= size %></label>
+        <input type="number" class="form-control border" name="sizes[<%= index %>][stock]" min="0" value="0" />
+        <input type="hidden" name="sizes[<%= index %>][size]" value="<%= size %>" />
+      </div>
+    <% }); %>
+  </div>
+</div>
+
                 </div>
 
                 <div class="card mb-4">
@@ -528,19 +536,37 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const productName = productNameInput.value.trim();
     const description = descriptionInput.value.trim();
-    const quantity = parseInt(quantityInput.value, 10);
     const category = categorySelect.value.trim();
     const regularPrice = parseFloat(regularPriceInput.value);
     const salesPrice = parseFloat(salesPriceInput.value);
     const files = Array.from(imageInput.files);
 
-    if (!productName || !description || !category || Number.isNaN(regularPrice) || Number.isNaN(quantity)) {
-      return Swal.fire({ icon: 'error', title: 'Missing Fields', text: 'Please fill in all required fields.', confirmButtonColor: '#d33' });
-    }
+// Check total stock from size inputs
+const sizeInputs = form.querySelectorAll("input[name^='sizes'][name$='[stock]']");
+let totalStock = 0;
+sizeInputs.forEach(input => {
+  const val = parseInt(input.value, 10) || 0;
+  totalStock += val;
+});
 
-    if (quantity <= 0) {
-      return Swal.fire({ icon: 'error', title: 'Invalid Quantity', text: 'Quantity must be greater than zero.', confirmButtonColor: '#d33' });
-    }
+if (!productName || !description || !category || Number.isNaN(regularPrice)) {
+  return Swal.fire({
+    icon: 'error',
+    title: 'Missing Fields',
+    text: 'Please fill in all required fields.',
+    confirmButtonColor: '#d33'
+  });
+}
+
+if (totalStock <= 0) {
+  return Swal.fire({
+    icon: 'error',
+    title: 'Invalid Stock',
+    text: 'Please add stock for at least one size.',
+    confirmButtonColor: '#d33'
+  });
+}
+
 
     if (!Number.isNaN(regularPrice) && !Number.isNaN(salesPrice) && salesPrice > regularPrice) {
       return Swal.fire({ icon: 'error', title: 'Invalid Price', text: 'Discount price cannot exceed regular price.', confirmButtonColor: '#d33' });

@@ -1,7 +1,8 @@
 const Product = require('../../models/productSchema')
 const Category = require('../../models/categorySchema')
 const User = require('../../models/userSchema')
-
+const Cart = require("../../models/cartSchema");
+const cartSchema = require('../../models/cartSchema');
 
 const searchProducts = async (req, res) => {
   try {
@@ -61,7 +62,7 @@ const searchProducts = async (req, res) => {
 const productDetails = async (req, res) => {
   try {
     const userId = req.session.user;
-    const userdata = await User.findById(userId);
+    const userdata = userId ? await User.findById(userId) : null;
     const productId = req.query.id;
 
     const product = await Product.findById(productId).populate('category');
@@ -89,9 +90,19 @@ const productDetails = async (req, res) => {
       }).limit(3);
     }
 
+    // ✅ Calculate cartCount
+    let cartCount = 0;
+    if (userId) {
+      const cart = await Cart.findOne({ user: userId });
+      if (cart && cart.items.length > 0) {
+        cartCount = cart.items.reduce((acc, item) => acc + item.quantity, 0);
+      }
+    }
+
     res.render("product-details", {
       user: userdata,
       product,
+      cartCount,
       quantity: product.quantity,
       category: product.category,
       relatedProducts,
@@ -384,10 +395,10 @@ const menDetails = async (req, res) => {
     const userdata = await User.findById(userId);
     const productId = req.query.id;
 
-    const product = await Product.findById(productId).populate('category');
+    const product = await Product.findById(productId).populate("category");
 
     if (!product || product.isDeleted || !product.isListed || product.isBlocked) {
-      return res.redirect('/');
+      return res.redirect("/");
     }
 
     const minPrice = product.price - 1000;
@@ -398,22 +409,29 @@ const menDetails = async (req, res) => {
       _id: { $ne: product._id },
       isDeleted: false,
       isListed: true,
-      price: { $gte: minPrice, $lte: maxPrice }
+      price: { $gte: minPrice, $lte: maxPrice },
     }).limit(4);
 
-    
+    let cartCount = 0;
+    if (userId) {
+      const cart = await Cart.findOne({ userId });
+      cartCount = cart ? cart.items.length : 0;
+    }
+
     res.render("men-details", {
       user: userdata,
       product,
       quantity: product.quantity,
       category: product.category,
       relatedProducts,
+      cartCount, 
     });
   } catch (error) {
-    console.error("Error fetching product details:", error);
+    console.error("🔥 menDetails ERROR:", error);
     res.redirect("/pageNotFound");
   }
 };
+
 
 
 
@@ -446,6 +464,7 @@ const womenDetails = async (req, res) => {
       quantity: product.quantity,
       category: product.category,
       relatedProducts,
+      cartCount
     });
   } catch (error) {
     console.error("Error fetching women product details:", error);

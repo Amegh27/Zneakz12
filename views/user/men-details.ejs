@@ -246,7 +246,7 @@
         <a href="#"><i class="bi bi-heart fs-5 me-3"></i></a>
         <a href="/cart" class="position-relative me-4">
           <i class="bi bi-cart fs-5"></i>
-          <span id="cartCount" class="position-absolute badge rounded-pill bg-danger">0</span>
+<span id="cartCount" class="position-absolute badge rounded-pill bg-danger"><%= cartCount %></span>
         </a>
       </div>
     </div>
@@ -299,14 +299,23 @@
     <div class="description"><%= product.description %></div>
 
     <!-- Sizes -->
-    <% if(product.sizes && product.sizes.length > 0){ %>
-      <div class="size-options">
-        <span class="label">Size:</span>
-        <% product.sizes.forEach((size,index)=>{ %>
-          <div class="size-option <%= index===0?'active':'' %>"><%= size %></div>
-        <% }) %>
-      </div>
-    <% } %>
+    <% if (product.sizes && product.sizes.length > 0) { %>
+<div class="size-options">
+  <span class="label">Size:</span>
+  <% product.sizes.forEach((s, index) => { %>
+    <div 
+      class="size-option <%= index === 0 ? 'active' : '' %>"
+      data-stock="<%= s.stock %>"
+      onclick="selectSize(this)"
+    >
+      <%= s.size %>
+    </div>
+  <% }) %>
+</div>
+<% } else { %>
+  <div>No sizes available</div>
+<% } %>
+
     <!-- Size Chart Modal -->
 <div id="sizeChartModal" class="modal">
   <div class="modal-content">
@@ -342,19 +351,27 @@
 
 
 <div id="stockIndicator" style="font-weight:bold; margin-bottom:10px;">
-  <% if(product.quantity < 5){ %>
-    <span style="color:red;">Less stocks available: <%= product.quantity %></span>
+  <% if (product.sizes && product.sizes.length > 0) { %>
+    <% const firstStock = product.sizes[0].stock || 0; %>
+    <% if (firstStock === 0) { %>
+      <span style="color:red;">No stock available</span>
+    <% } else if (firstStock < 5) { %>
+      <span style="color:red;">Less stocks available: <%= firstStock %></span>
+    <% } else { %>
+      <span style="color:green;">In stock: <%= firstStock %></span>
+    <% } %>
   <% } else { %>
-    <span style="color:green;">In stock: <%= product.quantity %></span>
+    <span style="color:red;">No size data available</span>
   <% } %>
 </div>
+
 
 
 
     <!-- Buttons -->
     <div class="btn-group">
       <button class="btn btn-primary">Buy Now</button>
-      <button class="btn btn-cart">Add to Cart 🛒</button>
+      <button class="btn btn-cart" onclick="addToCart('<%= product._id %>')">Add to Cart 🛒</button>
       <button class="btn btn-outline">♡</button>
     </div>
   </div>
@@ -431,86 +448,197 @@
   </div>
   <p>© <%= new Date().getFullYear() %> ZNEAKZ. All Rights Reserved.</p>
 </footer>
+<!-- SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
-function changeMainImage(src, thumb){
-  document.getElementById('mainImage').src = src;
-  document.querySelectorAll('.thumbnail').forEach(t=>t.classList.remove('active'));
-  thumb.classList.add('active');
-}
+    let selectedSize = null;
 
-function changeQuantity(delta){
-  let input = document.getElementById('quantity');
-  let qty = parseInt(input.value) + delta;
-  if(qty<1) qty=1;
-  input.value=qty;
-}
-
-function initImageZoom() {
-  const mainImage = document.getElementById('mainImage');
-  const mainImageContainer = document.querySelector('.main-image');
-  const zoomLens = document.getElementById('zoomLens');
-
-  if (!mainImage || !mainImageContainer) return;
-
-  if (window.innerWidth <= 992) {
-    mainImage.style.transform = "scale(1)";
-    if (zoomLens) zoomLens.style.display = 'none';
-    return;
-  }
-
-  mainImage.style.transition = "transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)";
-  mainImageContainer.style.position = "relative";
-  if (zoomLens) zoomLens.style.display = 'block';
-
-  let isZoomEnabled = false;
-
-  mainImageContainer.onmouseenter = () => {
-    mainImageContainer.style.cursor = 'zoom-in';
-    isZoomEnabled = true;
-    if (zoomLens) zoomLens.style.opacity = '1';
-  };
-
-  mainImageContainer.onmousemove = (e) => {
-    if (!isZoomEnabled) return;
-    const x = e.offsetX;
-    const y = e.offsetY;
-
-    const constrainedX = Math.max(50, Math.min(mainImageContainer.clientWidth - 50, x));
-    const constrainedY = Math.max(50, Math.min(mainImageContainer.clientHeight - 50, y));
-
-    mainImage.style.transformOrigin = `${(constrainedX / mainImageContainer.clientWidth) * 100}% ${(constrainedY / mainImageContainer.clientHeight) * 100}%`;
-    mainImage.style.transform = "scale(2.2)";
-
-    if (zoomLens) {
-      zoomLens.style.left = `${constrainedX - zoomLens.offsetWidth / 2}px`;
-      zoomLens.style.top = `${constrainedY - zoomLens.offsetHeight / 2}px`;
-    }
-  };
-
-  mainImageContainer.onmouseleave = () => {
-    isZoomEnabled = false;
-    mainImage.style.transformOrigin = "center center";
-    mainImage.style.transform = "scale(1)";
-    mainImageContainer.style.cursor = 'default';
-    if (zoomLens) zoomLens.style.opacity = '0';
-  };
-}
 document.addEventListener("DOMContentLoaded", () => {
-  initImageZoom();
-});
-  const stockIndicator = document.getElementById('stockIndicator');
 
-  function updateStockIndicator(stock) {
-    if(stock < 5){
+  // --- IMAGE ZOOM ---
+  function initImageZoom() {
+    const mainImage = document.getElementById('mainImage');
+    const mainImageContainer = document.querySelector('.main-image');
+    const zoomLens = document.getElementById('zoomLens');
+
+    if (!mainImage || !mainImageContainer) return;
+
+    if (window.innerWidth <= 992) {
+      mainImage.style.transform = "scale(1)";
+      if (zoomLens) zoomLens.style.display = 'none';
+      return;
+    }
+
+    mainImage.style.transition = "transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)";
+    mainImageContainer.style.position = "relative";
+    if (zoomLens) zoomLens.style.display = 'block';
+
+    let isZoomEnabled = false;
+
+    mainImageContainer.onmouseenter = () => {
+      mainImageContainer.style.cursor = 'zoom-in';
+      isZoomEnabled = true;
+      if (zoomLens) zoomLens.style.opacity = '1';
+    };
+
+    mainImageContainer.onmousemove = (e) => {
+      if (!isZoomEnabled) return;
+      const x = e.offsetX;
+      const y = e.offsetY;
+      const constrainedX = Math.max(50, Math.min(mainImageContainer.clientWidth - 50, x));
+      const constrainedY = Math.max(50, Math.min(mainImageContainer.clientHeight - 50, y));
+      mainImage.style.transformOrigin = `${(constrainedX / mainImageContainer.clientWidth) * 100}% ${(constrainedY / mainImageContainer.clientHeight) * 100}%`;
+      mainImage.style.transform = "scale(2.2)";
+      if (zoomLens) {
+        zoomLens.style.left = `${constrainedX - zoomLens.offsetWidth / 2}px`;
+        zoomLens.style.top = `${constrainedY - zoomLens.offsetHeight / 2}px`;
+      }
+    };
+
+    mainImageContainer.onmouseleave = () => {
+      isZoomEnabled = false;
+      mainImage.style.transformOrigin = "center center";
+      mainImage.style.transform = "scale(1)";
+      mainImageContainer.style.cursor = 'default';
+      if (zoomLens) zoomLens.style.opacity = '0';
+    };
+  }
+  initImageZoom();
+
+  // --- THUMBNAIL CLICK ---
+  window.changeMainImage = (src, thumb) => {
+    document.getElementById('mainImage').src = src;
+    document.querySelectorAll('.thumbnail').forEach(t => t.classList.remove('active'));
+    thumb.classList.add('active');
+  };
+
+  // --- QUANTITY ---
+  window.changeQuantity = (delta) => {
+    const input = document.getElementById('quantity');
+    let qty = parseInt(input.value) + delta;
+    if (qty < 1) qty = 1;
+    input.value = qty;
+  };
+
+  // --- SIZE SELECTION ---
+  let selectedSize = null;
+  function selectSize(element) {
+    document.querySelectorAll('.size-option').forEach(el => el.classList.remove('active'));
+    element.classList.add('active');
+    selectedSize = element.textContent.trim();
+
+    const stock = parseInt(element.dataset.stock);
+    const stockIndicator = document.getElementById('stockIndicator');
+
+    if (stock === 0) {
+      stockIndicator.innerHTML = `<span style="color:red;">Out of stock</span>`;
+    } else if (stock < 5) {
       stockIndicator.innerHTML = `<span style="color:red;">Less stocks available: ${stock}</span>`;
     } else {
       stockIndicator.innerHTML = `<span style="color:green;">In stock: ${stock}</span>`;
     }
   }
 
-  updateStockIndicator(productStock);
+  // Initialize first size
+  const firstSize = document.querySelector('.size-option.active');
+  if(firstSize) selectSize(firstSize);
+
+  // Attach click handlers to size options
+  document.querySelectorAll('.size-option').forEach(option => {
+    option.addEventListener('click', () => selectSize(option));
+  });
+
+  // --- ADD TO CART ---
+ window.addToCart = async (productId) => {
+  if (!selectedSize) {
+    Swal.fire({
+      icon: "error",
+      title: "Select Size",
+      text: "Please select a size before adding to cart",
+      timer: 1500,
+      toast: true,
+      position: "top-end",
+      showConfirmButton: false
+    });
+    return;
+  }
+
+   const quantity = parseInt(document.getElementById("quantity").value);
+  const activeOption = document.querySelector(".size-option.active");
+  const stock = parseInt(activeOption.dataset.stock);
+
+  if (quantity > stock) {
+    Swal.fire({
+      icon: "error",
+      title: "Out of Stock",
+      text: "Quantity exceeds available stock",
+      timer: 1500,
+      toast: true,
+      position: "top-end",
+      showConfirmButton: false
+    });
+    return;
+  }
+   try {
+    const response = await fetch("/cart/add", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ productId, size: selectedSize, quantity })
+    });
+
+      const data = await response.json();
+
+
+    if (data.success) {
+      Swal.fire({
+        icon: "success",
+        title: "Added to Cart",
+        text: data.message,
+        timer: 1200,
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false
+      });
+      let newStock = stock - quantity;
+      activeOption.dataset.stock = newStock;
+      selectSize(activeOption);
+
+        document.getElementById('cartCount').textContent = data.cartCount || 0;
+
+   
+
+      } else if (data.redirect) {
+        window.location.href = data.redirect;
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: data.message || data.error || "Failed to add to cart",
+          timer: 1500,
+          showConfirmButton: false,
+          toast: true,
+          position: "top-end"
+        });
+      }
+    } catch (err) {
+      console.error(err);
+      Swal.fire({
+        icon: "error",
+        title: "Server Error",
+        text: "Please try again later",
+        timer: 1500,
+        showConfirmButton: false,
+        toast: true,
+        position: "top-end"
+      });
+    }
+  };
+
+});
+
 </script>
+
 
 </body>
 </html>
