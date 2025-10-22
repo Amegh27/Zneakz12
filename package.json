@@ -17,6 +17,8 @@
     "ejs": "^3.1.10",
     "express": "^5.1.0",
     "express-session": "^1.18.2",
+    "jspdf": "^3.0.3",
+    "jspdf-autotable": "^5.0.2",
     "mongodb": "^6.17.0",
     "mongoose": "^8.16.1",
     "multer": "^2.0.1",
@@ -25,6 +27,8 @@
     "nodemon": "^3.1.10",
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
-    "sharp": "^0.34.2"
+    "pdfkit": "^0.17.2",
+    "sharp": "^0.34.2",
+    "tslib": "^2.8.1"
   }
 }

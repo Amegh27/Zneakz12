@@ -9,6 +9,7 @@ const productController = require('../controllers/user/productController')
 const profileController = require('../controllers/user/profileController')
 const cartController = require("../controllers/user/cartController");
 const checkoutController = require("../controllers/user/checkoutController");
+const { downloadInvoice } = require("../controllers/user/checkoutController");
 
 router.use(forceLogoutIfBlocked);
 
@@ -97,6 +98,10 @@ router.get("/checkout", checkoutController.checkoutPage);
 router.post("/checkout/place-order", checkoutController.placeOrder);
 router.get('/order-success',checkoutController.orderSuccessPage);
 
-router.get('/orders/:id',checkoutController.viewOrderDetails);
+router.get("/orders", checkoutController.getUserOrders);
+router.get("/orders/:id", checkoutController.getUserOrders);
+router.get("/orders/details/:id", checkoutController.viewOrderDetails);
+router.get("/orders/:id/invoice", checkoutController.downloadInvoice);
+  
 
 module.exports = router

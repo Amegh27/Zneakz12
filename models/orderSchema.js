@@ -1,4 +1,3 @@
-// models/orderSchema.js
 const mongoose = require("mongoose");
 const { nanoid } = require("nanoid");
 
@@ -21,7 +20,7 @@ const orderItemSchema = new mongoose.Schema({
   },
   status: { 
     type: String, 
-    enum: ["Ordered", "Cancelled", "Returned"], 
+    enum: ["Ordered", "Shipped", "Out for Delivery", "Delivered", "Cancelled"], 
     default: "Ordered" 
   },
   cancelReason: String,

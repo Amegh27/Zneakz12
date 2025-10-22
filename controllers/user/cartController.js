@@ -13,20 +13,14 @@ const addToCart = async (req, res) => {
     const product = await Product.findById(productId);
     if (!product) return res.json({ success: false, message: "Product not found" });
 
-    // Find the selected size
+    // ✅ Just verify stock exists — don't modify it
     const sizeIndex = product.sizes.findIndex(s => s.size === size);
     if (sizeIndex === -1) return res.json({ success: false, message: "Size not found" });
-
-    // Check stock
     if (product.sizes[sizeIndex].stock < quantity) {
       return res.json({ success: false, message: "Not enough stock" });
     }
 
-    // Reduce stock for that size
-    product.sizes[sizeIndex].stock -= quantity;
-    await product.save();
-
-    // Add to cart
+    // Add to cart logic
     let cart = await Cart.findOne({ user: userId });
     if (!cart) cart = new Cart({ user: userId, items: [] });
 
@@ -41,11 +35,10 @@ const addToCart = async (req, res) => {
         product: productId,
         quantity: parseInt(quantity),
         price: product.discountPrice || product.price,
-        size // use size from req.body
+        size
       });
     }
 
-    // Update total
     cart.total = cart.items.reduce((acc, item) => acc + item.price * item.quantity, 0);
     await cart.save();
 
@@ -59,6 +52,9 @@ const addToCart = async (req, res) => {
     res.json({ success: false, message: "Server error" });
   }
 };
+
+
+
 
 
 
@@ -148,25 +144,11 @@ const removeFromCart = async (req, res) => {
     const cart = await Cart.findOne({ user: userId });
     if (!cart) return res.json({ success: false, message: "Cart not found" });
 
-    // Find item in cart by productId AND size
     const itemIndex = cart.items.findIndex(
       item => item.product.toString() === productId && item.size === size
     );
     if (itemIndex === -1) return res.json({ success: false, message: "Item not found in cart" });
 
-    const item = cart.items[itemIndex];
-
-    // Restore stock for the correct size
-    const product = await Product.findById(productId);
-    if (!product) return res.json({ success: false, message: "Product not found" });
-
-    const sizeIndex = product.sizes.findIndex(s => s.size === size);
-    if (sizeIndex !== -1) {
-      product.sizes[sizeIndex].stock += item.quantity;
-      await product.save();
-    }
-
-    // Remove from cart
     cart.items.splice(itemIndex, 1);
     cart.total = cart.items.reduce((acc, i) => acc + i.price * i.quantity, 0);
     await cart.save();
@@ -177,6 +159,8 @@ const removeFromCart = async (req, res) => {
     res.json({ success: false, message: "Server error" });
   }
 };
+
+
 
 
 

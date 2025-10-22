@@ -590,25 +590,21 @@ document.addEventListener("DOMContentLoaded", () => {
       const data = await response.json();
 
 
-    if (data.success) {
-      Swal.fire({
-        icon: "success",
-        title: "Added to Cart",
-        text: data.message,
-        timer: 1200,
-        toast: true,
-        position: "top-end",
-        showConfirmButton: false
-      });
-      let newStock = stock - quantity;
-      activeOption.dataset.stock = newStock;
-      selectSize(activeOption);
+if (data.success) {
+  Swal.fire({
+    icon: "success",
+    title: "Added to Cart",
+    text: data.message,
+    timer: 1200,
+    toast: true,
+    position: "top-end",
+    showConfirmButton: false
+  });
 
-        document.getElementById('cartCount').textContent = data.cartCount || 0;
+  document.getElementById('cartCount').textContent = data.cartCount || 0;
+}
 
-   
-
-      } else if (data.redirect) {
+      else if (data.redirect) {
         window.location.href = data.redirect;
       } else {
         Swal.fire({
