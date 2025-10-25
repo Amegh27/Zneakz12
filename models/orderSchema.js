@@ -20,11 +20,17 @@ const orderItemSchema = new mongoose.Schema({
   },
   status: { 
     type: String, 
-    enum: ["Ordered", "Shipped", "Out for Delivery", "Delivered", "Cancelled"], 
-    default: "Ordered" 
+    enum: ["Placed", "Shipped", "Out for Delivery", "Delivered", "Cancelled","Partially Cancelled","Returned"], 
+    default: "Placed" 
   },
-  cancelReason: String,
-  returnReason: String
+ cancelReason: String,
+  returnReason: String,
+  returnDate: Date,
+  returnStatus: { 
+    type: String, 
+    enum: ["None", "Requested", "Approved", "Rejected"], 
+    default: "None" 
+  }
 });
 
 const orderSchema = new mongoose.Schema(
@@ -57,9 +63,11 @@ const orderSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ["Placed", "Shipped", "Delivered", "Cancelled"],
+      enum: ["Placed", "Shipped","Out for Delivery", "Delivered", "Cancelled","Partially Cancelled","Returned"],
       default: "Placed",
     },
+
+    
 
     placedAt: {
       type: Date,

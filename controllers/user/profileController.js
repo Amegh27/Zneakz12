@@ -230,8 +230,8 @@ const getEditProfilePage = async (req, res) => {
 
 const postEditProfile = async (req, res) => {
   try {
-    const userId = req.session.user?._id; 
-    const { name, email, phone, gender, remove_avatar } = req.body; 
+    const userId = req.session.user?._id;
+    const { name, email, phone, gender, remove_avatar } = req.body;
 
     const user = await User.findById(userId);
     if (!user) {
@@ -245,22 +245,22 @@ const postEditProfile = async (req, res) => {
 
     if (remove_avatar === '1') {
       if (user.avatar && user.avatar !== '/images/user-avatar.png') {
-        const oldPicPath = path.join(__dirname, '../../public', user.avatar);
-        fs.unlink(oldPicPath, (err) => {
-          if (err) console.log('Old avatar not found (skip delete):', err.message);
+        const oldAvatarPath = path.join(__dirname, '../../public', user.avatar);
+        fs.unlink(oldAvatarPath, err => {
+          if (err) console.log('Old avatar deletion error:', err.message);
         });
       }
       user.avatar = null;
-    } else if (req.file) {
+    }
+
+    if (req.file) {
       if (user.avatar && user.avatar !== '/images/user-avatar.png') {
-        const oldPicPath = path.join(__dirname, '../../public', user.avatar);
-        fs.unlink(oldPicPath, (err) => {
-          if (err) console.log('Old avatar not found (skip delete):', err.message);
+        const oldAvatarPath = path.join(__dirname, '../../public', user.avatar);
+        fs.unlink(oldAvatarPath, err => {
+          if (err) console.log('Old avatar deletion error:', err.message);
         });
       }
-
       user.avatar = `/admin-assets/profile/${req.file.filename}`;
-      console.log('Saved new avatar:', user.avatar); 
     }
 
     await user.save();

@@ -6,7 +6,7 @@ const categoryController = require('../controllers/admin/categoryController')
 const {userAuth,adminAuth} = require('../middlewares/auth')
 const uploads = require('../middlewares/multerConfig')
 const productController = require('../controllers/admin/productController')
-
+const orderController = require('../controllers/admin/orderController')
 
 
 router.get('/pageError',adminController.pageError)
@@ -42,6 +42,15 @@ router.post('/editProduct/:id',adminAuth,uploads.array('images',4),productContro
 router.post('/deleteImage',adminAuth,productController.deleteSingleImage)
 router.get('/products/delete/:id', adminAuth, productController.softDeleteProduct);
 
+// order management
+router.get("/orders", orderController.getAllOrders);
+router.post("/orders/:orderId/items/:itemId/status", orderController.updateItemStatus);
+
+// return management
+router.get('/return', orderController.viewReturns); 
+router.get('/return/:id', orderController.viewReturnDetails);
+router.post('/returns/:orderId/:itemId/approve', adminAuth, orderController.approveReturn);
+router.post('/returns/:orderId/:itemId/reject', adminAuth, orderController.rejectReturn);
 
 
 

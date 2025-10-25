@@ -60,13 +60,11 @@ const customerBlocked = async (req, res) => {
       return res.redirect("/admin/users");
     }
 
-    // 1️⃣ Block the user in DB
     await User.updateOne({ _id: id }, { $set: { isBlocked: true } });
 
-    // 2️⃣ Force logout: destroy all active sessions for this user
     const store = req.sessionStore;
     if (store) {
-      await destroyUserSessions(id, store);  // 👈 Now defined and works
+      await destroyUserSessions(id, store); 
       console.log(`All sessions destroyed for blocked user: ${id}`);
     }
 

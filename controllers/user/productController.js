@@ -90,7 +90,6 @@ const productDetails = async (req, res) => {
       }).limit(3);
     }
 
-    // ✅ Calculate cartCount
     let cartCount = 0;
     if (userId) {
       const cart = await Cart.findOne({ user: userId });
@@ -438,7 +437,7 @@ const menDetails = async (req, res) => {
 const womenDetails = async (req, res) => {
   try {
     const userId = req.session.user;
-    const userdata = await User.findById(userId);
+    const userdata = userId ? await User.findById(userId) : null;
     const productId = req.query.id;
 
     const product = await Product.findById(productId).populate('category');
@@ -457,6 +456,14 @@ const womenDetails = async (req, res) => {
       isListed: true,
       price: { $gte: minPrice, $lte: maxPrice }
     }).limit(4);
+
+    let cartCount = 0;
+    if (userId) {
+      const cart = await Cart.findOne({ user: userId });
+      if (cart && cart.items.length > 0) {
+        cartCount = cart.items.reduce((acc, item) => acc + item.quantity, 0);
+      }
+    }
 
     res.render("women-details", {
       user: userdata,
@@ -474,10 +481,12 @@ const womenDetails = async (req, res) => {
 
 
 
+
+
 const kidsDetails = async (req, res) => {
   try {
     const userId = req.session.user;
-    const userdata = await User.findById(userId);
+    const userdata = userId ? await User.findById(userId) : null;
     const productId = req.query.id;
 
     const product = await Product.findById(productId).populate('category');
@@ -497,13 +506,23 @@ const kidsDetails = async (req, res) => {
       price: { $gte: minPrice, $lte: maxPrice }
     }).limit(4);
 
+    // ✅ Initialize cartCount
+    let cartCount = 0;
+    if (userId) {
+      const cart = await Cart.findOne({ user: userId });
+      if (cart && cart.items.length > 0) {
+        cartCount = cart.items.reduce((acc, item) => acc + item.quantity, 0);
+      }
+    }
+
     res.render("kids-details", {
       user: userdata,
       product,
       quantity: product.quantity,
       category: product.category,
       relatedProducts,
-      reviews:[]
+      cartCount,
+      reviews: []
     });
   } catch (error) {
     console.error("Error fetching product details:", error);

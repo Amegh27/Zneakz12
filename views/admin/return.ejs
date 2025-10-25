@@ -1,0 +1,167 @@
+<%- include('../partials/admin/header') %>
+
+<div class="container mt-5">
+  <div class="mb-5">
+    <h2 class="fw-bold" style="color: #1a1a1a; font-size: 2rem;">Return Requests</h2>
+    <p class="text-muted">Manage and process customer return requests</p>
+  </div>
+
+  <% if (!returns || returns.length === 0) { %>
+    <div class="alert alert-info border-0 rounded-lg shadow-sm" style="background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%); border-left: 4px solid #2196F3;">
+      <strong>No return requests found.</strong> All returns have been processed.
+    </div>
+  <% } else { %>
+    <% returns.forEach(order => { %>
+      <div class="card mb-4 border-0 shadow-lg" style="border-radius: 12px; overflow: hidden;">
+        <div class="card-header border-0 d-flex justify-content-between align-items-center" 
+             style="background: linear-gradient(135deg, #000000 0%, #000000 100%); color: white; padding: 1.5rem;">
+          <div>
+            <div class="fw-bold" style="font-size: 1.1rem;">Order ID: <%= order.orderID %></div>
+            <div class="mt-2" style="font-size: 0.95rem; opacity: 0.95;">
+              <span>👤 <%= order.user?.name %></span> <span style="opacity: 0.8;">(<%= order.user?.email %>)</span>
+            </div>
+          </div>
+          <small style="opacity: 0.9; font-size: 0.9rem;">📅 <%= order.createdAt.toLocaleString() %></small>
+        </div>
+
+        <div class="card-body p-0">
+          <table class="table table-hover align-middle mb-0" style="border-collapse: collapse;">
+            <thead style="background-color: #f8f9fa; border-bottom: 2px solid #e9ecef;">
+              <tr>
+                <th style="padding: 1rem; color: #495057; font-weight: 600;">Product</th>
+                <th style="padding: 1rem; color: #495057; font-weight: 600;">Size</th>
+                <th style="padding: 1rem; color: #495057; font-weight: 600;">Quantity</th>
+                <th style="padding: 1rem; color: #495057; font-weight: 600;">Price</th>
+                <th style="padding: 1rem; color: #495057; font-weight: 600;">Return Reason</th>
+                <th style="padding: 1rem; color: #495057; font-weight: 600;">Status</th>
+                <th style="padding: 1rem; color: #495057; font-weight: 600;">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% order.items.forEach(item => { %>
+                <% if (item.returnStatus && item.returnStatus !== 'None') { %>
+                  <tr style="border-bottom: 1px solid #e9ecef; transition: background-color 0.2s;" 
+                      onmouseover="this.style.backgroundColor='#f8f9fa'" 
+                      onmouseout="this.style.backgroundColor='transparent'">
+                    <td style="padding: 1rem;">
+                      <div class="d-flex align-items-center gap-3">
+                        <% if (item.product?.productImage?.length > 0) { %>
+                          <img src="/uploads/products/<%= item.product.productImage[0] %>" 
+                               alt="Product" width="50" class="rounded" style="object-fit: cover; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                        <% } %>
+                        <span class="fw-500"><%= item.product?.productName %></span>
+                      </div>
+                    </td>
+                    <td style="padding: 1rem;"><%= item.size || '—' %></td>
+                    <td style="padding: 1rem;"><span class="badge bg-light text-dark"><%= item.quantity %></span></td>
+                    <td style="padding: 1rem; font-weight: 600; color: #667eea;">₹<%= item.price.toFixed(2) %></td>
+                    <td style="padding: 1rem; font-size: 0.95rem;"><%= item.returnReason || 'No reason provided' %></td>
+                    <td style="padding: 1rem;">
+                      <span class="badge 
+                        <%= item.returnStatus === 'Approved' 
+                              ? 'bg-success' 
+                              : item.returnStatus === 'Rejected' 
+                              ? 'bg-danger' 
+                              : 'bg-warning text-dark' %>">
+                        <%= item.returnStatus %>
+                      </span>
+                    </td>
+                    <td style="padding: 1rem;">
+                      <% if (item.returnStatus === 'Requested') { %>
+                        <div class="d-flex gap-2">
+                          <button class="btn btn-sm approve-return" 
+                                  data-orderid="<%= order._id %>" 
+                                  data-itemid="<%= item._id %>"
+                                  style="background-color: #10b981; color: white; border: none; border-radius: 6px; padding: 0.5rem 0.75rem; font-weight: 600; transition: all 0.2s; cursor: pointer;"
+                                  onmouseover="this.style.backgroundColor='#059669'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 8px rgba(16,185,129,0.3)';"
+                                  onmouseout="this.style.backgroundColor='#10b981'; this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+                            ✓ Approve
+                          </button>
+                          <button class="btn btn-sm reject-return" 
+                                  data-orderid="<%= order._id %>" 
+                                  data-itemid="<%= item._id %>"
+                                  style="background-color: #ef4444; color: white; border: none; border-radius: 6px; padding: 0.5rem 0.75rem; font-weight: 600; transition: all 0.2s; cursor: pointer;"
+                                  onmouseover="this.style.backgroundColor='#dc2626'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 8px rgba(239,68,68,0.3)';"
+                                  onmouseout="this.style.backgroundColor='#ef4444'; this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+                            ✕ Reject
+                          </button>
+                        </div>
+                      <% } else { %>
+                        <small class="text-muted">—</small>
+                      <% } %>
+                    </td>
+                  </tr>
+                <% } %>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    <% }) %>
+  <% } %>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+document.querySelectorAll('.approve-return').forEach(btn => {
+  btn.addEventListener('click', async () => {
+    const orderId = btn.dataset.orderid;
+    const itemId = btn.dataset.itemid;
+
+    const confirm = await Swal.fire({
+      title: 'Approve Return?',
+      text: 'The customer will be notified.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, approve',
+      cancelButtonText: 'Cancel'
+    });
+
+    if (!confirm.isConfirmed) return;
+
+    try {
+const res = await fetch(`/admin/returns/${orderId}/${itemId}/approve`, { method: 'POST' });
+      const data = await res.json();
+
+      if (data.success) Swal.fire('Approved', data.message, 'success').then(() => location.reload());
+      else Swal.fire('Error', data.message, 'error');
+    } catch (err) {
+      console.error(err);
+      Swal.fire('Error', 'Something went wrong.', 'error');
+    }
+  });
+});
+
+document.querySelectorAll('.reject-return').forEach(btn => {
+  btn.addEventListener('click', async () => {
+    const orderId = btn.dataset.orderid;
+    const itemId = btn.dataset.itemid;
+
+    const confirm = await Swal.fire({
+      title: 'Reject Return?',
+      text: 'The customer will be notified.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, reject',
+      cancelButtonText: 'Cancel'
+    });
+
+    if (!confirm.isConfirmed) return;
+
+    try {
+const res = await fetch(`/admin/returns/${orderId}/${itemId}/reject`, { method: 'POST' });
+      const data = await res.json();
+
+      if (data.success) Swal.fire('Rejected', data.message, 'info').then(() => location.reload());
+      else Swal.fire('Error', data.message, 'error');
+    } catch (err) {
+      console.error(err);
+      Swal.fire('Error', 'Something went wrong.', 'error');
+    }
+  });
+});
+</script>
+
+
+<%- include('../partials/admin/footer') %>

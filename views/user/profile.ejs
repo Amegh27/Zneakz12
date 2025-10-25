@@ -4,206 +4,738 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
 
 <style>
-.profile-sidebar {
-  background: #fff;
-  border-radius: 8px;
-  overflow: hidden;
-  min-height: 300px;
-  border: 1px solid #eee;
-}
-.profile-sidebar .user-box {
-  background: #111;
-  color: #fff;
-  padding: 22px;
-  text-align: left;
-}
-.profile-sidebar .user-box img {
-  width: 56px;
-  height: 56px;
-  object-fit: cover;
-  border-radius: 50%;
-  margin-right: 12px;
-}
-.profile-sidebar .list-group-item {
-  border: none;
-  padding: 14px 20px;
-}
-.profile-main {
-  background: #f8f6f6;
-  border-radius: 12px;
-  padding: 36px;
-  min-height: 400px;
-}
-.section-card {
-  background: white;
-  border-radius: 12px;
-  padding: 28px;
-  border: 1px solid #eee;
-}
-.field-edit {
-  position: relative;
-}
-.field-edit .edit-icon {
-  position: absolute;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  cursor: pointer;
-  color: #666;
-}
-.small-muted { color:#6c757d; font-size:0.9rem; }
-.profile-avatar {
-  position: relative;
-  display: inline-block;
-  cursor: pointer;
-}
-.profile-avatar img {
-  transition: border-color 0.3s ease;
-}
-.profile-avatar:hover img {
-  border-color: #007bff;
-}
-.profile-avatar .edit-overlay {
-  position: absolute;
-  bottom: 5px;
-  right: 5px;
-  background: rgba(0,0,0,0.6);
-  color: white;
-  border-radius: 50%;
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  z-index: 1;
-}
-.profile-sidebar .profile-avatar .edit-overlay {
-  width: 20px;
-  height: 20px;
-  bottom: 0;
-  right: 0;
-  font-size: 10px;
-}
-.profile-avatar .remove-overlay {
-  position: absolute;
-  bottom: 5px;
-  left: 5px;
-  background: rgba(220,53,69,0.8);
-  color: white;
-  border-radius: 50%;
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  cursor: pointer;
-  z-index: 1;
-}
-.profile-sidebar .profile-avatar .remove-overlay {
-  width: 20px;
-  height: 20px;
-  bottom: 0;
-  left: 0;
-  font-size: 10px;
-}
+
+  :root {
+    --primary-color: #070707;
+    --primary-dark: #5568d3;
+    --primary-light: #8b9ef5;
+    --secondary-color: #000000;
+    --accent-color: #7c747d;
+    --success-color: #28a745;
+    --danger-color: #dc3545;
+    --light-bg: #f8f9fa;
+    --card-bg: #ffffff;
+    --border-color: #e9ecef;
+    --text-primary: #1a1a1a;
+    --text-secondary: #6c757d;
+    --shadow-sm: 0 2px 8px rgba(102, 126, 234, 0.08);
+    --shadow-md: 0 4px 16px rgba(102, 126, 234, 0.12);
+    --shadow-lg: 0 8px 32px rgba(102, 126, 234, 0.2);
+    --shadow-xl: 0 12px 48px rgba(102, 126, 234, 0.25);
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  * {
+    transition: var(--transition);
+  }
+
+  html, body {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background: linear-gradient(135deg, #d8d9dc 0%, #f5f4f7 50%, #e4dee4 100%);
+    min-height: 100vh;
+    position: relative;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle at 20% 50%, rgba(240, 147, 251, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(102, 126, 234, 0.1) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: -1;
+  }
+
+  .profile-container {
+    padding: 3rem 0;
+    position: relative;
+    z-index: 1;
+  }
+
+
+  
+  .profile-sidebar {
+    background: var(--card-bg);
+    border-radius: 20px;
+    overflow: hidden;
+    min-height: 500px;
+    border: 1px solid rgba(102, 126, 234, 0.1);
+    box-shadow: var(--shadow-lg);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+
+  .profile-sidebar::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary-color), var(--secondary-color), var(--accent-color));
+  }
+
+  .profile-sidebar:hover {
+    box-shadow: var(--shadow-xl);
+    transform: translateY(-4px);
+  }
+
+  .profile-sidebar .user-box {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    color: #ffffff;
+    padding: 32px 24px;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .profile-sidebar .user-box::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 200px;
+    height: 200px;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+
+  .profile-sidebar .user-box .user-info {
+    flex: 1;
+    position: relative;
+    z-index: 1;
+  }
+
+  .profile-sidebar .user-box .user-label {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.85);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    font-weight: 700;
+  }
+
+  .profile-sidebar .user-box .user-name {
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: #ffffff;
+    word-break: break-word;
+    letter-spacing: 0.3px;
+  }
+
+  .profile-sidebar .list-group {
+    border: none;
+    flex: 1;
+    padding: 12px 0;
+  }
+
+  .profile-sidebar .list-group-item {
+    border: none;
+    padding: 16px 20px;
+    color: var(--text-secondary);
+    border-left: 4px solid transparent;
+    font-weight: 500;
+    font-size: 0.95rem;
+    background: transparent;
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .profile-sidebar .list-group-item i {
+    width: 20px;
+    text-align: center;
+    font-size: 1.1rem;
+  }
+
+  .profile-sidebar .list-group-item::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: linear-gradient(180deg, var(--primary-color), var(--secondary-color));
+    transform: scaleY(0);
+    transform-origin: center;
+  }
+
+  .profile-sidebar .list-group-item:hover {
+    background-color: rgba(102, 126, 234, 0.1);
+    color: var(--primary-color);
+    border-left-color: var(--primary-color);
+    padding-left: 24px;
+  }
+
+  .profile-sidebar .list-group-item:hover::before {
+    transform: scaleY(1);
+  }
+
+  .profile-sidebar .list-group-item.active {
+    background: linear-gradient(90deg, rgba(102, 126, 234, 0.15) 0%, transparent 100%);
+    color: var(--primary-color);
+    border-left-color: var(--primary-color);
+    font-weight: 700;
+    padding-left: 24px;
+  }
+
+  .profile-sidebar .list-group-item.active::before {
+    transform: scaleY(1);
+  }
+
+  
+  
+  .profile-main {
+    background: var(--card-bg);
+    border-radius: 20px;
+    padding: 48px;
+    min-height: 550px;
+    box-shadow: var(--shadow-lg);
+    border: 1px solid rgba(102, 126, 234, 0.1);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .profile-main::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(102, 126, 234, 0.05) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+
+  .section-card {
+    background: var(--card-bg);
+    border-radius: 16px;
+    padding: 40px;
+    border: 1px solid rgba(102, 126, 234, 0.08);
+    box-shadow: var(--shadow-sm);
+    position: relative;
+    z-index: 1;
+  }
+
+  .section-card h4 {
+    color: var(--text-primary);
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    margin-bottom: 36px;
+    padding-bottom: 24px;
+    border-bottom: 3px solid var(--border-color);
+    font-size: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .section-card h4 i {
+    color: var(--primary-color);
+    font-size: 1.8rem;
+  }
+
+ 
+  
+  .form-label {
+    color: var(--text-primary);
+    font-size: 0.85rem;
+    font-weight: 700;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    display: block;
+  }
+
+  .form-control {
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    padding: 14px 18px;
+    font-size: 0.95rem;
+    background: #fafbfc;
+    color: var(--text-primary);
+    font-weight: 500;
+    position: relative;
+  }
+
+  .form-control::placeholder {
+    color: var(--text-secondary);
+  }
+
+  .form-control:focus {
+    border-color: var(--primary-color);
+    background: #ffffff;
+    box-shadow: 0 0 0 5px rgba(102, 126, 234, 0.15);
+    outline: none;
+    transform: translateY(-2px);
+  }
+
+  .form-control:hover:not(:focus) {
+    border-color: rgba(22, 24, 31, 0.4);
+    background: #ffffff;
+  }
+
+  .field-edit {
+    position: relative;
+  }
+
+  .field-edit .edit-icon {
+    position: absolute;
+    right: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    opacity: 0;
+  }
+
+  .field-edit:hover .edit-icon {
+    opacity: 1;
+    color: var(--primary-color);
+  }
+
+  
+  .avatar-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 40px;
+  }
+
+  .profile-avatar {
+    position: relative;
+    display: inline-block;
+    cursor: pointer;
+  }
+
+  .profile-avatar img {
+    border: 5px solid var(--border-color);
+    box-shadow: var(--shadow-lg);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .profile-avatar:hover img {
+    border-color: var(--primary-color);
+    box-shadow: 0 12px 40px rgba(102, 126, 234, 0.35);
+    transform: scale(1.05);
+  }
+
+  .profile-avatar .edit-overlay,
+  .profile-avatar .remove-overlay {
+    position: absolute;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    border-radius: 50%;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    cursor: pointer;
+    z-index: 10;
+    backdrop-filter: blur(6px);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+  }
+
+  .profile-avatar .edit-overlay {
+    bottom: 16px;
+    right: 16px;
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+  }
+
+  .profile-avatar .edit-overlay:hover {
+    transform: scale(1.2) rotate(10deg);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+  }
+
+  .profile-avatar .remove-overlay {
+    bottom: 16px;
+    left: 16px;
+    background: linear-gradient(135deg, var(--danger-color), #e74c3c);
+  }
+
+  .profile-avatar .remove-overlay:hover {
+    transform: scale(1.2) rotate(-10deg);
+    box-shadow: 0 6px 20px rgba(220, 53, 69, 0.5);
+  }
+
+  .profile-sidebar .profile-avatar .edit-overlay,
+  .profile-sidebar .profile-avatar .remove-overlay {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+    bottom: 6px;
+  }
+
+  .profile-sidebar .profile-avatar .edit-overlay {
+    right: 6px;
+  }
+
+  .profile-sidebar .profile-avatar .remove-overlay {
+    left: 6px;
+  }
+
+  
+  
+  .btn-dark {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    border: none;
+    color: white;
+    font-weight: 700;
+    padding: 14px 32px;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.35);
+    position: relative;
+    overflow: hidden;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    letter-spacing: 0.3px;
+  }
+
+  .btn-dark::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.5s ease;
+  }
+
+  .btn-dark:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 32px rgba(102, 126, 234, 0.45);
+    color: white;
+  }
+
+  .btn-dark:hover::before {
+    left: 100%;
+  }
+
+  .btn-dark:active {
+    transform: translateY(-2px);
+  }
+
+  .btn-dark:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  
+  
+  .form-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 40px;
+    padding-top: 32px;
+    border-top: 3px solid var(--border-color);
+    gap: 20px;
+  }
+
+ 
+  
+  .form-check {
+    margin-right: 28px;
+  }
+
+  .form-check-input {
+    cursor: pointer;
+    border: 2px solid var(--border-color);
+    width: 22px;
+    height: 22px;
+    transition: var(--transition);
+    background-color: #ffffff;
+  }
+
+  .form-check-input:checked {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 5px rgba(102, 126, 234, 0.15);
+  }
+
+  .form-check-input:hover {
+    border-color: var(--primary-color);
+    transform: scale(1.1);
+  }
+
+  .form-check-label {
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-left: 10px;
+    user-select: none;
+  }
+
+  
+  
+  @media (max-width: 991px) {
+    .profile-container {
+      padding: 2rem 0;
+    }
+
+    .profile-main {
+      padding: 32px;
+    }
+
+    .section-card {
+      padding: 28px;
+    }
+
+    .profile-sidebar .user-box {
+      padding: 24px;
+    }
+
+    .form-actions {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .form-actions a,
+    .form-actions button {
+      width: 100%;
+      text-align: center;
+      justify-content: center;
+    }
+
+    .section-card h4 {
+      font-size: 1.3rem;
+      margin-bottom: 28px;
+    }
+  }
+
+  @media (max-width: 576px) {
+    .profile-container {
+      padding: 1rem 0;
+    }
+
+    .profile-main {
+      padding: 24px;
+      border-radius: 16px;
+    }
+
+    .section-card {
+      padding: 24px;
+      border-radius: 14px;
+    }
+
+    .profile-sidebar {
+      min-height: auto;
+      margin-bottom: 24px;
+      border-radius: 16px;
+    }
+
+    .form-label {
+      font-size: 0.8rem;
+    }
+
+    .form-control {
+      padding: 12px 14px;
+      font-size: 0.9rem;
+    }
+
+    .profile-avatar img {
+      width: 110px !important;
+      height: 110px !important;
+    }
+
+    .form-check {
+      margin-right: 20px;
+    }
+
+    .section-card h4 {
+      font-size: 1.1rem;
+    }
+  }
+
+  
+  
+  @keyframes slideInUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes pulse {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.8;
+    }
+  }
+
+  .section-card {
+    animation: slideInUp 0.6s ease-out;
+  }
+
+  .profile-sidebar {
+    animation: slideInUp 0.6s ease-out 0.15s both;
+  }
+
+  .profile-main {
+    animation: fadeIn 0.5s ease-out;
+  }
 </style>
 
-<div class="container my-5">
+<div class="container profile-container">
   <div class="row g-4">
+    <!-- Sidebar Navigation -->
     <div class="col-lg-3">
-      <div class="profile-sidebar shadow-sm">
-        <div class="user-box d-flex align-items-center">
+      <div class="profile-sidebar">
+        <!-- User Info Header -->
+        <div class="user-box">
           <div class="profile-avatar">
-            <img id="sidebarAvatar" src="<%= user.avatar || '/images/user-avatar.png' %>" alt="" class="rounded-circle" style="width: 56px; height: 56px; object-fit: cover;">
+            <img id="sidebarAvatar" src="<%= user.avatar || '/images/user-avatar.png' %>" alt="User Avatar" class="rounded-circle" style="width: 56px; height: 56px; object-fit: cover;">
           </div>
-          <div>
-            <div class="small-muted">Hello</div>
-            <div class="fw-bold" style="font-size:1.05rem;"><%= user.name || 'User' %></div>
+          <div class="user-info">
+            <div class="user-label">Welcome</div>
+            <div class="user-name"><%= user.name || 'User' %></div>
           </div>
         </div>
-        <div class="list-group">
-          <a href="/profile" class="list-group-item list-group-item-action active" data-tab="profile">Profile</a>
-          <a href="#" class="list-group-item list-group-item-action" data-tab="wallet">Wallet</a>
-          <a href="/address" class="list-group-item list-group-item-action" data-tab="address">Address</a>
-          <a href="/orders" class="list-group-item list-group-item-action">Orders</a>
-          <a href="/logout" id="logout-link" class="list-group-item list-group-item-action">Logout</a>
 
+        <!-- Navigation Menu -->
+        <div class="list-group">
+          <a href="/profile" class="list-group-item list-group-item-action active" data-tab="profile">
+            <i class="bi bi-person-fill"></i> Profile
+          </a>
+          <a href="#" class="list-group-item list-group-item-action" data-tab="wallet">
+            <i class="bi bi-wallet2"></i> Wallet
+          </a>
+          <a href="/address" class="list-group-item list-group-item-action" data-tab="address">
+            <i class="bi bi-geo-alt-fill"></i> Address
+          </a>
+          <a href="/orders" class="list-group-item list-group-item-action">
+            <i class="bi bi-bag-fill"></i> Orders
+          </a>
+          <a href="/logout" id="logout-link" class="list-group-item list-group-item-action">
+            <i class="bi bi-box-arrow-right"></i> Logout
+          </a>
         </div>
       </div>
     </div>
 
-    <!-- Main Section -->
+    <!-- Main Content Area -->
     <div class="col-lg-9">
       <div class="profile-main">
-        <!-- PROFILE SECTION -->
+        <!-- Profile Section -->
         <div id="tab-profile" class="section-card">
-          <h4 class="text-center fw-bold mb-4">PROFILE</h4>
+          <h4 class="text-center">
+            <i class="bi bi-person-circle"></i>My Profile
+          </h4>
 
-          <form id="profileForm" action="/profile/edit" method="POST" enctype="multipart/form-data" class="row g-3">
+          <form id="profileForm" action="/profile/edit" method="POST" enctype="multipart/form-data" class="row g-4">
+            <!-- Hidden Inputs -->
             <input type="file" id="avatarInput" name="avatar" accept="image/*" style="display: none;">
             <input type="hidden" id="removeAvatarFlag" name="remove_avatar" value="0">
 
-            <div class="col-12 text-center mb-4">
+            <!-- Avatar Section -->
+            <div class="col-12 avatar-container">
               <div class="profile-avatar">
-                <img id="avatarPreview" src="<%= user.avatar || '/images/user-avatar.png' %>" alt="" class="rounded-circle" style="width: 120px; height: 120px; object-fit: cover; border: 3px solid #eee;">
-                <i class="bi bi-pencil edit-overlay" title="Change Profile Picture"></i>
+                <img id="avatarPreview" src="<%= user.avatar || '/images/user-avatar.png' %>" alt="Profile Picture" class="rounded-circle" style="width: 140px; height: 140px; object-fit: cover;">
+                <i class="bi bi-pencil-fill edit-overlay" title="Change Profile Picture"></i>
                 <% if (user.avatar) { %>
-                  <i class="bi bi-x-lg remove-overlay" title="Remove Profile Picture"></i>
+                  <i class="bi bi-x-circle-fill remove-overlay" title="Remove Profile Picture"></i>
                 <% } %>
               </div>
             </div>
 
+            <!-- Form Fields -->
             <div class="col-md-6">
-              <label class="form-label small-muted">Name</label>
+              <label class="form-label">Full Name</label>
               <div class="field-edit">
-                <input type="text" name="name" class="form-control" value="<%= user.name || '' %>" required>
-                <i class="bi bi-pencil edit-icon" title="Edit"></i>
+                <input type="text" name="name" class="form-control" value="<%= user.name || '' %>" readonly>
+                <i class="bi bi-pencil edit-icon"></i>
               </div>
             </div>
 
             <div class="col-md-6">
-              <label class="form-label small-muted">Email</label>
+              <label class="form-label">Email Address</label>
               <div class="field-edit">
-                <input type="email" name="email" class="form-control" value="<%= user.email || '' %>" required>
-                <i class="bi bi-pencil edit-icon" title="Edit"></i>
+                <input type="email" name="email" class="form-control" value="<%= user.email || '' %>" readonly>
+                <i class="bi bi-pencil edit-icon"></i>
               </div>
             </div>
 
             <div class="col-md-6">
-              <label class="form-label small-muted">Phone</label>
+              <label class="form-label">Phone Number</label>
               <div class="field-edit">
-                <input type="text" name="phone" class="form-control" value="<%= user.phone || '' %>">
-                <i class="bi bi-pencil edit-icon" title="Edit"></i>
+                <input type="text" name="phone" class="form-control" value="<%= user.phone || '' %>" readonly>
+                <i class="bi bi-pencil edit-icon"></i>
               </div>
             </div>
 
             <div class="col-md-6">
-              <label class="form-label small-muted">Gender</label>
-              <div>
-                <div class="form-check form-check-inline">
+              <label class="form-label">Gender</label>
+              <div class="d-flex gap-3">
+                <div class="form-check">
                   <input class="form-check-input" type="radio" name="gender" id="g-female" value="Female" <%= user.gender === 'Female' ? 'checked' : '' %>>
                   <label class="form-check-label" for="g-female">Female</label>
                 </div>
-                <div class="form-check form-check-inline">
+                <div class="form-check">
                   <input class="form-check-input" type="radio" name="gender" id="g-male" value="Male" <%= user.gender === 'Male' ? 'checked' : '' %>>
                   <label class="form-check-label" for="g-male">Male</label>
                 </div>
               </div>
             </div>
+            <div class="col-12 form-actions">
+  <button type="button" id="editProfileBtn" class="btn btn-dark">
+    <i class="bi bi-pencil-fill"></i> Edit Profile
+  </button>
+  <button type="submit" id="saveProfileBtn" class="btn btn-dark" style="display: none;">
+    <i class="bi bi-check-circle-fill"></i> Save Changes
+  </button>
+  <button type="button" id="cancelEditBtn" class="btn btn-secondary" style="display: none;">
+    Cancel
+  </button>
+</div>
 
-            <div class="col-12 d-flex justify-content-between align-items-center mt-3">
-              <a href="/change-password" class="btn btn-dark">Change password</a>
-              <button type="submit" class="btn btn-dark">Save changes</button>
+
+            <!-- Form Actions -->
+            <div class="col-12 form-actions">
+              <a href="/change-password" class="btn btn-dark">
+                <i class="bi bi-key-fill"></i> Change Password
+              </a>
+              <button type="submit" class="btn btn-dark">
+                <i class="bi bi-check-circle-fill"></i> Save Changes
+              </button>
             </div>
           </form>
         </div>
       </div>
-    </div> <!-- END .col-lg-9 -->
-
-  </div> <!-- END .row -->
-</div> <!-- END .container -->
+    </div>
+  </div>
+</div>
 
 <%- include("../partials/user/footer") %>
 
@@ -211,27 +743,33 @@
 <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
-document.querySelectorAll('.profile-sidebar .list-group-item').forEach(link => {
-  link.addEventListener('click', (e) => {
-    const href = link.getAttribute('href');
-
-    if (href === '#' || href === '') {
-      e.preventDefault();
-
-      document.querySelectorAll('.profile-sidebar .list-group-item')
-        .forEach(i => i.classList.remove('active'));
-      link.classList.add('active');
-
-      const tab = link.getAttribute('data-tab');
-      document.querySelectorAll('[id^="tab-"]').forEach(sec => sec.style.display = 'none');
-      const target = document.getElementById('tab-' + tab);
-      if (target) target.style.display = 'block';
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+  function generateOtp() {
+    const digits = "1234567890";
+    let otp = "";
+    for (let i = 0; i < 6; i++) {
+      otp += digits[Math.floor(Math.random() * 10)];
     }
-  });
-});
+    return otp;
+  }
 
-  // Avatar logic
+  document.querySelectorAll('.profile-sidebar .list-group-item').forEach(link => {
+    link.addEventListener('click', (e) => {
+      const href = link.getAttribute('href');
+      if (href === '#' || href === '') {
+        e.preventDefault();
+        document.querySelectorAll('.profile-sidebar .list-group-item')
+          .forEach(i => i.classList.remove('active'));
+        link.classList.add('active');
+
+        const tab = link.getAttribute('data-tab');
+        document.querySelectorAll('[id^="tab-"]').forEach(sec => sec.style.display = 'none');
+        const target = document.getElementById('tab-' + tab);
+        if (target) target.style.display = 'block';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    });
+  });
+
   const avatarInput = document.getElementById('avatarInput');
   const sidebarAvatar = document.getElementById('sidebarAvatar');
   const avatarPreview = document.getElementById('avatarPreview');
@@ -250,8 +788,8 @@ document.querySelectorAll('.profile-sidebar .list-group-item').forEach(link => {
     overlay.addEventListener('click', (e) => {
       e.stopPropagation();
       if (confirm('Are you sure you want to remove your profile picture?')) {
-        if (sidebarAvatar) sidebarAvatar.src = defaultAvatar;
-        if (avatarPreview) avatarPreview.src = defaultAvatar;
+        sidebarAvatar.src = defaultAvatar;
+        avatarPreview.src = defaultAvatar;
         avatarInput.value = '';
         removeAvatarFlag.value = '1';
       }
@@ -260,75 +798,109 @@ document.querySelectorAll('.profile-sidebar .list-group-item').forEach(link => {
 
   avatarInput.addEventListener('change', function(e) {
     const file = e.target.files[0];
-    if (file) {
-      if (file.size > 2 * 1024 * 1024) {
-        alert('File size must be less than 2MB');
-        e.target.value = '';
-        return;
-      }
-      if (!file.type.startsWith('image/')) {
-        alert('Please select an image file');
-        e.target.value = '';
-        return;
-      }
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        if (sidebarAvatar) sidebarAvatar.src = e.target.result;
-        if (avatarPreview) avatarPreview.src = e.target.result;
-        removeAvatarFlag.value = '0';
-      };
-      reader.readAsDataURL(file);
-    }
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) { alert('File size must be less than 2MB'); e.target.value = ''; return; }
+    if (!file.type.startsWith('image/')) { alert('Please select an image file'); e.target.value = ''; return; }
+    const reader = new FileReader();
+    reader.onload = e => {
+      sidebarAvatar.src = e.target.result;
+      avatarPreview.src = e.target.result;
+      removeAvatarFlag.value = '0';
+    };
+    reader.readAsDataURL(file);
   });
 
-  // Profile form AJAX
-  document.getElementById('profileForm').addEventListener('submit', async (e) => {
+  // Logout with SweetAlert
+  document.getElementById("logout-link").addEventListener("click", function(event) {
+    event.preventDefault();
+    Swal.fire({
+      title: 'Are you sure?',
+      text: "You will be logged out.",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#667eea',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Yes, logout',
+      cancelButtonText: 'Cancel'
+    }).then((result) => {
+      if (result.isConfirmed) window.location.href = "/logout";
+    });
+  });
+
+  // Edit / Cancel buttons
+  const editBtn = document.getElementById('editProfileBtn');
+  const saveBtn = document.getElementById('saveProfileBtn');
+  const cancelBtn = document.getElementById('cancelEditBtn');
+  const form = document.getElementById('profileForm');
+
+  let originalValues = {
+    name: form.name.value,
+    email: form.email.value,
+    phone: form.phone.value,
+    gender: form.gender.value
+  };
+
+  editBtn.addEventListener('click', () => {
+    form.querySelectorAll('input').forEach(input => input.removeAttribute('readonly'));
+    editBtn.style.display = 'none';
+    saveBtn.style.display = 'inline-block';
+    cancelBtn.style.display = 'inline-block';
+  });
+
+  cancelBtn.addEventListener('click', () => {
+    form.name.value = originalValues.name;
+    form.email.value = originalValues.email;
+    form.phone.value = originalValues.phone;
+    if (originalValues.gender) form.querySelector(`input[value="${originalValues.gender}"]`).checked = true;
+
+    form.querySelectorAll('input').forEach(input => input.setAttribute('readonly', true));
+    editBtn.style.display = 'inline-block';
+    saveBtn.style.display = 'none';
+    cancelBtn.style.display = 'none';
+  });
+
+  // Form submission with OTP check for email
+  form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const form = e.target;
-    const submitBtn = form.querySelector('button[type="submit"]');
+
+    const newEmail = form.email.value;
+    let emailOtp = null;
+
+    if (newEmail !== originalValues.email) {
+      emailOtp = generateOtp();
+      console.log("OTP for email change:", emailOtp);
+
+      const userOtp = prompt('Enter the OTP sent to console for email change:');
+      if (userOtp === null) {
+        alert('Email update cancelled.');
+        form.email.value = originalValues.email;
+        return;
+      }
+      if (userOtp !== emailOtp) {
+        alert('Incorrect OTP. Cannot update email.');
+        form.email.value = originalValues.email;
+        return;
+      }
+    }
+
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Saving...';
     const formData = new FormData(form);
 
-    submitBtn.disabled = true;
-    submitBtn.textContent = 'Saving...';
-
     try {
-      const res = await fetch('/profile/edit', {
-        method: 'POST',
-        body: formData
-      });
+      const res = await fetch('/profile/edit', { method: 'POST', body: formData });
       const json = await res.json();
-
       if (json.success) {
-        Swal.fire('Success', 'Profile updated successfully!', 'success').then(() => {
-          window.location.reload();
-        });
+        Swal.fire('Success', 'Profile updated successfully!', 'success').then(() => window.location.reload());
       } else {
         Swal.fire('Error', json.message || 'Could not update profile', 'error');
       }
     } catch (err) {
       Swal.fire('Error', 'Server error', 'error');
     } finally {
-      submitBtn.disabled = false;
-      submitBtn.textContent = 'Save changes';
+      saveBtn.disabled = false;
+      saveBtn.textContent = 'Save Changes';
     }
   });
-
-  document.getElementById("logout-link").addEventListener("click", function(event) {
-  event.preventDefault(); 
-
-  Swal.fire({
-    title: 'Are you sure?',
-    text: "You will be logged out.",
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonColor: '#3085d6',
-    cancelButtonColor: '#d33',
-    confirmButtonText: 'Yes, logout',
-    cancelButtonText: 'Cancel'
-  }).then((result) => {
-    if (result.isConfirmed) {
-      window.location.href = "/logout"; 
-    }
-  });
-});
 </script>
+

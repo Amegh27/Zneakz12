@@ -4,10 +4,212 @@ a.btn:hover {
   color: #fff !important;
   transform: scale(1.05);
 }
+
+/* Enhanced navbar styling with modern gradient and better shadows */
+.navbar {
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+/* Improved announcement bar with gradient and better typography */
+.navbar-top {
+  background: linear-gradient(90deg, #1a1a1a 0%, #2d2d2d 100%) !important;
+  font-weight: 500;
+  letter-spacing: 0.8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.navbar-top a {
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.navbar-top a:hover {
+  opacity: 0.8;
+  text-decoration: none !important;
+}
+
+/* Enhanced search form with better focus states and styling */
+.search-form {
+  background: linear-gradient(135deg, #f5f5f5 0%, #ffffff 100%) !important;
+  border: 2px solid #e0e0e0 !important;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.search-form:focus-within {
+  border-color: #000 !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
+}
+
+.search-form input::placeholder {
+  color: #999;
+  font-weight: 500;
+}
+
+.search-form input:focus {
+  outline: none;
+  color: #000;
+}
+
+/* Improved nav links with underline animation */
+.nav-link {
+  font-weight: 600;
+  font-size: 0.95rem;
+  letter-spacing: 0.5px;
+  color: #1a1a1a !important;
+  position: relative;
+  transition: color 0.3s ease;
+  text-transform: uppercase;
+}
+
+.nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: #000;
+  transition: width 0.3s ease;
+}
+
+.nav-link:hover {
+  color: #000 !important;
+}
+
+.nav-link:hover::after {
+  width: 100%;
+}
+
+/* Enhanced brand logo with better styling */
+.navbar-brand {
+  font-family: 'Orbitron', sans-serif !important;
+  font-size: 1.8rem !important;
+  letter-spacing: 3px !important;
+  color: #000 !important;
+  font-weight: 800 !important;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+}
+
+.navbar-brand:hover {
+  transform: scale(1.05);
+  letter-spacing: 5px;
+}
+
+/* Improved icon styling with hover effects */
+.navbar a i {
+  transition: all 0.3s ease;
+  color: #1a1a1a;
+}
+
+.navbar a:hover i {
+  color: #000;
+  transform: scale(1.15);
+}
+
+/* Enhanced button styling with better states */
+.btn-outline-dark {
+  border: 2px solid #000 !important;
+  color: #000 !important;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  transition: all 0.3s ease;
+  border-radius: 50px !important;
+}
+
+.btn-outline-dark:hover {
+  background-color: #000 !important;
+  color: #fff !important;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+}
+
+/* Improved dropdown styling */
+.dropdown-menu {
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  animation: slideDown 0.2s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dropdown-item {
+  font-weight: 500;
+  transition: all 0.2s ease;
+  color: #1a1a1a;
+}
+
+.dropdown-item:hover {
+  background-color: #f5f5f5;
+  color: #000;
+  padding-left: 1.5rem;
+}
+
+.dropdown-item.text-danger:hover {
+  background-color: #ffe0e0;
+  color: #d32f2f;
+}
+
+/* Enhanced search button styling */
+.btn-dark {
+  background-color: #000 !important;
+  border: none !important;
+  transition: all 0.3s ease;
+}
+
+.btn-dark:hover {
+  background-color: #1a1a1a !important;
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Improved cart badge styling */
+#cartCount {
+  background-color: #d32f2f !important;
+  font-weight: 700;
+  font-size: 0.75rem;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+/* Better responsive spacing */
+@media (max-width: 991px) {
+  .navbar-brand {
+    font-size: 1.5rem !important;
+    letter-spacing: 2px !important;
+  }
+  
+  .nav-link {
+    font-size: 0.9rem;
+    padding: 0.5rem 0 !important;
+  }
+}
 </style>
 
 <!-- Top Announcement Bar -->
-<div class="navbar-top text-center py-2 text-white" style="background-color: #000000; font-size: 14px; letter-spacing: 0.5px;">
+<div class="navbar-top text-center py-3 text-white" style="background-color: #000000; font-size: 14px; letter-spacing: 0.5px;">
   Summer Sale And Free Express Delivery - OFF 50%!
   <a href="#" class="text-warning text-decoration-underline">Shop Now by ZNEAKZ</a>
 </div>
@@ -40,9 +242,9 @@ a.btn:hover {
       </ul>
 
       <!-- Search Form -->
-   <form class="d-flex align-items-center bg-white shadow-sm px-3 py-2 rounded-pill"
+   <form class="d-flex align-items-center search-form px-3 py-2 rounded-pill"
       action="/#productSection" method="GET"
-      style="max-width: 480px; transition: all 0.3s ease; border: 1px solid #ddd;">
+      style="max-width: 480px;">
   
   <!-- Search input -->
   <input class="form-control border-0 shadow-none me-2"
@@ -91,9 +293,9 @@ a.btn:hover {
       <!-- User Section -->
       <% if (typeof user !== 'undefined' && user) { %>
         <div class="dropdown">
-          <a class="d-flex align-items-center text-decoration-none dropdown-toggle" href="#" role="button"
+          <a style="color: #000;" class="d-flex align-items-center text-decoration-none dropdown-toggle" href="#" role="button"
             id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-            <span><%= user.name %></span>
+            <span style="color: #000;"><%= user.name %></span>
           </a>
           <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
             <li><a class="dropdown-item" href="/profile">Profile</a></li>

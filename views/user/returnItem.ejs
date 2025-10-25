@@ -1,0 +1,101 @@
+<%- include("../partials/admin/header") %>
+
+<style>
+  /* Ensure the page takes full height */
+  body, html {
+    height: 100%;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .content-wrapper {
+    flex: 1; /* Push footer to bottom */
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 40px 0;
+    background: linear-gradient(135deg, #f5f5f5 0%, #ffffff 100%);
+  }
+
+  .return-card {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+    padding: 30px;
+    max-width: 600px;
+    width: 100%;
+  }
+
+  h2 {
+    text-align: center;
+    margin-bottom: 30px;
+  }
+
+  .btn {
+    margin-top: 20px;
+  }
+</style>
+
+<div class="content-wrapper">
+  <div class="return-card">
+    <h2>Return Item: <%= item.product.productName %></h2>
+
+    <form id="returnForm" action="/orders/<%= order._id %>/items/<%= item._id %>/return" method="POST">
+      <div class="mb-3">
+        <label for="reason" class="form-label">Select Reason for Return</label>
+        <select class="form-select" id="reason" name="reason" required>
+          <option value="">-- Select a Reason --</option>
+          <% reasons.forEach(r => { %>
+            <option value="<%= r %>"><%= r %></option>
+          <% }) %>
+        </select>
+      </div>
+
+      <div class="mb-3 d-none" id="otherReasonDiv">
+        <label for="otherReason" class="form-label">Please specify</label>
+        <textarea class="form-control" id="otherReason" name="otherReason" rows="3"></textarea>
+      </div>
+
+      <button type="submit" class="btn btn-outline-success w-100">Submit Return Request</button>
+      <a href="/orders/details/<%= order._id %>" class="btn btn-outline-dark w-100 mt-2">Back to Order</a>
+    </form>
+  </div>
+</div>
+
+<script>
+  const reasonSelect = document.getElementById('reason');
+  const otherDiv = document.getElementById('otherReasonDiv');
+
+  reasonSelect.addEventListener('change', function() {
+    if (this.value === 'Other') {
+      otherDiv.classList.remove('d-none');
+      document.getElementById('otherReason').required = true;
+    } else {
+      otherDiv.classList.add('d-none');
+      document.getElementById('otherReason').required = false;
+    }
+  });
+
+  document.getElementById('returnForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const formData = new FormData(this);
+    const data = Object.fromEntries(formData.entries());
+
+    const res = await fetch(this.action, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+
+    const result = await res.json();
+    if (result.success) {
+      alert(result.message);
+      window.location.href = `/orders/details/<%= order._id %>`;
+    } else {
+      alert(result.message || 'Something went wrong');
+    }
+  });
+</script>
+
+<%- include('../partials/user/footer') %>

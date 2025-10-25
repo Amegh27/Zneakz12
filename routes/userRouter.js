@@ -101,6 +101,12 @@ router.get('/order-success',checkoutController.orderSuccessPage);
 router.get("/orders", checkoutController.getUserOrders);
 router.get("/orders/:id", checkoutController.getUserOrders);
 router.get("/orders/details/:id", checkoutController.viewOrderDetails);
+router.post("/orders/:id/cancel", checkoutController.cancelOrder);
+router.post("/orders/:orderId/items/:itemId/cancel", checkoutController.cancelItem);
+router.get("/orders/:orderId/items/:itemId/return", checkoutController.returnItemPage);
+router.post("/orders/:orderId/items/:itemId/return", checkoutController.submitReturnItem);
+
+
 router.get("/orders/:id/invoice", checkoutController.downloadInvoice);
   
 
