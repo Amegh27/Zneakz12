@@ -690,7 +690,7 @@
             <div class="col-md-6">
               <label class="form-label">Phone Number</label>
               <div class="field-edit">
-                <input type="text" name="phone" class="form-control" value="<%= user.phone || '' %>" readonly>
+                <input type="text" name="phone" class="form-control" value="<%= user.phone || '' %>" readonly maxlength="10">
                 <i class="bi bi-pencil edit-icon"></i>
               </div>
             </div>
@@ -726,9 +726,6 @@
               <a href="/change-password" class="btn btn-dark">
                 <i class="bi bi-key-fill"></i> Change Password
               </a>
-              <button type="submit" class="btn btn-dark">
-                <i class="bi bi-check-circle-fill"></i> Save Changes
-              </button>
             </div>
           </form>
         </div>
@@ -863,7 +860,8 @@
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
 
-    const newEmail = form.email.value;
+    const newEmail = form.email.value.trim();
+    const newPhone = form.phone.value.trim();
     let emailOtp = null;
 
     if (newEmail !== originalValues.email) {
@@ -883,8 +881,39 @@
       }
     }
 
+    // Phone validation
+    if (!newPhone) {
+      Swal.fire('Error', 'Phone number is required', 'error');
+      return;
+    }
+    if (newPhone.length !== 10 || !/^\d{10}$/.test(newPhone)) {
+      Swal.fire('Error', 'Phone number must be exactly 10 digits', 'error');
+      return;
+    }
+
+    // Name validation (assuming similar to address, but no specific limit mentioned, so optional)
+    const newName = form.name.value.trim();
+    if (!newName) {
+      Swal.fire('Error', 'Name is required', 'error');
+      return;
+    }
+
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(newEmail)) {
+      Swal.fire('Error', 'Please enter a valid email address', 'error');
+      return;
+    }
+
+    // Gender validation
+    const selectedGender = document.querySelector('input[name="gender"]:checked');
+    if (!selectedGender) {
+      Swal.fire('Error', 'Please select a gender', 'error');
+      return;
+    }
+
     saveBtn.disabled = true;
-    saveBtn.textContent = 'Saving...';
+    saveBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Saving...';
     const formData = new FormData(form);
 
     try {
@@ -899,8 +928,7 @@
       Swal.fire('Error', 'Server error', 'error');
     } finally {
       saveBtn.disabled = false;
-      saveBtn.textContent = 'Save Changes';
+      saveBtn.innerHTML = '<i class="bi bi-check-circle-fill"></i> Save Changes';
     }
   });
 </script>
-

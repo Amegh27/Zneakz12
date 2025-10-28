@@ -63,12 +63,10 @@ const updateOrderStatus = async (req, res) => {
       return res.status(404).json({ success: false, message: "Order not found" });
     }
 
-    // Update individual item statuses based on new order status
     order.items.forEach(item => {
       if (item.status !== "Cancelled") item.status = status;
     });
 
-    // If any item is cancelled but others are active → Partially Cancelled
     const hasCancelled = order.items.some(i => i.status === "Cancelled");
     const hasActive = order.items.some(i => i.status !== "Cancelled");
     order.status = (hasCancelled && hasActive) ? "Partially Cancelled" : status;
@@ -151,17 +149,26 @@ const viewReturnDetails = async (req, res) => {
 const approveReturn = async (req, res) => {
   try {
     const { orderId, itemId } = req.params;
+    console.log('Params:', req.params);
 
-    // Populate product info for email or display
     const order = await Order.findById(orderId).populate('items.product').populate('user', 'email name');
+    if (!order) {
+      console.error('Order not found', orderId);
+      return res.status(404).json({ success: false, message: 'Order not found' });
+    }
 
-    if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
-
+    console.log('Order items:', order.items.map(i => ({ id: i._id.toString(), returnStatus: i.returnStatus })));
     const item = order.items.id(itemId);
-    if (!item) return res.status(404).json({ success: false, message: 'Item not found' });
 
-    if (item.returnStatus !== 'Requested')
+    if (!item) {
+      console.error('Item not found', itemId);
+      return res.status(404).json({ success: false, message: 'Item not found' });
+    }
+
+    if (item.returnStatus !== 'Requested') {
+      console.error('Return status not requested:', item.returnStatus);
       return res.status(400).json({ success: false, message: 'Return is not in requested state' });
+    }
 
     item.returnStatus = 'Approved';
     item.returnDate = new Date();
@@ -173,13 +180,16 @@ const approveReturn = async (req, res) => {
     }
 
     await order.save();
-
+    console.log('Return approved for item:', itemId);
     res.json({ success: true, message: 'Return approved successfully' });
+
   } catch (err) {
-    console.error('Error approving return:', err);
+    console.error('Server error approving return:', err);
     res.status(500).json({ success: false, message: 'Server Error' });
   }
 };
+
+
 
 const rejectReturn = async (req, res) => {
   try {

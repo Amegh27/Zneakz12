@@ -276,6 +276,12 @@
   color: #721c24;
 }
 
+.status.return-requested {
+  background-color: #fff3cd;
+  color: #856404;
+  font-style: italic;
+}
+
 
   .delivery-timeline {
     display: flex;
@@ -418,6 +424,8 @@
   }
 </style>
 
+
+
 <head>
   <meta charset="UTF-8">
   <title>Order Details - ZNEAKZ</title>
@@ -547,7 +555,7 @@
         let subtotal = 0;
         order.items.forEach(i => { if(i.status !== "Cancelled") subtotal += i.price * i.quantity; });
         let tax = subtotal * 0.05;
-        let shipping = 50;
+let shipping = (order.status === "Cancelled") ? 0 : 50;
         let total = subtotal + tax + shipping;
       %>
       <p>Subtotal: ₹<%= subtotal.toFixed(2) %></p>
@@ -607,5 +615,3 @@
   });
 </script>
 <%- include("../partials/user/footer") %>
-
-

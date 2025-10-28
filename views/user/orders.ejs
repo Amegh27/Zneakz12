@@ -185,6 +185,29 @@
     .rounded {
       border-radius: 12px !important;
     }
+
+    /* Pagination Styles */
+    .pagination {
+      margin-top: 40px;
+    }
+
+    .page-item.active .page-link {
+      background-color: var(--primary);
+      border-color: var(--primary);
+      color: white;
+    }
+
+    .page-link {
+      color: var(--primary);
+      border: 1px solid var(--border);
+      font-weight: 500;
+    }
+
+    .page-link:hover {
+      background-color: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
   </style>
 </head>
 <body class="bg-light py-4">
@@ -229,6 +252,32 @@
         </div>
       </div>
     <% }) %>
+
+    <!-- Pagination -->
+    <% if (typeof totalPages !== 'undefined' && totalPages > 1) { %>
+      <nav aria-label="Orders pagination">
+        <ul class="pagination justify-content-center">
+          <% if (currentPage > 1) { %>
+            <li class="page-item">
+              <a class="page-link" href="?page=<%= currentPage - 1 %>">Previous</a>
+            </li>
+          <% } %>
+
+          <% for(let i = 1; i <= totalPages; i++) { %>
+            <li class="page-item <%= i === currentPage ? 'active' : '' %>">
+              <a class="page-link" href="?page=<%= i %>"><%= i %></a>
+            </li>
+          <% } %>
+
+          <% if (currentPage < totalPages) { %>
+            <li class="page-item">
+              <a class="page-link" href="?page=<%= currentPage + 1 %>">Next</a>
+            </li>
+          <% } %>
+        </ul>
+      </nav>
+    <% } %>
+
   <% } else { %>
     <div class="text-center bg-white p-5 shadow-sm rounded">
       <h5 class="text-muted">You haven't placed any orders yet.</h5>

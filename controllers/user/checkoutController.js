@@ -64,12 +64,11 @@ const placeOrder = async (req, res) => {
       return res.json({ success: false, message: "No address found" });
     }
 
-    const selectedAddress = user.address[addressIndex];
+const selectedAddress = user.address.id(addressIndex);
     const cart = await Cart.findOne({ user: userId }).populate("items.product");
     if (!cart || !cart.items.length)
       return res.json({ success: false, message: "Cart is empty" });
 
-    // Prepare order items
     const orderItems = cart.items.map((item) => ({
       product: item.product._id,
       quantity: item.quantity,
@@ -79,7 +78,6 @@ const placeOrder = async (req, res) => {
 
     const totalAmount = orderItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
-    // ✅ Reduce stock only when placing order
     for (let item of cart.items) {
       const product = await Product.findById(item.product._id);
       if (product) {
@@ -147,13 +145,28 @@ const getUserOrders = async (req, res) => {
     const userId = req.session.user;
     if (!userId) return res.redirect("/login");
 
+    const page = parseInt(req.query.page) || 1;
+    const limit = 6; 
+    const skip = (page - 1) * limit;
+
+    const totalOrders = await Order.countDocuments({ user: userId });
+    const totalPages = Math.ceil(totalOrders / limit);
+
     const orders = await Order.find({ user: userId })
       .sort({ createdAt: -1 })
-      .populate("items.product"); 
+      .skip(skip)
+      .limit(limit)
+      .populate("items.product");
 
     console.log("Fetched orders:", orders);
 
-    res.render("orders", { orders });
+    res.render("orders", { 
+      orders, 
+      currentPage: page,
+      totalPages,
+      hasPrev: page > 1,
+      hasNext: page < totalPages
+    });
   } catch (err) {
     console.error("Error fetching user orders:", err);
     res.status(500).send("Server Error");
@@ -172,7 +185,6 @@ const viewOrderDetails = async (req, res) => {
     const order = await Order.findOne({ _id: orderId, user: userId }).populate("items.product");
     if (!order) return res.redirect("/orders");
 
-    // Count cancelled items and calculate subtotal
     let subtotal = 0;
     let cancelledCount = 0;
 
@@ -365,7 +377,7 @@ doc.text(shippingText.split("\n"), 14, 70);
     });
 
     const tax = subtotal * 0.05;
-    const shipping = 50;
+    let shipping = (order.status === "Cancelled") ? 0 : 50;
     const grandTotal = subtotal + tax + shipping;
 
     y += 6;
@@ -411,7 +423,6 @@ const returnItemPage = async (req, res) => {
     const item = order.items.id(itemId);
     if (!item) return res.status(404).send('Item not found');
 
-    // Predefined return reasons
     const reasons = [
       "Item damaged",
       "Wrong product delivered",
@@ -427,12 +438,11 @@ const returnItemPage = async (req, res) => {
   }
 };
 
-// Handle return submission
 const submitReturnItem = async (req, res) => {
   const { orderId, itemId } = req.params;
   let { reason, otherReason } = req.body;
 
-  if (reason === "Other") reason = otherReason; // take custom reason if selected "Other"
+  if (reason === "Other") reason = otherReason; 
   if (!reason) return res.status(400).json({ success: false, message: 'Reason is required' });
 
   try {

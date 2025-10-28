@@ -49,15 +49,19 @@
                 <div><strong><%= item.product.productName %></strong></div>
               </td>
               <td>₹<%= item.product.discountPrice || item.product.price %></td>
-              <td>
-                <% if(item.product.stock === 0){ %>
-                  <span class="badge bg-danger">Out of Stock</span>
-                <% } else { %>
-                  <div class="quantity-input">
-                    <input type="text" value="<%= item.quantity %>" readonly>
-                  </div>
-                <% } %>
-              </td>
+<td>
+  <% if(item.product.stock === 0){ %>
+    <span class="badge bg-danger">Out of Stock</span>
+  <% } else { %>
+    <div class="quantity-input" data-id="<%= item.product._id %>">
+      <button class="decrease-btn">-</button>
+      <input type="text" value="<%= item.quantity %>" readonly>
+      <button class="increase-btn">+</button>
+    </div>
+  <% } %>
+</td>
+
+
               <td>₹<%= (item.product.discountPrice || item.product.price) * item.quantity %></td>
               <td>
 <button class="btn btn-sm btn-outline-danger remove-btn" 
@@ -131,7 +135,6 @@ document.addEventListener("DOMContentLoaded", () => {
         const row = btn.closest("tr");
         if (row) row.remove();
 
-        // ✅ Recalculate total dynamically
         let newTotal = 0;
         document.querySelectorAll(".cart-table tbody tr").forEach(tr => {
           const totalCell = tr.querySelector("td:nth-child(4)");
@@ -141,17 +144,14 @@ document.addEventListener("DOMContentLoaded", () => {
           }
         });
 
-        // ✅ Update total display
         const totalDisplay = document.querySelector(".fw-bold");
         if (totalDisplay) {
           totalDisplay.textContent = `₹${newTotal.toFixed(2)}`;
         }
 
-        // ✅ Update cart count badge (if exists)
         const cartCountBadge = document.getElementById("cartCount");
         if (cartCountBadge) cartCountBadge.textContent = data.cartCount;
 
-        // ✅ If cart is now empty, hide total and show message
         if (data.cartCount === 0) {
           const totalSection = document.querySelector(".d-flex.justify-content-between");
           if (totalSection) totalSection.remove();
@@ -188,9 +188,105 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 });
+
+document.querySelectorAll(".quantity-input").forEach(container => {
+  const productId = container.dataset.id;
+  const input = container.querySelector("input");
+
+  container.querySelector(".increase-btn").addEventListener("click", async () => {
+    try {
+      const res = await fetch("/cart/update", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ productId, action: "increase" })
+      });
+      const data = await res.json();
+      if (data.success) {
+        input.value = parseInt(input.value) + 1;
+        updateCartTotals();
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  });
+
+  container.querySelector(".decrease-btn").addEventListener("click", async () => {
+    try {
+      const res = await fetch("/cart/update", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ productId, action: "decrease" })
+      });
+      const data = await res.json();
+      if (data.success) {
+        let newQty = parseInt(input.value) - 1;
+        if (newQty <= 0) {
+          container.closest("tr").remove();
+        } else {
+          input.value = newQty;
+        }
+        updateCartTotals();
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  });
+});
+
+// Helper function to update total dynamically
+function updateCartTotals() {
+  let newTotal = 0;
+  document.querySelectorAll(".cart-table tbody tr").forEach(tr => {
+    const qtyInput = tr.querySelector(".quantity-input input");
+    const priceCell = tr.querySelector("td:nth-child(2)");
+    if (qtyInput && priceCell) {
+      const qty = parseInt(qtyInput.value);
+      const price = parseFloat(priceCell.textContent.replace("₹", "").trim());
+      newTotal += qty * price;
+      const totalCell = tr.querySelector("td:nth-child(4)");
+      if (totalCell) totalCell.textContent = `₹${(qty * price).toFixed(2)}`;
+    }
+  });
+  const totalDisplay = document.querySelector(".fw-bold");
+  if (totalDisplay) totalDisplay.textContent = `₹${newTotal.toFixed(2)}`;
+}
+
+const handleCartAction = async (productId, action) => {
+  try {
+    const res = await fetch("/cart/update", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ productId, action })
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      // Update quantity input and total
+      const row = document.querySelector(`[data-id="${productId}"]`).closest("tr");
+      const input = row.querySelector("input");
+      input.value = action === "increase" ? parseInt(input.value) + 1 : parseInt(input.value) - 1;
+
+      // Update total
+      document.querySelector(".fw-bold").textContent = `₹${data.total.toFixed(2)}`;
+    } else {
+      Swal.fire({
+        icon: "warning",
+        title: data.message,
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 1500
+      });
+    }
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+
+
 </script>
 
 
 <%- include("../partials/user/footer") %>
-</body>
-</html>
+

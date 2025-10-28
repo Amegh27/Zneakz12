@@ -83,8 +83,11 @@ router.get('/profile/edit', userAuth, profileController.getEditProfilePage);
 router.post('/profile/edit', userAuth, profileUpload.single('avatar'), profileController.postEditProfile); 
 router.get('/change-password', userAuth, profileController.getChangePasswordPage);
 router.post('/change-password', userAuth, profileController.postChangePassword);
-router.get('/address', userAuth, profileController.getAddressPage);
-router.post('/address', userAuth, profileController.postAddAddress);
+router.get('/address', profileController.getAddressPage);
+router.post('/address', profileController.postAddAddress);
+router.put('/address/edit/:id', profileController.postEditAddress);
+router.delete('/address/delete/:id', profileController.deleteAddress);
+
 
 // cart management
 router.get('/cart', cartController.viewCart);

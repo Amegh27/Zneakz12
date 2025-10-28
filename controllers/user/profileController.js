@@ -357,9 +357,22 @@ const postAddAddress = async (req, res) => {
     const userId = req.session.user;
     if (!userId) return res.status(401).json({ success: false, message: 'Unauthorized access.' });
 
-    const { name, city, state, pincode } = req.body;
-    if (!name || !city || !state || !pincode)
+    const { name: address, city, state, pincode } = req.body;
+    if (!address || !city || !state || !pincode)
       return res.status(400).json({ success: false, message: 'Please fill all required fields.' });
+
+    if (address.length > 40) {
+      return res.status(400).json({ success: false, message: 'Address must be 40 characters or less.' });
+    }
+    if (city.length > 40) {
+      return res.status(400).json({ success: false, message: 'City must be 40 characters or less.' });
+    }
+    if (state.length > 40) {
+      return res.status(400).json({ success: false, message: 'State must be 40 characters or less.' });
+    }
+    if (pincode.length !== 6 || !/^\d{6}$/.test(pincode)) {
+      return res.status(400).json({ success: false, message: 'Pincode must be exactly 6 digits.' });
+    }
 
     const user = await User.findById(userId);
     if (!user) return res.status(404).json({ success: false, message: 'User not found.' });
@@ -367,17 +380,17 @@ const postAddAddress = async (req, res) => {
     if (!Array.isArray(user.address)) user.address = [];
 
     const exists = user.address.find(addr =>
-      addr.name === name &&
+      addr.name === address &&
       addr.city === city &&
       addr.state === state &&
       addr.pincode === pincode
     );
 
     if (exists) {
-      return res.json({ success: true, message: 'This address already exists!' });
+      return res.status(400).json({ success: false, message: 'This address already exists!' });
     }
 
-    user.address.push({ name, city, state, pincode });
+    user.address.push({ name: address, city, state, pincode });
 
     await user.save();
 
@@ -390,6 +403,70 @@ const postAddAddress = async (req, res) => {
     return res.status(500).json({ success: false, message: 'Server error while saving address.' });
   }
 };
+
+const postEditAddress = async (req, res) => {
+  try {
+    const userId = req.session.user;
+    if (!userId) return res.status(401).json({ success: false, message: 'Unauthorized' });
+
+    const { name, city, state, pincode } = req.body;
+
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+
+const addressId = req.body.addressId; 
+const addr = user.address.id(addressId);
+if (!addr) return res.status(404).json({ success: false, message: "Address not found" });
+
+addr.name = req.body.name;
+addr.city = req.body.city;
+addr.state = req.body.state;
+addr.pincode = req.body.pincode;
+
+await user.save();
+
+    addr.name = name;
+    addr.city = city;
+    addr.state = state;
+    addr.pincode = pincode;
+
+    await user.save();
+    res.json({ success: true, message: 'Address updated successfully!' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+const deleteAddress = async (req, res) => {
+  try {
+    const userId = req.session.user;
+    const addressId = req.params.id;
+
+    if (!userId) {
+      return res.status(401).json({ success: false, message: "Unauthorized access." });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found." });
+    }
+
+    const address = user.address.find(a => a._id.toString() === addressId);
+    if (!address) {
+      return res.status(404).json({ success: false, message: "Address not found." });
+    }
+
+    user.address = user.address.filter(a => a._id.toString() !== addressId);
+    await user.save();
+
+    return res.json({ success: true, message: "Address deleted successfully!" });
+  } catch (error) {
+    console.error("Error deleting address:", error);
+    return res.status(500).json({ success: false, message: "Server error while deleting address." });
+  }
+};
+
 
 
 
@@ -408,7 +485,9 @@ module.exports = {
     getChangePasswordPage,
     postChangePassword,
     getAddressPage,
-    postAddAddress
+    postAddAddress,
+    postEditAddress,
+    deleteAddress
     
     
 

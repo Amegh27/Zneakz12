@@ -254,6 +254,192 @@
   }
 
   /* ============================================
+     ADDRESS LIST STYLES
+     ============================================ */
+  
+  .address-list {
+    list-style: none;
+    padding: 0;
+    margin-bottom: 40px;
+  }
+
+  .address-item {
+    background: var(--light-bg);
+    border: 2px solid var(--border-color);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 20px;
+    position: relative;
+    transition: var(--transition);
+  }
+
+  .address-item:hover {
+    border-color: var(--primary-color);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+  }
+
+  .address-item.default-address {
+    border-color: var(--success-color);
+    background: linear-gradient(135deg, rgba(40, 167, 69, 0.05) 0%, var(--light-bg) 100%);
+  }
+
+  .address-details {
+    margin-bottom: 20px;
+  }
+
+  .address-details .detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    font-size: 0.95rem;
+  }
+
+  .address-details .detail-label {
+    font-weight: 600;
+    color: var(--text-secondary);
+    min-width: 80px;
+  }
+
+  .address-details .detail-value {
+    color: var(--text-primary);
+    font-weight: 500;
+    text-align: right;
+  }
+
+  .address-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    border-top: 1px solid var(--border-color);
+    padding-top: 16px;
+    align-items: center;
+  }
+
+  .address-actions .btn,
+  .address-actions .btn:disabled {
+    padding: 8px 16px;
+    font-size: 0.85rem;
+    border-radius: 8px;
+    font-weight: 600;
+  }
+
+  .btn-set-default {
+    background: var(--success-color);
+    color: white;
+    border: none;
+  }
+
+  .btn-set-default:hover {
+    background: #218838;
+  }
+
+  .btn-edit {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+  }
+
+  .btn-edit:hover {
+    background: var(--secondary-color);
+  }
+
+  .btn-delete {
+    background: var(--danger-color);
+    color: white;
+    border: none;
+  }
+
+  .btn-delete:hover {
+    background: #c82333;
+  }
+
+  .default-indicator {
+    background: var(--success-color);
+    color: white;
+    border: none;
+    cursor: default;
+  }
+
+  /* Edit Mode for Address Item */
+  .address-item.editing {
+    border-color: var(--primary-color);
+    background: #ffffff;
+  }
+
+  .address-item.editing .address-details {
+    display: none;
+  }
+
+  .address-item.editing .address-edit-form {
+    display: block;
+  }
+
+  .address-edit-form {
+    display: none;
+  }
+
+  .address-edit-form .form-group {
+    margin-bottom: 16px;
+  }
+
+  .address-edit-form .form-control {
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 0.9rem;
+  }
+
+  .address-edit-form .form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  }
+
+  /* Add New Address Form */
+  .add-address-section {
+    border: 2px dashed var(--border-color);
+    border-radius: 16px;
+    padding: 32px;
+    text-align: center;
+    margin-bottom: 40px;
+    transition: var(--transition);
+    cursor: pointer;
+  }
+
+  .add-address-section:hover {
+    border-color: var(--primary-color);
+    background: rgba(102, 126, 234, 0.05);
+  }
+
+  .add-address-section i {
+    font-size: 3rem;
+    color: var(--text-secondary);
+    margin-bottom: 16px;
+    display: block;
+  }
+
+  .add-address-section h5 {
+    color: var(--text-primary);
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .add-address-section p {
+    color: var(--text-secondary);
+    margin: 0;
+  }
+
+  .add-address-form {
+    display: none;
+    background: var(--card-bg);
+    border-radius: 16px;
+    padding: 32px;
+    margin-top: 20px;
+    box-shadow: var(--shadow-sm);
+  }
+
+  /* ============================================
      FORM STYLES - ENHANCED
      ============================================ */
   
@@ -276,6 +462,11 @@
     color: var(--text-primary);
     font-weight: 500;
     position: relative;
+  }
+
+  .form-control[readonly] {
+    background: #f8f9fa;
+    opacity: 0.7;
   }
 
   .form-control::placeholder {
@@ -426,6 +617,15 @@
       font-size: 1.3rem;
       margin-bottom: 28px;
     }
+
+    .address-actions {
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .address-actions .btn {
+      width: 100%;
+    }
   }
 
   @media (max-width: 576px) {
@@ -470,6 +670,21 @@
     .form-actions button {
       width: 100%;
       justify-content: center;
+    }
+
+    .address-item {
+      padding: 20px;
+    }
+
+    .address-details .detail-row {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 4px;
+      text-align: left;
+    }
+
+    .address-details .detail-value {
+      text-align: left;
     }
   }
 </style>
@@ -516,48 +731,147 @@
       <div class="profile-main">
         <div id="tab-address" class="section-card">
           <h4>
-            <i class="bi bi-geo-alt-fill"></i> Your Address
+            <i class="bi bi-geo-alt-fill"></i> Your Addresses
           </h4>
 
-          <% let addr = addresses && addresses.length > 0 ? addresses[0] : {}; %>
+          <!-- Add New Address Section -->
+          <div class="add-address-section" id="addAddressTrigger">
+            <i class="bi bi-plus-circle"></i>
+            <h5>Add New Address</h5>
+            <p>Click to add a new delivery address</p>
+          </div>
 
-          <form id="addressForm" class="row g-4">
-            <!-- Enhanced form fields with premium styling -->
-            <div class="col-md-12">
-              <label class="form-label">
-                <i class="bi bi-house-fill"></i> Address
-              </label>
-              <input type="text" class="form-control" name="name" value="<%= addr.name || '' %>" placeholder="Enter your full address" required>
-            </div>
-
-            <div class="col-md-12">
-              <label class="form-label">
-                <i class="bi bi-building"></i> City
-              </label>
-              <input type="text" class="form-control" name="city" value="<%= addr.city || '' %>" placeholder="Enter your city" required>
-            </div>
-
+          <!-- Add New Address Form -->
+          <form id="addAddressForm" class="add-address-form row g-3" style="display: none;">
             <div class="col-md-6">
-              <label class="form-label">
-                <i class="bi bi-map"></i> State
-              </label>
-              <input type="text" class="form-control" name="state" value="<%= addr.state || '' %>" placeholder="Enter your state" required>
+              <label class="form-label">Name</label>
+              <input type="text" class="form-control" value="<%= user.name || '' %>" >
             </div>
-
             <div class="col-md-6">
-              <label class="form-label">
-                <i class="bi bi-pin-map"></i> Pincode
-              </label>
-              <input type="text" class="form-control" name="pincode" value="<%= addr.pincode || '' %>" placeholder="Enter your pincode" required>
+              <label class="form-label">Phone</label>
+              <input type="text" class="form-control" value="<%= user.phone || '' %>" >
             </div>
-
-            <!-- Form Actions -->
+            <div class="col-md-12">
+              <label class="form-label"><i class="bi bi-house-fill"></i> Address</label>
+              <input type="text" class="form-control" name="name" placeholder="Enter your full address" maxlength="40">
+            </div>
+            <div class="col-md-12">
+              <label class="form-label"><i class="bi bi-building"></i> City</label>
+              <input type="text" class="form-control" name="city" placeholder="Enter your city" maxlength="40">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label"><i class="bi bi-map"></i> State</label>
+              <input type="text" class="form-control" name="state" placeholder="Enter your state" maxlength="40">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label"><i class="bi bi-pin-map"></i> Pincode</label>
+              <input type="text" class="form-control" name="pincode" placeholder="Enter your pincode" maxlength="6">
+            </div>
             <div class="col-12 form-actions">
+              <button type="button" id="cancelAddBtn" class="btn btn-secondary me-2">Cancel</button>
               <button type="submit" class="btn btn-dark">
-                <i class="bi bi-check-circle-fill"></i> <%= addr && addr.name ? 'Update Address' : 'Save Address' %>
+                <i class="bi bi-plus-circle-fill"></i> Add Address
               </button>
             </div>
           </form>
+
+          <!-- Address List -->
+          <% if (addresses && addresses.length > 0) { %>
+            <ul class="address-list">
+              <% addresses.forEach((addr, index) => { %>
+                <li class="address-item <%= index === 0 ? 'default-address' : '' %>">
+                  <!-- View Mode -->
+                  <div class="address-details">
+                    <div class="detail-row">
+                      <span class="detail-label">Name:</span>
+                      <span class="detail-value"><%= user.name %></span>
+                    </div>
+                    <div class="detail-row">
+                      <span class="detail-label">Phone:</span>
+                      <span class="detail-value"><%= user.phone || 'Not provided' %></span>
+                    </div>
+                    <div class="detail-row">
+                      <span class="detail-label">Address:</span>
+                      <span class="detail-value"><%= addr.name %></span>
+                    </div>
+                    <div class="detail-row">
+                      <span class="detail-label">City:</span>
+                      <span class="detail-value"><%= addr.city %></span>
+                    </div>
+                    <div class="detail-row">
+                      <span class="detail-label">State:</span>
+                      <span class="detail-value"><%= addr.state %></span>
+                    </div>
+                    <div class="detail-row">
+                      <span class="detail-label">Pincode:</span>
+                      <span class="detail-value"><%= addr.pincode %></span>
+                    </div>
+                  </div>
+
+                  <!-- Edit Mode -->
+                  <form class="address-edit-form row g-3">
+                    <input type="hidden" name="addressId" value="<%= addr._id %>">
+                    <div class="col-md-6">
+                      <label class="form-label">Name</label>
+                      <input type="text" class="form-control" value="<%= user.name || '' %>" readonly>
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label">Phone</label>
+                      <input type="text" class="form-control" value="<%= user.phone || '' %>" readonly>
+                    </div>
+                    <div class="col-md-12">
+                      <label class="form-label"><i class="bi bi-house-fill"></i> Address</label>
+                      <input type="text" class="form-control" name="name" value="<%= addr.name %>" maxlength="40">
+                    </div>
+                    <div class="col-md-12">
+                      <label class="form-label"><i class="bi bi-building"></i> City</label>
+                      <input type="text" class="form-control" name="city" value="<%= addr.city %>" maxlength="40">
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label"><i class="bi bi-map"></i> State</label>
+                      <input type="text" class="form-control" name="state" value="<%= addr.state %>" maxlength="40">
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label"><i class="bi bi-pin-map"></i> Pincode</label>
+                      <input type="text" class="form-control" name="pincode" value="<%= addr.pincode %>" maxlength="6">
+                    </div>
+                    <div class="col-12 form-actions">
+                      <button type="button" class="btn btn-secondary cancel-edit-btn me-2">Cancel</button>
+                      <button type="submit" class="btn btn-dark save-edit-btn">
+                        <i class="bi bi-check-circle-fill"></i> Save Changes
+                      </button>
+                    </div>
+                  </form>
+
+                  <!-- Actions -->
+                  <div class="address-actions">
+                    <% if (index === 0) { %>
+                      <button type="button" class="btn btn-success default-indicator me-2" disabled>
+                        <i class="bi bi-star-fill"></i> Default
+                      </button>
+                    <% } else { %>
+                      <button type="button" class="btn btn-set-default" data-id="<%= addr._id %>">
+                        <i class="bi bi-star-fill"></i> Set Default
+                      </button>
+                    <% } %>
+                    <button type="button" class="btn btn-edit" data-id="<%= addr._id %>">
+                      <i class="bi bi-pencil-fill"></i> Edit
+                    </button>
+                    <button type="button" class="btn btn-delete" data-id="<%= addr._id %>">
+                      <i class="bi bi-trash-fill"></i> Delete
+                    </button>
+                  </div>
+                </li>
+              <% }) %>
+            </ul>
+          <% } else { %>
+            <div class="text-center py-5">
+              <i class="bi bi-geo-alt" style="font-size: 4rem; color: var(--text-secondary); display: block; margin-bottom: 16px;"></i>
+              <h5>No Addresses Added</h5>
+              <p class="text-muted">Add your first delivery address to get started.</p>
+            </div>
+          <% } %>
+
         </div>
       </div>
     </div>
@@ -568,16 +882,53 @@
 <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
-  // ============================================
-  // ADDRESS FORM SUBMISSION
-  // ============================================
-  document.getElementById('addressForm').addEventListener('submit', async (e) => {
+  // Generic validation function
+  function validateAddress(formData) {
+    const { name: address, city, state, pincode } = formData;
+    if (!address || address.trim().length === 0) return { valid: false, msg: 'Address is required' };
+    if (address.trim().length > 40) return { valid: false, msg: 'Address must be 40 characters or less' };
+    if (!city || city.trim().length === 0) return { valid: false, msg: 'City is required' };
+    if (city.trim().length > 40) return { valid: false, msg: 'City must be 40 characters or less' };
+    if (!state || state.trim().length === 0) return { valid: false, msg: 'State is required' };
+    if (state.trim().length > 40) return { valid: false, msg: 'State must be 40 characters or less' };
+    if (!pincode || pincode.trim().length !== 6 || !/^\d{6}$/.test(pincode.trim())) return { valid: false, msg: 'Pincode must be exactly 6 digits' };
+    return { valid: true };
+  }
+
+  // Trim form data
+  function trimFormData(formData) {
+    const trimmed = { ...formData };
+    Object.keys(trimmed).forEach(key => {
+      if (key !== 'addressId') trimmed[key] = trimmed[key].trim();
+    });
+    return trimmed;
+  }
+
+  // Add New Address Handler
+  document.getElementById('addAddressTrigger').addEventListener('click', () => {
+    document.getElementById('addAddressTrigger').style.display = 'none';
+    document.getElementById('addAddressForm').style.display = 'block';
+  });
+
+  document.getElementById('cancelAddBtn').addEventListener('click', () => {
+    document.getElementById('addAddressForm').style.display = 'none';
+    document.getElementById('addAddressTrigger').style.display = 'block';
+    document.getElementById('addAddressForm').reset();
+  });
+
+  document.getElementById('addAddressForm').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const formData = Object.fromEntries(new FormData(e.target).entries());
+    const formData = trimFormData(Object.fromEntries(new FormData(e.target).entries()));
+    const validation = validateAddress(formData);
+    if (!validation.valid) {
+      Swal.fire('Error', validation.msg, 'error');
+      return;
+    }
 
     const submitBtn = e.target.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
     submitBtn.disabled = true;
-    submitBtn.textContent = 'Saving...';
+    submitBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Adding...';
 
     try {
       const res = await fetch('/address', {
@@ -586,25 +937,156 @@
         body: JSON.stringify(formData)
       });
 
+      if (!res.ok) {
+        let errorMsg = `Server error (${res.status})`;
+        try {
+          const errorData = await res.json();
+          errorMsg = errorData.message || errorMsg;
+        } catch {} 
+        throw new Error(errorMsg);
+      }
+
       const data = await res.json();
       if (data.success) {
         Swal.fire('Success', data.message, 'success').then(() => {
           window.location.reload();
         });
       } else {
-        Swal.fire('Error', data.message, 'error');
+        throw new Error(data.message || 'Failed to add address');
       }
     } catch (err) {
-      Swal.fire('Error', 'Server error', 'error');
+      Swal.fire('Error', err.message, 'error');
     } finally {
       submitBtn.disabled = false;
-      submitBtn.textContent = '<%= addr && addr.name ? "Update Address" : "Save Address" %>';
+      submitBtn.innerHTML = originalText;
     }
   });
 
-  // ============================================
-  // LOGOUT CONFIRMATION
-  // ============================================
+  // Edit Handlers (per address)
+  document.querySelectorAll('.btn-edit').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const addressItem = e.target.closest('.address-item');
+      addressItem.classList.add('editing');
+    });
+  });
+
+  // Cancel Edit
+  document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('cancel-edit-btn')) {
+      e.target.closest('.address-item').classList.remove('editing');
+    }
+  });
+
+  // Save Edit
+  document.addEventListener('submit', async (e) => {
+    if (e.target.classList.contains('address-edit-form')) {
+      e.preventDefault();
+      const formData = trimFormData(Object.fromEntries(new FormData(e.target).entries()));
+      const { addressId } = formData;
+      const validation = validateAddress(formData);
+      if (!validation.valid) {
+        Swal.fire('Error', validation.msg, 'error');
+        return;
+      }
+
+      const submitBtn = e.target.querySelector('.save-edit-btn');
+      const originalText = submitBtn.innerHTML;
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Saving...';
+
+      try {
+        const res = await fetch(`/address/edit/${addressId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData)
+        });
+
+        if (!res.ok) {
+          let errorMsg = `Server error (${res.status})`;
+          try {
+            const errorData = await res.json();
+            errorMsg = errorData.message || errorMsg;
+          } catch {}
+          throw new Error(errorMsg);
+        }
+
+        const data = await res.json();
+        if (data.success) {
+          Swal.fire('Success', data.message, 'success').then(() => {
+            window.location.reload();
+          });
+        } else {
+          throw new Error(data.message || 'Failed to update address');
+        }
+      } catch (err) {
+        Swal.fire('Error', err.message, 'error');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+      }
+    }
+  });
+
+  // Delete Address
+  document.querySelectorAll('.btn-delete').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      const addressId = e.target.dataset.id;
+      const result = await Swal.fire({
+        title: 'Are you sure?',
+        text: 'This address will be permanently deleted!',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes, delete it!'
+      });
+
+      if (result.isConfirmed) {
+        try {
+          const res = await fetch(`/address/delete/${addressId}`, { method: 'DELETE' });
+          if (res.ok) {
+            Swal.fire('Deleted!', 'Address has been deleted.', 'success').then(() => {
+              window.location.reload();
+            });
+          } else {
+            const errorData = await res.json();
+            Swal.fire('Error', errorData.message || 'Failed to delete address', 'error');
+          }
+        } catch (err) {
+          Swal.fire('Error', 'Network error. Please try again.', 'error');
+        }
+      }
+    });
+  });
+
+  // Set Default Address
+  document.querySelectorAll('.btn-set-default').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      const addressId = e.target.dataset.id;
+      const submitBtn = e.target;
+      const originalText = submitBtn.innerHTML;
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Setting...';
+
+      try {
+        const res = await fetch(`/address/set-default/${addressId}`, { method: 'PUT' });
+        if (res.ok) {
+          Swal.fire('Success', 'Address set as default!', 'success').then(() => {
+            window.location.reload();
+          });
+        } else {
+          const errorData = await res.json();
+          Swal.fire('Error', errorData.message || 'Failed to set default', 'error');
+        }
+      } catch (err) {
+        Swal.fire('Error', 'Network error. Please try again.', 'error');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+      }
+    });
+  });
+
   document.getElementById("logout-link").addEventListener("click", function(event) {
     event.preventDefault();
 

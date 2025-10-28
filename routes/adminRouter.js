@@ -49,8 +49,8 @@ router.post("/orders/:orderId/items/:itemId/status", orderController.updateItemS
 // return management
 router.get('/return', orderController.viewReturns); 
 router.get('/return/:id', orderController.viewReturnDetails);
-router.post('/returns/:orderId/:itemId/approve', adminAuth, orderController.approveReturn);
-router.post('/returns/:orderId/:itemId/reject', adminAuth, orderController.rejectReturn);
+router.post('/returns/:orderId/:itemId/approve', orderController.approveReturn);
+router.post('/returns/:orderId/:itemId/reject', orderController.rejectReturn);
 
 
 
