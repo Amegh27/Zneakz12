@@ -209,10 +209,16 @@ const updateItemStatus = async (req, res) => {
 
 const viewReturns = async (req, res) => {
   try {
-    const returns = await Order.find({ 'items.returnStatus': { $ne: 'None' } })
-      .populate('user', 'name email')
-      .populate('items.product', 'productName productImage price brand category')
-      .sort({ createdAt: -1 });
+  const returns = await Order.find({
+  $or: [
+    { 'items.returnStatus': { $ne: 'None' } },
+    { 'items.status': 'Partially Cancelled' }
+  ]
+})
+.populate('user', 'name email')
+.populate('items.product', 'productName productImage price brand category')
+.sort({ createdAt: -1 });
+
     res.render('return', { returns });
   } catch (err) {
     console.error('Error fetching returns:', err);
@@ -252,10 +258,8 @@ const approveReturn = async (req, res) => {
       return res.json({ success: false, message: "Return already approved" });
     }
 
-    // ✅ Update return status
     item.returnStatus = "Approved";
 
-    // ✅ Restock product for the correct size (same logic as cancel)
     const product = await Product.findById(item.product._id);
     if (product) {
       const sizeIndex = product.sizes.findIndex(s => s.size === item.size);
@@ -265,7 +269,6 @@ const approveReturn = async (req, res) => {
       }
     }
 
-    // ✅ Save updated order
     await order.save();
 
     res.json({ success: true, message: "Return approved and stock updated" });

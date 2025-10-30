@@ -189,7 +189,6 @@
     padding: 1.5rem;
   }
 
-  /* ===== Status Badge ===== */
   .badge {
     padding: 0.5rem 1rem;
     border-radius: 6px;
@@ -198,9 +197,10 @@
     letter-spacing: 0.5px;
   }
 
-  .bg-danger {
-    background: linear-gradient(135deg, #a90202 0%, #c80303 100%) !important;
-  }
+.bg-danger {
+  background: linear-gradient(135deg, #a90202 0%, #c80303 100%) !important;
+  color: #fff !important;
+}
 
   .bg-success {
     background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%) !important;
@@ -219,7 +219,6 @@
     background: linear-gradient(135deg, #05e177 0%, #39e305 100%) !important;
   }
 
-  /* ===== Product List ===== */
   .list-group {
     border: none;
   }
@@ -463,12 +462,17 @@
     <select class="form-select form-select-sm item-status-update" 
             data-order="<%= order._id %>" 
             data-item="<%= item._id %>">
-      <% statuses.filter(s => s !== 'Cancelled' && s !== 'Partially Cancelled').forEach(s => { %>
-        <option value="<%= s %>" <%= s === item.status ? 'selected' : '' %>><%= s %></option>
+
+      <% ['Placed', 'Shipped', 'Out for Delivery', 'Delivered'].forEach(s => { %>
+        <option value="<%= s %>" <%= s === item.status ? 'selected' : '' %>>
+          <%= s %>
+        </option>
       <% }) %>
+
     </select>
   </div>
 <% } %>
+
 
   </li>
 <% }) %>

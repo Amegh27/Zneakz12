@@ -1,89 +1,219 @@
 <%- include('../partials/admin/header') %>
 
-<div class="container mt-5">
-  <div class="mb-5">
-    <h2 class="fw-bold"  style="color: #1a1a1a; font-size: 2rem;">RETURN REQUESTS</h2>
+<style>
+  :root {
+    --gradient-black: linear-gradient(135deg, #000000 0%, #111111 100%);
+    --gradient-blue: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --success: #10b981;
+    --danger: #ef4444;
+    --text-dark: #1a1a1a;
+    --light-bg: #f8f9fa;
+    --border-color: #e5e7eb;
+  }
+
+  body {
+    background: #f5f6f7;
+    font-family: "Inter", "Segoe UI", sans-serif;
+    color: var(--text-dark);
+  }
+
+  h2 {
+    font-weight: 700;
+    font-size: 2rem;
+    background: var(--gradient-blue);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 2rem;
+  }
+
+  .return-card {
+    border: none;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    background: #fff;
+  }
+
+  .return-header {
+    background: var(--gradient-black);
+    color: #fff;
+    padding: 1.25rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .return-header .fw-bold {
+    font-size: 1.1rem;
+  }
+
+  .return-table-wrapper {
+    width: 100%;
+    background: #fff;
+  }
+
+  table.return-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .return-table th {
+    background: var(--light-bg);
+    padding: 1rem 1.5rem;
+    text-align: left;
+    font-weight: 600;
+    border-bottom: 2px solid var(--border-color);
+  }
+
+  .return-table td {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    vertical-align: middle;
+  }
+
+  .return-table tr:hover {
+    background: #f9fafb;
+  }
+
+  .badge {
+    font-size: 0.85rem;
+    border-radius: 6px;
+    padding: 0.35rem 0.6rem;
+    font-weight: 600;
+  }
+
+  .bg-success {
+    background: #10b981 !important;
+    color: #fff !important;
+  }
+
+  .bg-danger {
+    background: #ef4444 !important;
+    color: #fff !important;
+  }
+
+  .bg-warning {
+    background: #facc15 !important;
+    color: #1a1a1a !important;
+  }
+
+  .btn {
+    border-radius: 8px;
+    font-weight: 600;
+    padding: 0.45rem 0.8rem;
+    border: none;
+    cursor: pointer;
+    transition: all 0.25s ease;
+  }
+
+  .btn-success {
+    background: var(--success);
+    color: white;
+  }
+
+  .btn-success:hover {
+    background: #059669;
+    transform: translateY(-2px);
+  }
+
+  .btn-danger {
+    background: var(--danger);
+    color: white;
+  }
+
+  .btn-danger:hover {
+    background: #dc2626;
+    transform: translateY(-2px);
+  }
+
+  @media (max-width: 768px) {
+    .return-header {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .return-table th,
+    .return-table td {
+      padding: 0.75rem 1rem;
+      font-size: 0.9rem;
+    }
+  }
+</style>
+
+<div class="container-fluid px-0 mt-4">
+  <div class="px-4">
+    <h2>Return Requests</h2>
   </div>
 
   <% if (!returns || returns.length === 0) { %>
-    <div class="alert alert-info border-0 rounded-lg shadow-sm" style="background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%); border-left: 4px solid #2196F3;">
+    <div class="alert alert-info mx-4 shadow-sm" 
+         style="background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%); border-left: 4px solid #667eea;">
       <strong>No return requests found.</strong> All returns have been processed.
     </div>
   <% } else { %>
     <% returns.forEach(order => { %>
-      <div class="card mb-4 border-0 shadow-lg" style="border-radius: 12px; overflow: hidden;">
-        <div class="card-header border-0 d-flex justify-content-between align-items-center" 
-             style="background: linear-gradient(135deg, #000000 0%, #000000 100%); color: white; padding: 1.5rem;">
+      <div class="return-card mb-5">
+        <!-- FULL-WIDTH HEADER -->
+        <div class="return-header">
           <div>
-            <div class="fw-bold" style="font-size: 1.1rem;">Order ID: <%= order.orderID %></div>
-            <div class="mt-2" style="font-size: 0.95rem; opacity: 0.95;">
-              <span>👤 <%= order.user?.name %></span> <span style="opacity: 0.8;">(<%= order.user?.email %>)</span>
+            <div class="fw-bold">Order ID: <%= order.orderID %></div>
+            <div style="font-size: 0.9rem; opacity: 0.9;">
+              👤 <%= order.user?.name %> 
+              <span style="opacity: 0.8;">(<%= order.user?.email %>)</span>
             </div>
           </div>
-          <small style="opacity: 0.9; font-size: 0.9rem;">📅 <%= order.createdAt.toLocaleString() %></small>
+          <small style="opacity: 0.9;">📅 <%= order.createdAt.toLocaleString() %></small>
         </div>
 
-        <div class="card-body p-0">
-          <table class="table table-hover align-middle mb-0" style="border-collapse: collapse;">
-            <thead style="background-color: #f8f9fa; border-bottom: 2px solid #e9ecef;">
+        <!-- FULL-WIDTH TABLE -->
+        <div class="return-table-wrapper">
+          <table class="return-table">
+            <thead>
               <tr>
-                <th style="padding: 1rem; color: #495057; font-weight: 600;">Product</th>
-                <th style="padding: 1rem; color: #495057; font-weight: 600;">Size</th>
-                <th style="padding: 1rem; color: #495057; font-weight: 600;">Quantity</th>
-                <th style="padding: 1rem; color: #495057; font-weight: 600;">Price</th>
-                <th style="padding: 1rem; color: #495057; font-weight: 600;">Return Reason</th>
-                <th style="padding: 1rem; color: #495057; font-weight: 600;">Status</th>
-                <th style="padding: 1rem; color: #495057; font-weight: 600;">Action</th>
+                <th>Product</th>
+                <th>Size</th>
+                <th>Quantity</th>
+                <th>Price</th>
+                <th>Return Reason</th>
+                <th>Status</th>
+                <th>Action</th>
               </tr>
             </thead>
             <tbody>
               <% order.items.forEach(item => { %>
                 <% if (item.returnStatus && item.returnStatus !== 'None') { %>
-                  <tr style="border-bottom: 1px solid #e9ecef; transition: background-color 0.2s;" 
-                      onmouseover="this.style.backgroundColor='#f8f9fa'" 
-                      onmouseout="this.style.backgroundColor='transparent'">
-                    <td style="padding: 1rem;">
+                  <tr>
+                    <td>
                       <div class="d-flex align-items-center gap-3">
                         <% if (item.product?.productImage?.length > 0) { %>
                           <img src="/uploads/products/<%= item.product.productImage[0] %>" 
-                               alt="Product" width="50" class="rounded" style="object-fit: cover; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                               alt="Product" width="50" height="50" class="rounded" style="object-fit: cover;">
                         <% } %>
-                        <span class="fw-500"><%= item.product?.productName %></span>
+                        <span><%= item.product?.productName %></span>
                       </div>
                     </td>
-                    <td style="padding: 1rem;"><%= item.size || '—' %></td>
-                    <td style="padding: 1rem;"><span class="badge bg-light text-dark"><%= item.quantity %></span></td>
-                    <td style="padding: 1rem; font-weight: 600; color: #667eea;">₹<%= item.price.toFixed(2) %></td>
-                    <td style="padding: 1rem; font-size: 0.95rem;"><%= item.returnReason || 'No reason provided' %></td>
-                    <td style="padding: 1rem;">
+                    <td><%= item.size || '—' %></td>
+                    <td><span class="badge bg-light text-dark"><%= item.quantity %></span></td>
+                    <td style="color:#667eea; font-weight:600;">₹<%= item.price.toFixed(2) %></td>
+                    <td><%= item.returnReason || 'No reason provided' %></td>
+                    <td>
                       <span class="badge 
-                        <%= item.returnStatus === 'Approved' 
-                              ? 'bg-success' 
-                              : item.returnStatus === 'Rejected' 
-                              ? 'bg-danger' 
-                              : 'bg-warning text-dark' %>">
+                        <%= item.returnStatus === 'Approved' ? 'bg-success' 
+                        : item.returnStatus === 'Rejected' ? 'bg-danger' 
+                        : 'bg-warning' %>">
                         <%= item.returnStatus %>
                       </span>
                     </td>
-                    <td style="padding: 1rem;">
+                    <td>
                       <% if (item.returnStatus === 'Requested') { %>
                         <div class="d-flex gap-2">
-                          <button class="btn btn-sm approve-return" 
+                          <button class="btn btn-sm btn-success approve-return" 
                                   data-orderid="<%= order._id %>" 
-                                  data-itemid="<%= item._id %>"
-                                  style="background-color: #10b981; color: white; border: none; border-radius: 6px; padding: 0.5rem 0.75rem; font-weight: 600; transition: all 0.2s; cursor: pointer;"
-                                  onmouseover="this.style.backgroundColor='#059669'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 8px rgba(16,185,129,0.3)';"
-                                  onmouseout="this.style.backgroundColor='#10b981'; this.style.transform='translateY(0)'; this.style.boxShadow='none';">
-                            ✓ Approve
-                          </button>
-                          <button class="btn btn-sm reject-return" 
+                                  data-itemid="<%= item._id %>">✓ Approve</button>
+                          <button class="btn btn-sm btn-danger reject-return" 
                                   data-orderid="<%= order._id %>" 
-                                  data-itemid="<%= item._id %>"
-                                  style="background-color: #ef4444; color: white; border: none; border-radius: 6px; padding: 0.5rem 0.75rem; font-weight: 600; transition: all 0.2s; cursor: pointer;"
-                                  onmouseover="this.style.backgroundColor='#dc2626'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 8px rgba(239,68,68,0.3)';"
-                                  onmouseout="this.style.backgroundColor='#ef4444'; this.style.transform='translateY(0)'; this.style.boxShadow='none';">
-                            ✕ Reject
-                          </button>
+                                  data-itemid="<%= item._id %>">✕ Reject</button>
                         </div>
                       <% } else { %>
                         <small class="text-muted">—</small>
@@ -100,67 +230,43 @@
   <% } %>
 </div>
 
-
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 document.querySelectorAll('.approve-return').forEach(btn => {
   btn.addEventListener('click', async () => {
-    const orderId = btn.dataset.orderid;
-    const itemId = btn.dataset.itemid;
-
+    const { orderid, itemid } = btn.dataset;
     const confirm = await Swal.fire({
       title: 'Approve Return?',
       text: 'The customer will be notified.',
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonText: 'Yes, approve',
-      cancelButtonText: 'Cancel'
+      confirmButtonText: 'Yes, approve'
     });
-
     if (!confirm.isConfirmed) return;
-
-    try {
-const res = await fetch(`/admin/returns/${orderId}/${itemId}/approve`, { method: 'POST' });
-      const data = await res.json();
-
-      if (data.success) Swal.fire('Approved', data.message, 'success').then(() => location.reload());
-      else Swal.fire('Error', data.message, 'error');
-    } catch (err) {
-      console.error(err);
-      Swal.fire('Error', 'Something went wrong.', 'error');
-    }
+    const res = await fetch(`/admin/returns/${orderid}/${itemid}/approve`, { method: 'POST' });
+    const data = await res.json();
+    if (data.success) Swal.fire('Approved', data.message, 'success').then(() => location.reload());
+    else Swal.fire('Error', data.message, 'error');
   });
 });
 
 document.querySelectorAll('.reject-return').forEach(btn => {
   btn.addEventListener('click', async () => {
-    const orderId = btn.dataset.orderid;
-    const itemId = btn.dataset.itemid;
-
+    const { orderid, itemid } = btn.dataset;
     const confirm = await Swal.fire({
       title: 'Reject Return?',
       text: 'The customer will be notified.',
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonText: 'Yes, reject',
-      cancelButtonText: 'Cancel'
+      confirmButtonText: 'Yes, reject'
     });
-
     if (!confirm.isConfirmed) return;
-
-    try {
-const res = await fetch(`/admin/returns/${orderId}/${itemId}/reject`, { method: 'POST' });
-      const data = await res.json();
-
-      if (data.success) Swal.fire('Rejected', data.message, 'info').then(() => location.reload());
-      else Swal.fire('Error', data.message, 'error');
-    } catch (err) {
-      console.error(err);
-      Swal.fire('Error', 'Something went wrong.', 'error');
-    }
+    const res = await fetch(`/admin/returns/${orderid}/${itemid}/reject`, { method: 'POST' });
+    const data = await res.json();
+    if (data.success) Swal.fire('Rejected', data.message, 'info').then(() => location.reload());
+    else Swal.fire('Error', data.message, 'error');
   });
 });
 </script>
-
 
 <%- include('../partials/admin/footer') %>

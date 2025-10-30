@@ -191,14 +191,14 @@ const viewOrderDetails = async (req, res) => {
 
     if (!order) return res.redirect("/orders");
 
-    if (!order.address || !order.address.name) {
-      order.address = {
-        name: "N/A",
-        city: "N/A",
-        state: "N/A",
-        pincode: "N/A"
-      };
-    }
+    // if (!order.address || !order.address.name) {
+    //   order.address = {
+    //     name: "N/A",
+    //     city: "N/A",
+    //     state: "N/A",
+    //     pincode: "N/A"
+    //   };
+    // }
 
     let subtotal = 0;
     let cancelledCount = 0;
@@ -226,7 +226,6 @@ const viewOrderDetails = async (req, res) => {
       item.displayStatus = item.status === "Cancelled" ? "Cancelled" : displayStatus;
     });
 
-    // ✅ Render page with full order + address
     res.render("order-details", {  
       order,
       subtotal,
@@ -329,89 +328,94 @@ const downloadInvoice = async (req, res) => {
     const { jsPDF } = await import("jspdf");
     const doc = new jsPDF();
 
-    doc.setFontSize(20);
-    doc.setFont("helvetica", "bold");
-    doc.text("ZNEAKZ", 105, 20, null, null, "center");
+    const mainFont = "helvetica";
+    const mainSize = 11;
+    doc.setFont(mainFont, "normal");
+    doc.setFontSize(mainSize);
 
-    doc.setFontSize(12);
-    doc.setFont("helvetica", "normal");
-    doc.text("Invoice", 105, 30, null, null, "center");
+    doc.setFont(mainFont, "bold");
+    doc.setFontSize(20);
+    doc.text("ZNEAKZ", 105, 20, { align: "center" });
+
+    doc.setFont(mainFont, "normal");
+    doc.setFontSize(13);
+    doc.text("Invoice", 105, 30, { align: "center" });
 
     doc.setLineWidth(0.5);
     doc.line(14, 34, 196, 34);
 
-    doc.setFontSize(10);
-    doc.text(`Order ID: ${order.orderID}`, 14, 42);
-    doc.text(`Date: ${new Date(order.createdAt).toLocaleDateString()}`, 14, 48);
-    doc.text(`Payment Method: ${order.paymentMethod}`, 14, 54);
+    doc.setFontSize(mainSize);
+    doc.text(`Order ID: ${order.orderID}`, 14, 44);
+    doc.text(`Date: ${new Date(order.createdAt).toLocaleDateString()}`, 14, 50);
+    doc.text(`Payment Method: ${order.paymentMethod}`, 14, 56);
 
-    doc.setFontSize(12);
-    doc.setFont("helvetica", "bold");
-    doc.text("Shipping Address:", 14, 64);
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(10);
-const recipientName = order.address.name || "N/A";
-const shippingText = `${recipientName}
-${order.address.city}, ${order.address.state} - ${order.address.pincode}`;
+    doc.setFont(mainFont, "bold");
+    doc.text("Shipping Address:", 14, 68);
+    doc.setFont(mainFont, "normal");
 
-doc.text(shippingText.split("\n"), 14, 70);
+    const address = order.address || {};
+    const recipient = address.name || "N/A";
+    const shippingText = `${recipient}
+${address.city || ""}, ${address.state || ""} - ${address.pincode || ""}`;
+    doc.text(shippingText.split("\n"), 14, 74);
 
-    let y = 90;
-    doc.setFont("helvetica", "bold");
-    doc.setFillColor(220, 220, 220);
-    doc.rect(14, y - 4, 182, 6, "F"); 
-
+    let y = 95;
+    doc.setFont(mainFont, "bold");
+    doc.setFillColor(230, 230, 230);
+    doc.rect(14, y - 5, 182, 7, "F");
     doc.text("Product", 16, y);
     doc.text("Qty", 110, y);
-    doc.text("Price", 140, y);
-    doc.text("Total", 170, y);
-    doc.setFont("helvetica", "normal");
+    doc.text("Price (₹)", 140, y);
+    doc.text("Total (₹)", 170, y);
 
-    y += 6;
+    doc.setFont(mainFont, "normal");
+    y += 7;
+
     let subtotal = 0;
-
     order.items.forEach((item) => {
-      const productName = item.product.productName;
+      const name = item.product?.productName || "Unnamed Product";
       const qty = item.quantity;
       const price = item.price;
       const total = qty * price;
+      const displayName =
+        item.status === "Cancelled" ? `${name} (Cancelled)` : name;
 
-      const displayName = item.status === "Cancelled" ? `${productName} (Cancelled)` : productName;
-
-      if (item.status !== "Cancelled") {
-        subtotal += total; 
-      }
+      if (item.status !== "Cancelled") subtotal += total;
 
       doc.text(displayName, 16, y);
       doc.text(String(qty), 110, y);
-      doc.text(`₹${price}`, 140, y);
-      doc.text(item.status === "Cancelled" ? "₹0" : `₹${total}`, 170, y);
-
+      doc.text(`₹${price.toFixed(2)}`, 140, y);
+      doc.text(
+        item.status === "Cancelled" ? "₹0.00" : `₹${total.toFixed(2)}`,
+        170,
+        y
+      );
       y += 7;
     });
 
     const tax = subtotal * 0.05;
-    let shipping = (order.status === "Cancelled") ? 0 : 50;
+    const shipping = order.status === "Cancelled" ? 0 : 50;
     const grandTotal = subtotal + tax + shipping;
 
     y += 6;
-    doc.setFont("helvetica", "bold");
+    doc.setFont(mainFont, "bold");
     doc.text("Summary", 14, y);
-    doc.setFont("helvetica", "normal");
     y += 6;
+
+    doc.setFont(mainFont, "normal");
     doc.text(`Subtotal: ₹${subtotal.toFixed(2)}`, 14, y);
-    y += 5;
-    doc.text(`Tax (5%): ₹${tax.toFixed(2)}`, 14, y);
-    y += 5;
-    doc.text(`Shipping: ₹${shipping.toFixed(2)}`, 14, y);
     y += 6;
-    doc.setFont("helvetica", "bold");
+    doc.text(`Tax (5%): ₹${tax.toFixed(2)}`, 14, y);
+    y += 6;
+    doc.text(`Shipping: ₹${shipping.toFixed(2)}`, 14, y);
+    y += 7;
+    doc.setFont(mainFont, "bold");
     doc.text(`Grand Total: ₹${grandTotal.toFixed(2)}`, 14, y);
 
-    y += 15;
-    doc.setFont("helvetica", "italic");
+    y += 20;
+    doc.setFont(mainFont, "italic");
     doc.setFontSize(10);
-    doc.text("Thank you for shopping with ZNEAKZ!", 105, y, null, null, "center");
+    doc.text("Thank you for shopping with ZNEAKZ!", 105, y, { align: "center" });
 
     const filename = `invoice-${order.orderID}.pdf`;
     const filePath = path.join(__dirname, "../../public/invoices", filename);
@@ -422,7 +426,6 @@ doc.text(shippingText.split("\n"), 14, 70);
       if (err) console.error("Error sending file:", err);
       fs.unlinkSync(filePath);
     });
-
   } catch (error) {
     console.error("Error generating invoice:", error);
     res.status(500).send("Error generating invoice");
