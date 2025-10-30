@@ -64,12 +64,12 @@ const totalQuantity = sizes.reduce((acc, s) => acc + s.stock, 0);
 const newProduct = new Product({
   productName: products.productName,
   description: products.description,
-  quantity: totalQuantity,  // ← update here
+  quantity: totalQuantity,  
   category: categoryId._id,
   productImage: images,
   price: products.price,
   discountPrice: products.discountPrice || products.price,
-  sizes,                     // ← include sizes
+  sizes,                    
   status: 'Available',
   isPublished
 });
@@ -88,7 +88,7 @@ const newProduct = new Product({
 
 const getAllProducts = async (req, res) => {
   try {
-    const searchQuery = req.query.search || ""; // <-- store search query
+    const searchQuery = req.query.search || ""; 
     const page = parseInt(req.query.page) || 1;
     const limit = 7;
 
@@ -185,7 +185,6 @@ const editProduct = async (req, res) => {
       });
     }
 
-    // Handle new uploaded images
     let newImages = [];
     if (req.files && req.files.length > 0) {
       const imageOutputDir = path.join(__dirname, '../../public/uploads/products');
@@ -201,8 +200,7 @@ const editProduct = async (req, res) => {
       }
     }
 
-    // Process sizes 6–10 and calculate total quantity
-   // ✅ Handle sizes from form inputs (e.g. size[] and stock[])
+ 
 let sizes = [];
 let totalQuantity = 0;
 

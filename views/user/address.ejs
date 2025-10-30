@@ -813,11 +813,11 @@
                     <input type="hidden" name="addressId" value="<%= addr._id %>">
                     <div class="col-md-6">
                       <label class="form-label">Name</label>
-                      <input type="text" class="form-control" value="<%= user.name || '' %>" readonly>
+                      <input type="text" class="form-control" value="<%= user.name || '' %>" >
                     </div>
                     <div class="col-md-6">
                       <label class="form-label">Phone</label>
-                      <input type="text" class="form-control" value="<%= user.phone || '' %>" readonly>
+                      <input type="text" class="form-control" value="<%= user.phone || '' %>" >
                     </div>
                     <div class="col-md-12">
                       <label class="form-label"><i class="bi bi-house-fill"></i> Address</label>
@@ -998,6 +998,7 @@
         const res = await fetch(`/address/edit/${addressId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
+           credentials: 'include',
           body: JSON.stringify(formData)
         });
 
@@ -1027,7 +1028,6 @@
     }
   });
 
-  // Delete Address
   document.querySelectorAll('.btn-delete').forEach(btn => {
     btn.addEventListener('click', async (e) => {
       const addressId = e.target.dataset.id;
@@ -1061,31 +1061,38 @@
 
   // Set Default Address
   document.querySelectorAll('.btn-set-default').forEach(btn => {
-    btn.addEventListener('click', async (e) => {
-      const addressId = e.target.dataset.id;
-      const submitBtn = e.target;
-      const originalText = submitBtn.innerHTML;
-      submitBtn.disabled = true;
-      submitBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Setting...';
+  btn.addEventListener('click', async (e) => {
+    const addressId = e.target.dataset.id;
+    const submitBtn = e.target;
+    const originalText = submitBtn.innerHTML;
 
-      try {
-        const res = await fetch(`/address/set-default/${addressId}`, { method: 'PUT' });
-        if (res.ok) {
-          Swal.fire('Success', 'Address set as default!', 'success').then(() => {
-            window.location.reload();
-          });
-        } else {
-          const errorData = await res.json();
-          Swal.fire('Error', errorData.message || 'Failed to set default', 'error');
-        }
-      } catch (err) {
-        Swal.fire('Error', 'Network error. Please try again.', 'error');
-      } finally {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = originalText;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Setting...';
+
+    try {
+      const res = await fetch(`/address/set-default/${addressId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+         credentials: 'include'
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        Swal.fire('Success!', data.message, 'success').then(() => {
+          window.location.reload();
+        });
+      } else {
+        throw new Error(data.message || 'Failed to set default');
       }
-    });
+    } catch (err) {
+      Swal.fire('Error', err.message, 'error');
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = originalText;
+    }
   });
+});
 
   document.getElementById("logout-link").addEventListener("click", function(event) {
     event.preventDefault();

@@ -9,11 +9,18 @@ const Product = require('../../models/productSchema')
 
 const checkoutPage = async (req, res) => {
   try {
-    const userId = req.session.user;
+    const userId = typeof req.session.user === "object" 
+      ? req.session.user._id 
+      : req.session.user;
+
     if (!userId) return res.redirect('/login');
 
     const user = await User.findById(userId);
     if (!user) return res.redirect('/login');
+
+    const defaultAddress = user.address && user.address.length > 0 
+      ? user.address[0] 
+      : null;
 
     const cart = await Cart.findOne({ user: userId }).populate('items.product');
     if (!cart || !cart.items || cart.items.length === 0) {
@@ -36,6 +43,7 @@ const checkoutPage = async (req, res) => {
     res.render('checkout', {
       user,
       addresses,
+      defaultAddress,
       cart,
       subtotal,
       tax,
@@ -52,6 +60,7 @@ const checkoutPage = async (req, res) => {
 
 
 
+
 const placeOrder = async (req, res) => {
   try {
     const userId = req.session.user;
@@ -64,7 +73,7 @@ const placeOrder = async (req, res) => {
       return res.json({ success: false, message: "No address found" });
     }
 
-const selectedAddress = user.address.id(addressIndex);
+    const selectedAddress = user.address[addressIndex];
     const cart = await Cart.findOne({ user: userId }).populate("items.product");
     if (!cart || !cart.items.length)
       return res.json({ success: false, message: "Cart is empty" });
@@ -113,12 +122,6 @@ const selectedAddress = user.address.id(addressIndex);
     res.json({ success: false, message: "Unable to place order. Please try again" });
   }
 };
-
-
-
-
-
-
 
 
 
@@ -182,8 +185,20 @@ const viewOrderDetails = async (req, res) => {
     const orderId = req.params.id;
     if (!orderId) return res.redirect("/orders");
 
-    const order = await Order.findOne({ _id: orderId, user: userId }).populate("items.product");
+    const order = await Order.findOne({ _id: orderId, user: userId })
+      .populate("items.product")
+      .lean();
+
     if (!order) return res.redirect("/orders");
+
+    if (!order.address || !order.address.name) {
+      order.address = {
+        name: "N/A",
+        city: "N/A",
+        state: "N/A",
+        pincode: "N/A"
+      };
+    }
 
     let subtotal = 0;
     let cancelledCount = 0;
@@ -200,27 +215,26 @@ const viewOrderDetails = async (req, res) => {
     const shipping = 50;
     const total = subtotal + tax + shipping;
 
-    let displayStatus;
+    let displayStatus = order.status;
     if (order.status === "Cancelled") {
       displayStatus = "Cancelled";
     } else if (cancelledCount > 0 && cancelledCount < order.items.length) {
       displayStatus = "Partially Cancelled";
-    } else {
-      displayStatus = order.status; 
     }
 
     order.items.forEach(item => {
-      if (item.status !== "Cancelled") item.displayStatus = order.status;
-      else item.displayStatus = "Cancelled";
+      item.displayStatus = item.status === "Cancelled" ? "Cancelled" : displayStatus;
     });
 
-    res.render("order-details", {
+    // ✅ Render page with full order + address
+    res.render("order-details", {  
       order,
       subtotal,
       tax,
       shipping,
       total,
-      displayStatus
+      displayStatus,
+      user: req.session.user
     });
 
   } catch (err) {

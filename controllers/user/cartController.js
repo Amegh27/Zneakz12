@@ -159,9 +159,26 @@ const removeFromCart = async (req, res) => {
 };
 
 
+const cartCount = async (req, res) => {
+  try {
+    const userId = req.session.user;
+    if (!userId) {
+      return res.json({ count: 0 });
+    }
 
+    const cart = await Cart.findOne({ user: userId });
+    let count = 0;
 
+    if (cart && cart.items.length > 0) {
+      count = cart.items.reduce((acc, item) => acc + item.quantity, 0);
+    }
 
+    return res.json({ count });
+  } catch (err) {
+    console.error("Error in cartCount:", err);
+    res.status(500).json({ count: 0 });
+  }
+};
 
 
 
@@ -171,5 +188,6 @@ module.exports = {
     viewCart,
     loadCart, 
     updateCart, 
-    removeFromCart 
+    removeFromCart,
+    cartCount
 };

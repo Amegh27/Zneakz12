@@ -63,6 +63,7 @@
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
   const reasonSelect = document.getElementById('reason');
   const otherDiv = document.getElementById('otherReasonDiv');
@@ -79,23 +80,61 @@
 
   document.getElementById('returnForm').addEventListener('submit', async function(e) {
     e.preventDefault();
+
     const formData = new FormData(this);
     const data = Object.fromEntries(formData.entries());
 
-    const res = await fetch(this.action, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    });
+    try {
+      const res = await fetch(this.action, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
 
-    const result = await res.json();
-    if (result.success) {
-      alert(result.message);
-      window.location.href = `/orders/details/<%= order._id %>`;
-    } else {
-      alert(result.message || 'Something went wrong');
+      const result = await res.json();
+
+      if (result.success) {
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'success',
+          title: result.message || 'Return request submitted successfully!',
+          showConfirmButton: false,
+          timer: 2500,
+          timerProgressBar: true,
+          background: '#f0fff4'
+        });
+
+        setTimeout(() => {
+          window.location.href = `/orders/details/<%= order._id %>`;
+        }, 2500);
+
+      } else {
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'error',
+          title: result.message || 'Something went wrong. Please try again.',
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true,
+          background: '#fff5f5'
+        });
+      }
+
+    } catch (err) {
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'error',
+        title: 'Network error. Please try again.',
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true
+      });
     }
   });
 </script>
+
 
 <%- include('../partials/user/footer') %>

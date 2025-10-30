@@ -12,40 +12,131 @@ const ALLOWED_STATUSES = [
 
 const getAllOrders = async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = 8;
-    const q = req.query.q || "";
+    const query = req.query.q ? req.query.q.trim() : "";
     const status = req.query.status || "";
+    const page = parseInt(req.query.page) || 1;
+    const limit = 10;
+    const skip = (page - 1) * limit;
 
-    const filter = {};
-    if (q) filter.orderID = { $regex: q, $options: "i" };
-    if (status) filter.status = status;
+    const matchStage = {};
+    if (status) matchStage.status = status;
 
-    const total = await Order.countDocuments(filter);
-    const pages = Math.ceil(total / limit);
+    const pipeline = [
+      { $match: matchStage },
+      {
+        $lookup: {
+          from: "products",
+          localField: "items.product",
+          foreignField: "_id",
+          as: "productDetails"
+        }
+      },
+      {
+        $addFields: {
+          items: {
+            $map: {
+              input: "$items",
+              as: "item",
+              in: {
+                _id: "$$item._id",
+                quantity: "$$item.quantity",
+                price: "$$item.price",
+                size: "$$item.size",
+                status: "$$item.status",
+                returnStatus: "$$item.returnStatus",
+                product: {
+                  $arrayElemAt: [
+                    {
+                      $filter: {
+                        input: "$productDetails",
+                        as: "prod",
+                        cond: { $eq: ["$$prod._id", "$$item.product"] }
+                      }
+                    },
+                    0
+                  ]
+                }
+              }
+            }
+          },
+          productNames: {
+            $map: {
+              input: "$productDetails",
+              as: "prod",
+              in: "$$prod.productName"
+            }
+          }
+        }
+      },
+      ...(query
+        ? [
+            {
+              $match: {
+                productNames: { $regex: query, $options: "i" }
+              }
+            }
+          ]
+        : []),
+      { $sort: { createdAt: -1 } },
+      { $skip: skip },
+      { $limit: limit }
+    ];
 
-    const orders = await Order.find(filter)
-      .populate("user", "name email")
-      .populate("items.product", "productName productImage sizes")
-      .sort({ createdAt: -1 })
-      .skip((page - 1) * limit)
-      .limit(limit)
-      .lean();
+    const orders = await Order.aggregate(pipeline);
+
+    const totalPipeline = [
+      { $match: matchStage },
+      {
+        $lookup: {
+          from: "products",
+          localField: "items.product",
+          foreignField: "_id",
+          as: "productDetails"
+        }
+      },
+      {
+        $addFields: {
+          productNames: {
+            $map: {
+              input: "$productDetails",
+              as: "prod",
+              in: "$$prod.productName"
+            }
+          }
+        }
+      },
+      ...(query
+        ? [
+            {
+              $match: {
+                productNames: { $regex: query, $options: "i" }
+              }
+            }
+          ]
+        : []),
+      { $count: "total" }
+    ];
+
+    const totalResult = await Order.aggregate(totalPipeline);
+    const totalOrders = totalResult[0]?.total || 0;
+    const pages = Math.ceil(totalOrders / limit);
+
+    await Order.populate(orders, { path: "user", select: "name email" });
 
     res.render("orderController", {
       orders,
-      q,
-      status,
-      page,
       pages,
-      total,
-      statuses: ALLOWED_STATUSES,
+      page,
+      q: query,
+      status,
+      statuses: ["Placed", "Shipped", "Delivered", "Cancelled", "Returned"]
     });
   } catch (err) {
-    console.error("Error fetching admin orders:", err);
+    console.error("Error fetching orders:", err);
     res.status(500).send("Server error");
   }
 };
+
 
 const updateOrderStatus = async (req, res) => {
   try {
@@ -146,48 +237,45 @@ const viewReturnDetails = async (req, res) => {
   }
 };
 
+
 const approveReturn = async (req, res) => {
   try {
     const { orderId, itemId } = req.params;
-    console.log('Params:', req.params);
 
-    const order = await Order.findById(orderId).populate('items.product').populate('user', 'email name');
-    if (!order) {
-      console.error('Order not found', orderId);
-      return res.status(404).json({ success: false, message: 'Order not found' });
-    }
+    const order = await Order.findById(orderId).populate("items.product");
+    if (!order) return res.status(404).json({ success: false, message: "Order not found" });
 
-    console.log('Order items:', order.items.map(i => ({ id: i._id.toString(), returnStatus: i.returnStatus })));
     const item = order.items.id(itemId);
+    if (!item) return res.status(404).json({ success: false, message: "Item not found" });
 
-    if (!item) {
-      console.error('Item not found', itemId);
-      return res.status(404).json({ success: false, message: 'Item not found' });
+    if (item.returnStatus === "Approved") {
+      return res.json({ success: false, message: "Return already approved" });
     }
 
-    if (item.returnStatus !== 'Requested') {
-      console.error('Return status not requested:', item.returnStatus);
-      return res.status(400).json({ success: false, message: 'Return is not in requested state' });
+    // ✅ Update return status
+    item.returnStatus = "Approved";
+
+    // ✅ Restock product for the correct size (same logic as cancel)
+    const product = await Product.findById(item.product._id);
+    if (product) {
+      const sizeIndex = product.sizes.findIndex(s => s.size === item.size);
+      if (sizeIndex !== -1) {
+        product.sizes[sizeIndex].stock += item.quantity;
+        await product.save();
+      }
     }
 
-    item.returnStatus = 'Approved';
-    item.returnDate = new Date();
-
-    const anyRequested = order.items.some(i => i.returnStatus === 'Requested');
-    if (!anyRequested) {
-      const hasAnyApproved = order.items.some(i => i.returnStatus === 'Approved');
-      order.status = hasAnyApproved ? 'Returned' : 'Delivered';
-    }
-
+    // ✅ Save updated order
     await order.save();
-    console.log('Return approved for item:', itemId);
-    res.json({ success: true, message: 'Return approved successfully' });
 
-  } catch (err) {
-    console.error('Server error approving return:', err);
-    res.status(500).json({ success: false, message: 'Server Error' });
+    res.json({ success: true, message: "Return approved and stock updated" });
+
+  } catch (error) {
+    console.error("Error approving return:", error);
+    res.status(500).json({ success: false, message: "Error approving return" });
   }
 };
+
 
 
 

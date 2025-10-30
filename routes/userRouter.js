@@ -10,6 +10,7 @@ const profileController = require('../controllers/user/profileController')
 const cartController = require("../controllers/user/cartController");
 const checkoutController = require("../controllers/user/checkoutController");
 const { downloadInvoice } = require("../controllers/user/checkoutController");
+const uploads = require('../middlewares/multerConfig')
 
 router.use(forceLogoutIfBlocked);
 
@@ -80,14 +81,17 @@ router.get('/kids-details', productController.kidsDetails);
 
 router.get('/profile', userAuth, profileController.getProfilePage);
 router.get('/profile/edit', userAuth, profileController.getEditProfilePage); 
-router.post('/profile/edit', userAuth, profileUpload.single('avatar'), profileController.postEditProfile); 
+router.post('/profile/edit', userAuth, uploads.single('avatar'), profileController.postEditProfile); 
+router.get('/profile/verify-email-otp', profileController.getEmailOtpPage);
+router.post('/profile/verify-email-otp', profileController.verifyEmailOtp);
+router.post('/profile/resend-email-otp', profileController.resendEmailOtp);
 router.get('/change-password', userAuth, profileController.getChangePasswordPage);
 router.post('/change-password', userAuth, profileController.postChangePassword);
 router.get('/address', profileController.getAddressPage);
 router.post('/address', profileController.postAddAddress);
 router.put('/address/edit/:id', profileController.postEditAddress);
 router.delete('/address/delete/:id', profileController.deleteAddress);
-
+router.put('/address/set-default/:id', profileController.setDefaultAddress);
 
 // cart management
 router.get('/cart', cartController.viewCart);
@@ -95,6 +99,7 @@ router.get("/cart/load", cartController.loadCart);
 router.post("/cart/add", cartController.addToCart);
 router.post("/cart/update", cartController.updateCart);
 router.post("/cart/remove", cartController.removeFromCart);
+router.get('/cart/count',cartController.cartCount)
 
 
 router.get("/checkout", checkoutController.checkoutPage);

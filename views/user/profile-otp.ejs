@@ -1,0 +1,191 @@
+<%- include("../partials/user/header2") %>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+
+<style>
+  .otp-container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+    padding: 20px;
+  }
+  .otp-card {
+    background: white;
+    border-radius: 20px;
+    padding: 40px;
+    max-width: 480px;
+    width: 100%;
+    box-shadow: 0 12px 40px rgba(102, 126, 234, 0.15);
+    text-align: center;
+    animation: slideInUp 0.6s ease-out;
+  }
+  .otp-card h3 {
+    color: #1a1a1a;
+    font-weight: 800;
+    margin-bottom: 16px;
+  }
+  .otp-card p {
+    color: #6c757d;
+    margin-bottom: 32px;
+    font-size: 0.95rem;
+  }
+  .otp-inputs {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 32px;
+  }
+  .otp-input {
+    width: 50px;
+    height: 50px;
+    text-align: center;
+    font-size: 1.5rem;
+    font-weight: 700;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+  }
+  .otp-input:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.2);
+    outline: none;
+  }
+  .btn-verify {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 14px 32px;
+    border-radius: 12px;
+    font-weight: 700;
+    width: 100%;
+    font-size: 1rem;
+  }
+  .btn-verify:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+  }
+  .resend-link {
+    color: #667eea;
+    font-weight: 600;
+    text-decoration: none;
+    font-size: 0.9rem;
+  }
+  .resend-link:hover {
+    text-decoration: underline;
+  }
+  @keyframes slideInUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>
+
+<div class="otp-container">
+  <div class="otp-card">
+    <i class="bi bi-shield-lock-fill text-primary" style="font-size: 3rem; margin-bottom: 16px;"></i>
+    <h3>Verify Your Email</h3>
+    <p>We sent a 6-digit OTP to <strong id="emailDisplay"></strong></p>
+
+    <form id="otpForm">
+      <div class="otp-inputs">
+        <input type="text" class="otp-input" maxlength="1" required>
+        <input type="text" class="otp-input" maxlength="1" required>
+        <input type="text" class="otp-input" maxlength="1" required>
+        <input type="text" class="otp-input" maxlength="1" required>
+        <input type="text" class="otp-input" maxlength="1" required>
+        <input type="text" class="otp-input" maxlength="1" required>
+      </div>
+
+      <button type="submit" class="btn btn-verify">
+        <i class="bi bi-check-circle-fill"></i> Verify OTP
+      </button>
+    </form>
+
+    <p class="mt-3">
+      Didn't receive it? 
+      <a href="#" class="resend-link" id="resendOtp">Resend OTP</a>
+    </p>
+  </div>
+</div>
+
+<%- include("../partials/user/footer") %>
+
+<script>
+  const inputs = document.querySelectorAll('.otp-input');
+  const form = document.getElementById('otpForm');
+  const emailDisplay = document.getElementById('emailDisplay');
+  const resendBtn = document.getElementById('resendOtp');
+
+  // Display email
+  const urlParams = new URLSearchParams(window.location.search);
+  const email = urlParams.get('email');
+  if (email) emailDisplay.textContent = email;
+
+  // Auto-focus next input
+  inputs.forEach((input, index) => {
+    input.addEventListener('input', () => {
+      if (input.value.length === 1 && index < 5) {
+        inputs[index + 1].focus();
+      }
+    });
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Backspace' && input.value === '' && index > 0) {
+        inputs[index - 1].focus();
+      }
+    });
+  });
+
+  // Submit OTP
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const otp = Array.from(inputs).map(i => i.value).join('');
+    if (otp.length !== 6) {
+      Swal.fire('Error', 'Please enter all 6 digits', 'error');
+      return;
+    }
+
+    const btn = form.querySelector('button');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Verifying...';
+
+    try {
+      const res = await fetch('/profile/verify-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ otp, email })
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        Swal.fire('Success!', 'Email verified. Profile updated.', 'success')
+          .then(() => window.location.href = '/profile');
+      } else {
+        Swal.fire('Invalid OTP', data.message || 'Try again', 'error');
+      }
+    } catch (err) {
+      Swal.fire('Error', 'Server error', 'error');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-check-circle-fill"></i> Verify OTP';
+    }
+  });
+
+  resendBtn.addEventListener('click', async (e) => {
+    e.preventDefault();
+    resendBtn.innerHTML = 'Sending...';
+    try {
+      const res = await fetch('/profile/resend-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+      const data = await res.json();
+      if (data.success) {
+        Swal.fire('Sent!', 'New OTP sent to your email.', 'success');
+      }
+    } catch {}
+    resendBtn.innerHTML = 'Resend OTP';
+  });
+</script>

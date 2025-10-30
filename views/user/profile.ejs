@@ -690,7 +690,7 @@
             <div class="col-md-6">
               <label class="form-label">Phone Number</label>
               <div class="field-edit">
-                <input type="text" name="phone" class="form-control" value="<%= user.phone || '' %>" readonly maxlength="10">
+                <input type="text" name="phone" class="form-control" value="<%= user.phone || '' %>" readonly>
                 <i class="bi bi-pencil edit-icon"></i>
               </div>
             </div>
@@ -726,6 +726,9 @@
               <a href="/change-password" class="btn btn-dark">
                 <i class="bi bi-key-fill"></i> Change Password
               </a>
+              <button type="submit" class="btn btn-dark">
+                <i class="bi bi-check-circle-fill"></i> Save Changes
+              </button>
             </div>
           </form>
         </div>
@@ -740,33 +743,23 @@
 <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
-  function generateOtp() {
-    const digits = "1234567890";
-    let otp = "";
-    for (let i = 0; i < 6; i++) {
-      otp += digits[Math.floor(Math.random() * 10)];
-    }
-    return otp;
-  }
+  // ====================== VALIDATION HELPERS ======================
+  const validateName = (name) => {
+    const regex = /^[A-Za-z\s]{1,20}$/;
+    return regex.test(name.trim());
+  };
 
-  document.querySelectorAll('.profile-sidebar .list-group-item').forEach(link => {
-    link.addEventListener('click', (e) => {
-      const href = link.getAttribute('href');
-      if (href === '#' || href === '') {
-        e.preventDefault();
-        document.querySelectorAll('.profile-sidebar .list-group-item')
-          .forEach(i => i.classList.remove('active'));
-        link.classList.add('active');
+  const validatePhone = (phone) => {
+    const regex = /^[1-9]\d{9}$/; // 10 digits, doesn't start with 0
+    return regex.test(phone);
+  };
 
-        const tab = link.getAttribute('data-tab');
-        document.querySelectorAll('[id^="tab-"]').forEach(sec => sec.style.display = 'none');
-        const target = document.getElementById('tab-' + tab);
-        if (target) target.style.display = 'block';
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      }
-    });
-  });
+  const validateEmail = (email) => {
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return regex.test(email);
+  };
 
+  // ====================== AVATAR HANDLING ======================
   const avatarInput = document.getElementById('avatarInput');
   const sidebarAvatar = document.getElementById('sidebarAvatar');
   const avatarPreview = document.getElementById('avatarPreview');
@@ -782,53 +775,90 @@
   });
 
   document.querySelectorAll('.remove-overlay').forEach(overlay => {
-    overlay.addEventListener('click', (e) => {
+    overlay.addEventListener('click', async (e) => {
       e.stopPropagation();
-      if (confirm('Are you sure you want to remove your profile picture?')) {
-        sidebarAvatar.src = defaultAvatar;
-        avatarPreview.src = defaultAvatar;
-        avatarInput.value = '';
-        removeAvatarFlag.value = '1';
+      const result = await Swal.fire({
+        title: 'Remove Picture?',
+        text: 'This cannot be undone.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Yes, Remove',
+        cancelButtonText: 'Cancel'
+      });
+
+      if (result.isConfirmed) {
+        const fd = new FormData();
+        fd.append('remove_avatar', '1');
+        try {
+          const res = await fetch('/profile/edit', { method: 'POST', body: fd });
+          const json = await res.json();
+          if (json.success) {
+            sidebarAvatar.src = defaultAvatar;
+            avatarPreview.src = defaultAvatar;
+            removeAvatarFlag.value = '1';
+            Swal.fire({ icon: 'success', title: 'Removed!', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false });
+            setTimeout(() => location.reload(), 1000);
+          }
+        } catch (err) {
+          Swal.fire('Error', 'Server error', 'error');
+        }
       }
     });
   });
 
-  avatarInput.addEventListener('change', function(e) {
+  avatarInput.addEventListener('change', async function(e) {
     const file = e.target.files[0];
     if (!file) return;
-    if (file.size > 2 * 1024 * 1024) { alert('File size must be less than 2MB'); e.target.value = ''; return; }
-    if (!file.type.startsWith('image/')) { alert('Please select an image file'); e.target.value = ''; return; }
+
+    if (!file.type.startsWith('image/')) {
+      Swal.fire('Invalid', 'Please select an image file', 'error');
+      e.target.value = '';
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      Swal.fire('Too Large', 'Image must be under 2 MB', 'error');
+      e.target.value = '';
+      return;
+    }
+
     const reader = new FileReader();
-    reader.onload = e => {
-      sidebarAvatar.src = e.target.result;
-      avatarPreview.src = e.target.result;
+    reader.onload = ev => {
+      sidebarAvatar.src = ev.target.result;
+      avatarPreview.src = ev.target.result;
       removeAvatarFlag.value = '0';
     };
     reader.readAsDataURL(file);
+
+    // Auto-upload if email not changing
+    const currentEmail = form.email.value.trim();
+    const originalEmail = originalValues.email;
+
+    if (currentEmail === originalEmail) {
+      const fd = new FormData();
+      fd.append('avatar', file);
+      fd.append('remove_avatar', '0');
+      try {
+        const res = await fetch('/profile/edit', { method: 'POST', body: fd });
+        const json = await res.json();
+        if (json.success) {
+          Swal.fire({ icon: 'success', title: 'Uploaded!', toast: true, position: 'top-end', timer: 1500 });
+          setTimeout(() => location.reload(), 1000);
+        }
+      } catch (err) {
+        Swal.fire('Error', 'Upload failed', 'error');
+      }
+    } else {
+      Swal.fire({ icon: 'info', title: 'Avatar will be saved after email verification', toast: true, timer: 2000 });
+    }
   });
 
-  // Logout with SweetAlert
-  document.getElementById("logout-link").addEventListener("click", function(event) {
-    event.preventDefault();
-    Swal.fire({
-      title: 'Are you sure?',
-      text: "You will be logged out.",
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#667eea',
-      cancelButtonColor: '#d33',
-      confirmButtonText: 'Yes, logout',
-      cancelButtonText: 'Cancel'
-    }).then((result) => {
-      if (result.isConfirmed) window.location.href = "/logout";
-    });
-  });
-
-  // Edit / Cancel buttons
+  // ====================== FORM LOGIC ======================
+  const form = document.getElementById('profileForm');
   const editBtn = document.getElementById('editProfileBtn');
   const saveBtn = document.getElementById('saveProfileBtn');
   const cancelBtn = document.getElementById('cancelEditBtn');
-  const form = document.getElementById('profileForm');
 
   let originalValues = {
     name: form.name.value,
@@ -838,7 +868,7 @@
   };
 
   editBtn.addEventListener('click', () => {
-    form.querySelectorAll('input').forEach(input => input.removeAttribute('readonly'));
+    form.querySelectorAll('input[readonly]').forEach(input => input.removeAttribute('readonly'));
     editBtn.style.display = 'none';
     saveBtn.style.display = 'inline-block';
     cancelBtn.style.display = 'inline-block';
@@ -848,7 +878,9 @@
     form.name.value = originalValues.name;
     form.email.value = originalValues.email;
     form.phone.value = originalValues.phone;
-    if (originalValues.gender) form.querySelector(`input[value="${originalValues.gender}"]`).checked = true;
+    if (originalValues.gender) {
+      form.querySelector(`input[name="gender"][value="${originalValues.gender}"]`).checked = true;
+    }
 
     form.querySelectorAll('input').forEach(input => input.setAttribute('readonly', true));
     editBtn.style.display = 'inline-block';
@@ -856,79 +888,111 @@
     cancelBtn.style.display = 'none';
   });
 
-  // Form submission with OTP check for email
+  // ====================== FORM SUBMIT WITH VALIDATION ======================
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
 
-    const newEmail = form.email.value.trim();
-    const newPhone = form.phone.value.trim();
-    let emailOtp = null;
+    const name = form.name.value.trim();
+    const email = form.email.value.trim();
+    const phone = form.phone.value.trim();
+    const gender = form.querySelector('input[name="gender"]:checked');
 
-    if (newEmail !== originalValues.email) {
-      emailOtp = generateOtp();
-      console.log("OTP for email change:", emailOtp);
+    // === VALIDATION ===
+    if (!name) {
+      return Swal.fire('Required', 'Name is required', 'error');
+    }
+    if (!validateName(name)) {
+      return Swal.fire('Invalid Name', 'Name must be 1–20 letters only (no numbers/symbols)', 'error');
+    }
+    if (!email) {
+      return Swal.fire('Required', 'Email is required', 'error');
+    }
+    if (!validateEmail(email)) {
+      return Swal.fire('Invalid Email', 'Please enter a valid email address', 'error');
+    }
+    if (!phone) {
+      return Swal.fire('Required', 'Phone number is required', 'error');
+    }
+    if (!validatePhone(phone)) {
+      return Swal.fire('Invalid Phone', 'Phone must be exactly 10 digits and not start with 0', 'error');
+    }
+    if (!gender) {
+      return Swal.fire('Required', 'Please select your gender', 'error');
+    }
 
-      const userOtp = prompt('Enter the OTP sent to console for email change:');
-      if (userOtp === null) {
-        alert('Email update cancelled.');
+    // === EMAIL CHANGE OTP FLOW ===
+    if (email !== originalValues.email) {
+      const otp = generateOtp();
+      console.log("EMAIL VERIFICATION OTP:", otp);
+
+      const { value: userOtp } = await Swal.fire({
+        title: 'Verify Email Change',
+        input: 'text',
+        inputLabel: 'Enter the 6-digit OTP (check browser console)',
+        inputPlaceholder: '123456',
+        showCancelButton: true,
+        inputValidator: (value) => {
+          if (!value) return 'OTP is required';
+          if (!/^\d{6}$/.test(value)) return 'OTP must be 6 digits';
+        }
+      });
+
+      if (!userOtp || userOtp !== otp) {
+        Swal.fire('Incorrect OTP', 'Email not updated. Try again.', 'error');
         form.email.value = originalValues.email;
         return;
       }
-      if (userOtp !== emailOtp) {
-        alert('Incorrect OTP. Cannot update email.');
-        form.email.value = originalValues.email;
-        return;
-      }
     }
 
-    // Phone validation
-    if (!newPhone) {
-      Swal.fire('Error', 'Phone number is required', 'error');
-      return;
-    }
-    if (newPhone.length !== 10 || !/^\d{10}$/.test(newPhone)) {
-      Swal.fire('Error', 'Phone number must be exactly 10 digits', 'error');
-      return;
-    }
-
-    // Name validation (assuming similar to address, but no specific limit mentioned, so optional)
-    const newName = form.name.value.trim();
-    if (!newName) {
-      Swal.fire('Error', 'Name is required', 'error');
-      return;
-    }
-
-    // Email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(newEmail)) {
-      Swal.fire('Error', 'Please enter a valid email address', 'error');
-      return;
-    }
-
-    // Gender validation
-    const selectedGender = document.querySelector('input[name="gender"]:checked');
-    if (!selectedGender) {
-      Swal.fire('Error', 'Please select a gender', 'error');
-      return;
-    }
-
+    // === SUBMIT FORM ===
     saveBtn.disabled = true;
     saveBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Saving...';
+
     const formData = new FormData(form);
 
     try {
       const res = await fetch('/profile/edit', { method: 'POST', body: formData });
       const json = await res.json();
+
       if (json.success) {
-        Swal.fire('Success', 'Profile updated successfully!', 'success').then(() => window.location.reload());
+        Swal.fire({
+          icon: 'success',
+          title: 'Profile Updated!',
+          toast: true,
+          position: 'top-end',
+          timer: 2000,
+          showConfirmButton: false
+        }).then(() => location.reload());
       } else {
-        Swal.fire('Error', json.message || 'Could not update profile', 'error');
+        Swal.fire('Error', json.message || 'Update failed', 'error');
       }
     } catch (err) {
-      Swal.fire('Error', 'Server error', 'error');
+      console.error(err);
+      Swal.fire('Error', 'Server error. Please try again.', 'error');
     } finally {
       saveBtn.disabled = false;
       saveBtn.innerHTML = '<i class="bi bi-check-circle-fill"></i> Save Changes';
     }
+  });
+
+  // ====================== OTP GENERATOR ======================
+  function generateOtp() {
+    return Math.floor(100000 + Math.random() * 900000).toString();
+  }
+
+  // ====================== LOGOUT ======================
+  document.getElementById("logout-link").addEventListener("click", function(e) {
+    e.preventDefault();
+    Swal.fire({
+      title: 'Logout?',
+      text: "You will be signed out.",
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#667eea',
+      cancelButtonColor: '#dc3545',
+      confirmButtonText: 'Yes, Logout'
+    }).then((result) => {
+      if (result.isConfirmed) window.location.href = "/logout";
+    });
   });
 </script>

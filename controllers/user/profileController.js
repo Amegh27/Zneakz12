@@ -3,6 +3,8 @@ const nodemailer = require('nodemailer')
 const bcrypt = require('bcrypt')
 const env = require('dotenv').config()
 const session = require('express-session')
+const path = require('path');
+const fs = require('fs');
 
 
 function generateOtp (){
@@ -201,13 +203,13 @@ const postNewPassword = async (req, res) => {
 
 const getProfilePage = async (req, res) => {
   try {
-    const userId = req.session.user?._id; 
+    const userId = req.session.user?._id;
     if (!userId) return res.redirect('/login');
 
-    const user = await User.findById(userId).populate('wallet');
+    const user = await User.findById(userId).populate('wallet').lean();
     res.render('profile', { user, message: null });
   } catch (error) {
-    console.error('Error loading profile page:', error);
+    console.error('Error loading profile:', error);
     res.redirect('/pageNotFound');
   }
 };
@@ -215,15 +217,11 @@ const getProfilePage = async (req, res) => {
 const getEditProfilePage = async (req, res) => {
   try {
     const userId = req.session.user?._id;
-    const user = await User.findById(userId);
-
-    if (!user) {
-      return res.redirect('/login');
-    }
-
+    const user = await User.findById(userId).lean();
+    if (!user) return res.redirect('/login');
     res.render('profile', { user });
   } catch (error) {
-    console.error('Error loading edit profile page:', error);
+    console.error('Error loading edit profile:', error);
     res.redirect('/pageNotFound');
   }
 };
@@ -269,6 +267,70 @@ const postEditProfile = async (req, res) => {
   } catch (error) {
     console.error('Error updating profile:', error);
     res.status(500).json({ success: false, message: 'Something went wrong while updating your profile.' });
+  }
+};
+
+
+const getEmailOtpPage = (req, res) => {
+  const email = req.query.email;
+  if (!email || !req.session.pendingProfile) {
+    return res.redirect('/profile');
+  }
+  res.render('profile-otp', { email });
+};
+
+
+const verifyEmailOtp = async (req, res) => {
+  try {
+    const { otp } = req.body;
+    const pending = req.session.pendingProfile;
+
+    if (!pending || Date.now() > pending.otpExpiry || otp !== pending.otp) {
+      req.session.pendingProfile = null;
+      return res.json({ success: false, message: 'Invalid or expired OTP' });
+    }
+
+    const user = await User.findById(pending.userId || req.session.user?._id);
+    if (!user) return res.json({ success: false, message: 'User not found' });
+
+    const tempReq = {
+      body: {
+        name: pending.name,
+        email: pending.email,
+        phone: pending.phone,
+        gender: pending.gender,
+        remove_avatar: pending.remove_avatar
+      },
+      file: pending.avatarFile ? { filename: pending.avatarFile } : null
+    };
+
+    await saveProfile(user, tempReq);
+    req.session.pendingProfile = null;
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error("OTP verify error:", error);
+    res.json({ success: false, message: 'Server error' });
+  }
+};
+
+const resendEmailOtp = async (req, res) => {
+  try {
+    const pending = req.session.pendingProfile;
+    if (!pending) return res.json({ success: false });
+
+    const newOtp = generateOtp();
+    const emailSent = await sendVerificationEmail(pending.email, newOtp);
+
+    if (emailSent) {
+      pending.otp = newOtp;
+      pending.otpExpiry = Date.now() + 5 * 60 * 1000;
+      req.session.pendingProfile = pending;
+      console.log("Resent OTP:", newOtp);
+      res.json({ success: true });
+    }
+  } catch (error) {
+    res.json({ success: false });
   }
 };
 
@@ -467,6 +529,35 @@ const deleteAddress = async (req, res) => {
   }
 };
 
+const setDefaultAddress = async (req, res) => {
+  try {
+    const sess = req.session.user;
+    const userId = typeof sess === "object" ? sess._id : sess;
+
+    if (!userId) {
+      return res.status(401).json({ success: false, message: "Unauthorized" });
+    }
+
+    const addressId = req.params.id;
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ success: false, message: "User not found" });
+
+    const idx = user.address.findIndex(a => a._id.toString() === addressId);
+    if (idx === -1) return res.status(404).json({ success: false, message: "Address not found" });
+
+    const [addr] = user.address.splice(idx, 1);
+    user.address.unshift(addr);
+    await user.save();
+
+    res.json({ success: true, message: "Default address updated!" });
+  } catch (err) {
+    console.error("setDefaultAddress error:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+
+
 
 
 
@@ -487,7 +578,11 @@ module.exports = {
     getAddressPage,
     postAddAddress,
     postEditAddress,
-    deleteAddress
+    deleteAddress,
+    setDefaultAddress,
+    getEmailOtpPage,
+  verifyEmailOtp,
+  resendEmailOtp
     
     
 
