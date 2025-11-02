@@ -23,6 +23,12 @@ const userSchema = new Schema({
     type: String,
     required: false
   },
+  wishlist: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Product'
+    }
+  ],
   phone: {
     type: String,
     default: ''

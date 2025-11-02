@@ -442,7 +442,6 @@
     <p class="mb-1 text-muted">Payment: <%= order.paymentMethod %></p>
 
     <%
-      // Determine main status with return overrides
       let displayStatus = order.status;
       const allCancelled = order.items.every(i => i.status === "Cancelled");
       const someCancelled = order.items.some(i => i.status === "Cancelled");
@@ -466,7 +465,6 @@
     <h5 class="mt-3">Products:</h5>
     <ul class="list-unstyled">
      <% order.items.forEach(item => { 
-     // compute effective display status
      let itemStatusDisplay = item.status;
 
      if (item.returnStatus === "Approved") {

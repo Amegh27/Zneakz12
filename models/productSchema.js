@@ -17,6 +17,12 @@ const productSchema = new Schema({
     ref: "Category",
     required: true
   },
+   wishlist: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Product",
+    },
+  ],
   isListed: {
   type: Boolean,
   default: true,
@@ -24,7 +30,7 @@ const productSchema = new Schema({
  sizes: [
     {
       size: { type: String, required: true },  
-      stock: { type: Number, default: 0, min: 0 }
+      stock: { type: Number, default: 6, min: 0 }
     }
   ],
   productImage: {
