@@ -5,7 +5,7 @@ const User = require("../../models/userSchema");
 const Cart = require("../../models/cartSchema");
 const Order = require("../../models/orderSchema");
 const Product = require('../../models/productSchema')
-
+const Coupon = require('../../models/couponSchema')
 
 const checkoutPage = async (req, res) => {
   try {
@@ -36,19 +36,37 @@ const checkoutPage = async (req, res) => {
     const taxRate = 0.05;
     const tax = subtotal * taxRate;
     const shipping = 50;
-    const finalTotal = subtotal + tax + shipping;
 
-    const addresses = user.address || [];
+    // 🧩 Coupon application logic
+    let discountAmount = 0;
+    let appliedCoupon = null;
+
+    if (req.session.appliedCoupon) {
+      appliedCoupon = req.session.appliedCoupon;
+
+      if (appliedCoupon.discountType === "percentage") {
+        discountAmount = (subtotal * appliedCoupon.discountValue) / 100;
+      } else {
+        discountAmount = appliedCoupon.discountValue;
+      }
+
+      // cap discount to subtotal
+      if (discountAmount > subtotal) discountAmount = subtotal;
+    }
+
+    const finalTotal = subtotal + tax + shipping - discountAmount;
 
     res.render('checkout', {
       user,
-      addresses,
+      addresses: user.address || [],
       defaultAddress,
       cart,
       subtotal,
       tax,
       shipping,
-      finalTotal
+      finalTotal,
+      appliedCoupon,
+      discountAmount
     });
 
   } catch (err) {
@@ -56,7 +74,6 @@ const checkoutPage = async (req, res) => {
     res.redirect('/');
   }
 };
-
 
 
 
@@ -78,6 +95,7 @@ const placeOrder = async (req, res) => {
     if (!cart || !cart.items.length)
       return res.json({ success: false, message: "Cart is empty" });
 
+    // Calculate totals
     const orderItems = cart.items.map((item) => ({
       product: item.product._id,
       quantity: item.quantity,
@@ -85,44 +103,77 @@ const placeOrder = async (req, res) => {
       price: item.product.discountPrice || item.product.price,
     }));
 
-    const totalAmount = orderItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    let subtotal = orderItems.reduce(
+      (sum, item) => sum + item.price * item.quantity,
+      0
+    );
 
+    let discountAmount = 0;
+    if (req.session.appliedCoupon) {
+      const c = req.session.appliedCoupon;
+      discountAmount =
+        c.discountType === "percentage"
+          ? (subtotal * c.discountValue) / 100
+          : c.discountValue;
+
+      if (c.maxDiscount && discountAmount > c.maxDiscount)
+        discountAmount = c.maxDiscount;
+    }
+
+    const tax = subtotal * 0.05;
+    const shipping = 50;
+    const totalAmount = subtotal + tax + shipping - discountAmount;
+
+    // Update product stock
     for (let item of cart.items) {
       const product = await Product.findById(item.product._id);
       if (product) {
         const sizeIndex = product.sizes.findIndex(s => s.size === item.size);
         if (sizeIndex !== -1) {
           if (product.sizes[sizeIndex].stock < item.quantity) {
-            return res.json({ success: false, message: `${product.productName} is out of stock` });
+            return res.json({
+              success: false,
+              message: `${product.productName} is out of stock`,
+            });
           }
           product.sizes[sizeIndex].stock -= item.quantity;
           await product.save();
         }
       }
     }
+const newOrder = new Order({
+  user: user._id,
+  items: orderItems,
+  address: selectedAddress,
+  paymentMethod: "Cash on Delivery",
+  totalAmount,
+  status: "Placed",
+  coupon: req.session.appliedCoupon
+    ? {
+        code: req.session.appliedCoupon.code,
+        discountAmount: discountAmount,
+      }
+    : undefined,
+});
 
-    const newOrder = new Order({
-      user: user._id,
-      items: orderItems,
-      address: selectedAddress,
-      paymentMethod: "Cash on Delivery",
-      totalAmount,
-      status: "Placed",
-    });
+
 
     await newOrder.save();
 
     cart.items = [];
     cart.total = 0;
     await cart.save();
+    delete req.session.appliedCoupon;
 
     res.json({ success: true, redirect: `/order-success?id=${newOrder._id}` });
   } catch (error) {
     console.error("Error placing order:", error);
-    res.json({ success: false, message: "Unable to place order. Please try again" });
+    res.json({
+      success: false,
+      message: "Unable to place order. Please try again",
+    });
   }
 };
-
 
 
 const orderSuccessPage = async (req, res) => {
@@ -191,15 +242,6 @@ const viewOrderDetails = async (req, res) => {
 
     if (!order) return res.redirect("/orders");
 
-    // if (!order.address || !order.address.name) {
-    //   order.address = {
-    //     name: "N/A",
-    //     city: "N/A",
-    //     state: "N/A",
-    //     pincode: "N/A"
-    //   };
-    // }
-
     let subtotal = 0;
     let cancelledCount = 0;
 
@@ -213,8 +255,13 @@ const viewOrderDetails = async (req, res) => {
 
     const tax = subtotal * 0.05;
     const shipping = 50;
-    const total = subtotal + tax + shipping;
 
+ const discount = order.coupon?.discountAmount || 0;
+const couponCode = order.coupon?.code || null;
+
+    const total = subtotal + tax + shipping - discount;
+
+    // Handle order status display
     let displayStatus = order.status;
     if (order.status === "Cancelled") {
       displayStatus = "Cancelled";
@@ -231,6 +278,8 @@ const viewOrderDetails = async (req, res) => {
       subtotal,
       tax,
       shipping,
+      discount,
+      couponCode,
       total,
       displayStatus,
       user: req.session.user
@@ -241,6 +290,7 @@ const viewOrderDetails = async (req, res) => {
     res.redirect("/orders");
   }
 };
+
 
 
 
@@ -333,6 +383,7 @@ const downloadInvoice = async (req, res) => {
     doc.setFont(mainFont, "normal");
     doc.setFontSize(mainSize);
 
+    // ====== HEADER ======
     doc.setFont(mainFont, "bold");
     doc.setFontSize(20);
     doc.text("ZNEAKZ", 105, 20, { align: "center" });
@@ -344,11 +395,13 @@ const downloadInvoice = async (req, res) => {
     doc.setLineWidth(0.5);
     doc.line(14, 34, 196, 34);
 
+    // ====== ORDER DETAILS ======
     doc.setFontSize(mainSize);
     doc.text(`Order ID: ${order.orderID}`, 14, 44);
     doc.text(`Date: ${new Date(order.createdAt).toLocaleDateString()}`, 14, 50);
     doc.text(`Payment Method: ${order.paymentMethod}`, 14, 56);
 
+    // ====== SHIPPING ADDRESS ======
     doc.setFont(mainFont, "bold");
     doc.text("Shipping Address:", 14, 68);
     doc.setFont(mainFont, "normal");
@@ -359,15 +412,17 @@ const downloadInvoice = async (req, res) => {
 ${address.city || ""}, ${address.state || ""} - ${address.pincode || ""}`;
     doc.text(shippingText.split("\n"), 14, 74);
 
+    // ====== TABLE HEADER ======
     let y = 95;
     doc.setFont(mainFont, "bold");
     doc.setFillColor(230, 230, 230);
     doc.rect(14, y - 5, 182, 7, "F");
     doc.text("Product", 16, y);
     doc.text("Qty", 110, y);
-    doc.text("Price (₹)", 140, y);
-    doc.text("Total (₹)", 170, y);
+    doc.text("Price (Rs)", 140, y);
+    doc.text("Total (Rs)", 170, y);
 
+    // ====== TABLE BODY ======
     doc.setFont(mainFont, "normal");
     y += 7;
 
@@ -384,18 +439,20 @@ ${address.city || ""}, ${address.state || ""} - ${address.pincode || ""}`;
 
       doc.text(displayName, 16, y);
       doc.text(String(qty), 110, y);
-      doc.text(`₹${price.toFixed(2)}`, 140, y);
+      doc.text(`Rs ${price.toFixed(2)}`, 140, y);
       doc.text(
-        item.status === "Cancelled" ? "₹0.00" : `₹${total.toFixed(2)}`,
+        item.status === "Cancelled" ? "Rs 0.00" : `Rs ${total.toFixed(2)}`,
         170,
         y
       );
       y += 7;
     });
 
+    // ====== SUMMARY ======
     const tax = subtotal * 0.05;
     const shipping = order.status === "Cancelled" ? 0 : 50;
-    const grandTotal = subtotal + tax + shipping;
+    const discount = order.coupon?.discountAmount || 0;
+    const grandTotal = subtotal + tax + shipping - discount;
 
     y += 6;
     doc.setFont(mainFont, "bold");
@@ -403,20 +460,32 @@ ${address.city || ""}, ${address.state || ""} - ${address.pincode || ""}`;
     y += 6;
 
     doc.setFont(mainFont, "normal");
-    doc.text(`Subtotal: ₹${subtotal.toFixed(2)}`, 14, y);
+    doc.text(`Subtotal: Rs ${subtotal.toFixed(2)}`, 14, y);
     y += 6;
-    doc.text(`Tax (5%): ₹${tax.toFixed(2)}`, 14, y);
+    doc.text(`Tax (5%): Rs ${tax.toFixed(2)}`, 14, y);
     y += 6;
-    doc.text(`Shipping: ₹${shipping.toFixed(2)}`, 14, y);
+    doc.text(`Shipping: Rs ${shipping.toFixed(2)}`, 14, y);
+
+    if (order.coupon?.code) {
+      y += 6;
+      doc.text(
+        `Coupon (${order.coupon.code}): -Rs ${discount.toFixed(2)}`,
+        14,
+        y
+      );
+    }
+
     y += 7;
     doc.setFont(mainFont, "bold");
-    doc.text(`Grand Total: ₹${grandTotal.toFixed(2)}`, 14, y);
+    doc.text(`Grand Total: Rs ${grandTotal.toFixed(2)}`, 14, y);
 
+    // ====== FOOTER ======
     y += 20;
     doc.setFont(mainFont, "italic");
     doc.setFontSize(10);
     doc.text("Thank you for shopping with ZNEAKZ!", 105, y, { align: "center" });
 
+    // ====== SAVE & SEND FILE ======
     const filename = `invoice-${order.orderID}.pdf`;
     const filePath = path.join(__dirname, "../../public/invoices", filename);
     fs.mkdirSync(path.dirname(filePath), { recursive: true });
@@ -431,6 +500,7 @@ ${address.city || ""}, ${address.state || ""} - ${address.pincode || ""}`;
     res.status(500).send("Error generating invoice");
   }
 };
+
 
 
 const returnItemPage = async (req, res) => {
@@ -480,6 +550,76 @@ const submitReturnItem = async (req, res) => {
 
 
 
+const applyCoupon = async (req, res) => {
+  try {
+    const { code } = req.body;
+    const userId = req.session.user;
+
+    const cart = await Cart.findOne({ user: userId }).populate("items.product");
+    if (!cart || !cart.items.length)
+      return res.json({ success: false, message: "Cart is empty." });
+
+    let subtotal = 0;
+    cart.items.forEach(item => {
+      const price = item.product.discountPrice || item.product.price;
+      subtotal += price * item.quantity;
+    });
+
+    const coupon = await Coupon.findOne({ code, isActive: true });
+    if (!coupon) return res.json({ success: false, message: "Invalid coupon code." });
+
+    if (new Date(coupon.expiryDate) < new Date())
+      return res.json({ success: false, message: "Coupon expired." });
+
+    if (subtotal < coupon.minPurchase)
+      return res.json({
+        success: false,
+        message: `Minimum purchase of ₹${coupon.minPurchase} required.`,
+      });
+
+    // Store coupon in session
+    req.session.appliedCoupon = {
+      code: coupon.code,
+      discountType: coupon.discountType,
+      discountValue: coupon.discountValue,
+      minPurchase: coupon.minPurchase,
+      maxDiscount: coupon.maxDiscount,
+    };
+
+    res.json({ success: true, message: "Coupon applied successfully!" });
+  } catch (err) {
+    console.error("Apply Coupon Error:", err);
+    res.json({ success: false, message: "Server error applying coupon." });
+  }
+};
+
+// =================== REMOVE COUPON ===================
+const removeCoupon = (req, res) => {
+  try {
+    delete req.session.appliedCoupon;
+    res.json({ success: true, message: "Coupon removed successfully." });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Error removing coupon." });
+  }
+};
+
+// =================== AVAILABLE COUPONS ===================
+const availableCoupons = async (req, res) => {
+  try {
+    const coupons = await Coupon.find({
+      isActive: true,
+      expiryDate: { $gte: new Date() },
+    }).lean();
+
+    res.json({ success: true, coupons });
+  } catch (err) {
+    console.error("Available Coupons Error:", err);
+    res.status(500).json({ success: false, message: "Error fetching coupons." });
+  }
+};
+
+
+
 
 
 
@@ -494,5 +634,9 @@ module.exports = {
      cancelItem,
      downloadInvoice,
      returnItemPage,
-     submitReturnItem
+     submitReturnItem,
+     applyCoupon,
+     removeCoupon,
+     availableCoupons,
+
     };

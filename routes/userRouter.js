@@ -127,5 +127,11 @@ router.delete("/wishlist/remove/:productId", wishlistController.removeFromWishli
 router.post("/wishlist/move-to-cart/:productId", wishlistController.moveToCart);
 
 
+// coupon management
+router.get('/checkout/available-coupons', checkoutController.availableCoupons);
+router.post('/checkout/apply-coupon', checkoutController.applyCoupon);
+router.delete('/checkout/remove-coupon', checkoutController.removeCoupon);
+
+
 
 module.exports = router

@@ -7,7 +7,6 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.js"></script>
   <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <style>
-    /* Enhanced black and white styling for checkout page */
     * {
       margin: 0;
       padding: 0;
@@ -574,39 +573,81 @@
       <% } %>
     </div>
 
-    <div class="col-md-6">
-      <h5>Order Summary</h5>
-      <div class="card">
-        <div class="card-body">
-          <% if(cart && cart.items.length > 0) { %>
-            <% cart.items.forEach(item => { %>
-              <div class="d-flex justify-content-between border-bottom py-2">
-                <div>
-                  <img src="/uploads/products/<%= item.product.productImage[0] %>" width="50" height="50">
-                  <span><%= item.product.productName %> (x<%= item.quantity %>)</span>
-                </div>
-                <div>₹<%= (item.product.discountPrice || item.product.price) * item.quantity %></div>
-              </div>
-            <% }) %>
+   <div class="col-md-6">
+  <h5>Order Summary</h5>
+  <div class="card">
+    <div class="card-body">
 
-            <hr>
-            <div class="d-flex justify-content-between"><span>Subtotal:</span><span>₹<%= subtotal %></span></div>
-            <div class="d-flex justify-content-between"><span>Tax (5%):</span><span>₹<%= tax.toFixed(2) %></span></div>
-            <div class="d-flex justify-content-between"><span>Shipping:</span><span>₹<%= shipping %></span></div>
-            <div class="d-flex justify-content-between"><strong>Total:</strong><strong>₹<%= finalTotal.toFixed(2) %></strong></div>
+      <% if(cart && cart.items.length > 0) { %>
+        <% cart.items.forEach(item => { %>
+          <div class="d-flex justify-content-between border-bottom py-2">
+            <div>
+              <img src="/uploads/products/<%= item.product.productImage[0] %>" width="50" height="50">
+              <span><%= item.product.productName %> (x<%= item.quantity %>)</span>
+            </div>
+            <div>₹<%= (item.product.discountPrice || item.product.price) * item.quantity %></div>
+          </div>
+        <% }) %>
 
-            <button id="placeOrderBtn" class="btn btn-primary w-100 mt-3">Place Order (COD)</button>
-          <% } else { %>
-            <p class="text-center">Your cart is empty.</p>
+        <hr>
+
+        <!-- Coupon Section -->
+        <div class="coupon-section mb-3">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <h6 class="mb-0">Have a Coupon?</h6>
+            <button type="button" id="viewCouponsBtn" class="btn btn-outline-dark btn-sm">
+              View Coupons
+            </button>
+          </div>
+
+          <!-- Coupon Input -->
+          <div class="input-group mb-2">
+            <input type="text" id="couponCodeInput" class="form-control" placeholder="Enter coupon code" value="<%= appliedCoupon ? appliedCoupon.code : '' %>">
+            <% if (appliedCoupon) { %>
+              <button class="btn btn-secondary" id="removeCouponBtn">Remove</button>
+            <% } else { %>
+              <button class="btn btn-dark" id="applyCouponBtn">Apply</button>
+            <% } %>
+          </div>
+
+          <!-- Coupon Applied Message -->
+          <% if (appliedCoupon) { %>
+            <div class="alert alert-success py-2 mb-0">
+              Coupon <strong><%= appliedCoupon.code %></strong> applied! You saved ₹<%= discountAmount.toFixed(2) %>
+            </div>
           <% } %>
         </div>
-      </div>
+
+        <hr>
+
+        <!-- Order Totals -->
+        <div class="d-flex justify-content-between"><span>Subtotal:</span><span>₹<%= subtotal %></span></div>
+        <div class="d-flex justify-content-between"><span>Tax (5%):</span><span>₹<%= tax.toFixed(2) %></span></div>
+        <div class="d-flex justify-content-between"><span>Shipping:</span><span>₹<%= shipping %></span></div>
+        <% if (appliedCoupon) { %>
+          <div class="d-flex justify-content-between text-success fw-semibold">
+            <span>Coupon Discount:</span><span>-₹<%= discountAmount.toFixed(2) %></span>
+          </div>
+        <% } %>
+        <div class="d-flex justify-content-between mt-2">
+          <strong>Total:</strong>
+          <strong>₹<%= finalTotal.toFixed(2) %></strong>
+        </div>
+
+        <button id="placeOrderBtn" class="btn btn-primary w-100 mt-3">Place Order (COD)</button>
+
+      <% } else { %>
+        <p class="text-center">Your cart is empty.</p>
+      <% } %>
+
     </div>
   </div>
 </div>
 
+  </div>
+</div>
+
 <script>
-  // Generic validation function
   function validateAddress(formData) {
     const { name: address, city, state, pincode } = formData;
     if (!address || address.trim().length === 0) return { valid: false, msg: 'Address is required' };
@@ -750,7 +791,6 @@
     }
   });
 
-  // Delete Address
   document.querySelectorAll('.btn-delete')?.forEach(btn => {
     btn.addEventListener('click', async (e) => {
       const addressId = e.target.dataset.id;
@@ -783,7 +823,6 @@
     });
   });
 
-  // PLACE ORDER
   document.getElementById("placeOrderBtn")?.addEventListener("click", async () => {
     const selectedAddressId = document.querySelector('input[name="selectedAddress"]:checked')?.value;
     if (!selectedAddressId) {
@@ -805,6 +844,77 @@
     } catch (err) {
       console.error(err);
       Swal.fire({ icon: 'error', title: 'Server Error', text: 'Unable to place order.' });
+    }
+  });
+
+   document.getElementById('viewCouponsBtn')?.addEventListener('click', async () => {
+    try {
+      const res = await fetch('/checkout/available-coupons');
+      const data = await res.json();
+
+      if (!data.success || !data.coupons.length) {
+        Swal.fire('No Coupons', 'No active coupons available right now.', 'info');
+        return;
+      }
+
+      let couponList = data.coupons.map(c => `
+        <div style="border:1px solid #ddd; border-radius:8px; padding:10px; margin-bottom:8px; text-align:left;">
+          <strong>${c.name}</strong><br>
+          Code: <code>${c.code}</code><br>
+          Discount: ${c.discountType === 'percentage' ? c.discountValue + '%' : '₹' + c.discountValue}<br>
+          <button class="btn btn-sm btn-outline-dark mt-2" onclick="copyCouponCode('${c.code}')">Copy Code</button>
+        </div>
+      `).join('');
+
+      Swal.fire({
+        title: 'Available Coupons',
+        html: couponList,
+        showConfirmButton: false,
+        width: 400
+      });
+    } catch (err) {
+      Swal.fire('Error', 'Unable to fetch coupons.', 'error');
+    }
+  });
+
+  function copyCouponCode(code) {
+    navigator.clipboard.writeText(code);
+    Swal.fire('Copied!', `Coupon code "${code}" copied to clipboard.`, 'success');
+  }
+
+  document.getElementById('applyCouponBtn')?.addEventListener('click', async () => {
+    const code = document.getElementById('couponCodeInput').value.trim();
+    if (!code) return Swal.fire('Enter Coupon', 'Please enter a coupon code.', 'warning');
+
+    try {
+      const res = await fetch('/checkout/apply-coupon', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code })
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        Swal.fire('Success', data.message, 'success').then(() => window.location.reload());
+      } else {
+        Swal.fire('Invalid Coupon', data.message || 'Coupon could not be applied.', 'error');
+      }
+    } catch (err) {
+      Swal.fire('Error', 'Server error applying coupon.', 'error');
+    }
+  });
+
+  document.getElementById('removeCouponBtn')?.addEventListener('click', async () => {
+    try {
+      const res = await fetch('/checkout/remove-coupon', { method: 'DELETE' });
+      const data = await res.json();
+      if (data.success) {
+        Swal.fire('Removed', data.message, 'success').then(() => window.location.reload());
+      } else {
+        Swal.fire('Error', data.message || 'Failed to remove coupon.', 'error');
+      }
+    } catch (err) {
+      Swal.fire('Error', 'Unable to remove coupon.', 'error');
     }
   });
 </script>

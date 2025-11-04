@@ -8,7 +8,7 @@ const uploads = require('../middlewares/multerConfig')
 const productController = require('../controllers/admin/productController')
 const orderController = require('../controllers/admin/orderController')
 const offerController = require('../controllers/admin/offerController')
-
+const couponController = require('../controllers/admin/couponController')
 
 router.get('/pageError',adminController.pageError)
 // Login management
@@ -62,6 +62,14 @@ router.delete('/remove-product-offer/:productId', offerController.removeProductO
 // Category Offer Routes
 router.post('/category-offer', offerController.createCategoryOffer);
 router.delete('/remove-category-offer/:offerId', offerController.removeOffer);
+
+
+// coupon managemnet
+router.get('/coupons', couponController.getAllCoupons);
+router.post('/coupons/create', couponController.createCoupon);
+router.get('/coupons/delete/:id', couponController.deleteCoupon);
+router.get('/coupons/toggle/:id', couponController.toggleCouponStatus);
+
 
 
 module.exports = router

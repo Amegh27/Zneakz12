@@ -110,12 +110,19 @@
             <img src="/uploads/products/<%= product.productImage[0] %>" class="card-img-top" alt="<%= product.productName %>">
             <div class="card-body">
               <h6><%= product.productName %></h6>
-              <% if (product.discountPrice && product.discountPrice < product.price) { %>
-                <p class="mb-1 text-muted text-decoration-line-through">₹<%= product.price %></p>
-                <p class="fw-bold text-danger">₹<%= product.discountPrice %></p>
-              <% } else { %>
-                <p class="fw-bold">₹<%= product.price %></p>
-              <% } %>
+             <% if (product.discountPrice && product.discountPrice < product.price) { %>
+  <p class="mb-1 text-muted text-decoration-line-through">
+    Rs <%= product.price.toFixed(0) %>
+  </p>
+  <p class="fw-bold text-danger">
+    Rs <%= product.discountPrice.toFixed(0) %>
+  </p>
+<% } else { %>
+  <p class="fw-bold">
+    Rs <%= product.price.toFixed(0) %>
+  </p>
+<% } %>
+
 
               <button class="btn move-to-cart mt-2" data-id="<%= product._id %>">
                 Move to Cart

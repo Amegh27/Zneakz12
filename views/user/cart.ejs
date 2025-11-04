@@ -48,7 +48,7 @@
                 <img src="/uploads/products/<%= item.product.productImage[0] %>" class="product-img" alt="">
                 <div><strong><%= item.product.productName %></strong></div>
               </td>
-              <td>₹<%= item.product.discountPrice || item.product.price %></td>
+<td>₹<%= (item.product.discountPrice || item.product.price).toFixed(0) %></td>
 <td>
   <% if(item.product.stock === 0){ %>
     <span class="badge bg-danger">Out of Stock</span>
@@ -62,7 +62,7 @@
 </td>
 
 
-              <td>₹<%= (item.product.discountPrice || item.product.price) * item.quantity %></td>
+<td>₹<%= ((item.product.discountPrice || item.product.price) * item.quantity).toFixed(0) %></td>
               <td>
 <button class="btn btn-sm btn-outline-danger remove-btn" 
         data-id="<%= item.product._id %>" 
@@ -85,7 +85,7 @@
   <div class="d-flex justify-content-between align-items-center mt-4 px-2">
     <h5 class="mb-0">
       Total Amount: 
-      <span class="text-success fw-bold">₹<%= cart.total %></span>
+<span class="text-success fw-bold">₹<%= cart.total.toFixed(0) %></span>
     </h5>
     <form action="/checkout" method="GET">
       <button type="submit" class="btn btn-danger px-4 py-2">
@@ -147,7 +147,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const totalDisplay = document.querySelector(".fw-bold");
         if (totalDisplay) {
-          totalDisplay.textContent = `₹${newTotal.toFixed(2)}`;
+          totalDisplay.textContent = `₹${newTotal.toFixed(0)}`;
         }
 
         const cartCountBadge = document.getElementById("cartCount");
@@ -245,7 +245,7 @@ function updateCartTotals() {
       const price = parseFloat(priceCell.textContent.replace("₹", "").trim());
       newTotal += qty * price;
       const totalCell = tr.querySelector("td:nth-child(4)");
-      if (totalCell) totalCell.textContent = `₹${(qty * price).toFixed(2)}`;
+      if (totalCell) totalCell.textContent = `₹${(qty * price).toFixed(0)}`;
     }
   });
   const totalDisplay = document.querySelector(".fw-bold");
