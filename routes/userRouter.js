@@ -126,4 +126,6 @@ router.post("/wishlist/add/:productId", wishlistController.addToWishlist);
 router.delete("/wishlist/remove/:productId", wishlistController.removeFromWishlist);
 router.post("/wishlist/move-to-cart/:productId", wishlistController.moveToCart);
 
+
+
 module.exports = router

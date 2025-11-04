@@ -4,79 +4,184 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@10/dist/sweetalert2.min.css" />
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif;
       font-size: 16px;
-      background-color: #f8f9fa;
+      background: linear-gradient(135deg, #f8f9fa 0%, #f0f2f5 100%);
       color: #2c3e50;
       margin: 0;
       padding: 0;
     }
 
+    .content-main {
+      padding: 30px 0;
+    }
+
     .content-header {
-      padding: 24px 30px;
-      background-color: #ffffff;
-      border-bottom: 1px solid #e8ecf1;
-      margin-bottom: 24px;
+      padding: 28px 40px;
+      background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+      border-bottom: 2px solid #e8ecf1;
+      margin-bottom: 32px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
     }
 
     .content-title {
-      font-size: 26px;
+      font-size: 32px;
       font-weight: 700;
       color: #1a202c;
       margin: 0;
+      letter-spacing: -0.5px;
     }
 
     .card {
       background: #ffffff;
-      border-radius: 10px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-      padding: 24px;
-      margin: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      padding: 32px;
+      margin: 0 30px;
+      border: 1px solid #e8ecf1;
+      animation: slideUp 0.3s ease-out;
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .card-header {
+      margin-bottom: 28px;
+    }
+
+    .card-body {
+      padding: 0;
     }
 
     .form-label {
       font-weight: 600;
-      margin-bottom: 8px;
+      margin-bottom: 10px;
       display: block;
-      color: #2c3e50;
+      color: #1a202c;
       font-size: 14px;
+      letter-spacing: 0.3px;
     }
 
     .form-control {
       width: 100%;
-      padding: 10px 12px;
+      padding: 12px 16px;
       font-size: 14px;
-      border: 1px solid #e0e6ed;
-      border-radius: 6px;
-      margin-bottom: 16px;
-      transition: all 0.2s ease;
+      border: 2px solid #e0e6ed;
+      border-radius: 8px;
+      margin-bottom: 18px;
+      transition: all 0.3s ease;
       font-family: 'Inter', sans-serif;
+      background-color: #f8f9fa;
     }
 
     .form-control:focus {
       outline: none;
-      border-color: #ff6b35;
-      box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+      border-color: #000000;
+      background-color: #fff;
+      box-shadow: 0 0 0 4px rgba(255, 107, 53, 0.12);
+      transform: translateY(-1px);
+    }
+
+    .form-control::placeholder {
+      color: #95a3b3;
+    }
+
+    textarea.form-control {
+      resize: vertical;
+      min-height: 100px;
+      font-family: 'Inter', sans-serif;
     }
 
     .btn-primary {
-      background-color: #ff6b35;
+      background: linear-gradient(135deg, #000000 0%, #000000 100%);
       color: #fff;
       border: none;
-      padding: 10px 16px;
+      padding: 12px 24px;
       font-size: 14px;
       font-weight: 600;
-      border-radius: 6px;
+      border-radius: 8px;
       cursor: pointer;
-      transition: all 0.2s ease;
+      transition: all 0.3s ease;
       width: 100%;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
     }
 
     .btn-primary:hover {
-      background-color: #e55a24;
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(255, 107, 53, 0.4);
+      background: linear-gradient(135deg, #f55a1f 0%, #e54a10 100%);
+    }
+
+    .btn-primary:active {
+      transform: translateY(0);
+    }
+
+    .input-group {
+      max-width: 500px;
+      margin: 0 auto 20px;
+      display: flex;
+      border-radius: 8px;
+      overflow: hidden;
+      background-color: #fff;
+      border: 2px solid #e0e6ed;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    }
+
+    .input-group:focus-within {
+      border-color: #000000;
+      box-shadow: 0 4px 16px rgba(255, 107, 53, 0.15);
+    }
+
+    .input-group input {
+      flex: 1;
+      border: none;
+      padding: 12px 16px;
+      outline: none;
+      font-size: 14px;
+      font-family: 'Inter', sans-serif;
+      background-color: #f8f9fa;
+    }
+
+    .input-group button {
+      background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+      color: #fff;
+      border: none;
+      padding: 0 20px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-weight: 600;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .input-group button:hover {
+      background: linear-gradient(135deg, #0f1419 0%, #1a202c 100%);
+    }
+
+    .input-group .btn {
+      background: #95a3b3;
+      padding: 0 16px;
+    }
+
+    .input-group .btn:hover {
+      background: #738096;
     }
 
     .table {
@@ -86,94 +191,114 @@
       font-size: 14px;
     }
 
+    .table-responsive {
+      overflow-x: auto;
+      border-radius: 8px;
+    }
+
     .table thead {
-      background-color: #f8f9fa;
+      background: linear-gradient(135deg, #f8f9fa 0%, #f0f2f5 100%);
     }
 
     .table th {
-      padding: 12px 16px;
+      padding: 16px;
       text-align: left;
       border-bottom: 2px solid #e8ecf1;
-      font-weight: 600;
-      color: #2c3e50;
-      font-size: 13px;
+      font-weight: 700;
+      color: #1a202c;
+      font-size: 12px;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.6px;
     }
 
     .table td {
-      padding: 12px 16px;
+      padding: 16px;
       text-align: left;
       border-bottom: 1px solid #e8ecf1;
+      transition: all 0.2s ease;
     }
 
     .table tbody tr {
-      transition: background-color 0.2s ease;
+      transition: all 0.3s ease;
     }
 
     .table tbody tr:hover {
       background-color: #f8f9fa;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
     }
 
     .badge {
-      padding: 5px 10px;
-      border-radius: 6px;
+      padding: 6px 12px;
+      border-radius: 20px;
       font-size: 12px;
       font-weight: 600;
       display: inline-block;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
     }
 
     .alert-success {
       background-color: #d4f4dd;
       color: #0d5c2f;
+      border: 1px solid #a7e9b1;
     }
 
     .alert-danger {
       background-color: #fdd5d0;
       color: #7a1f1a;
+      border: 1px solid #f5a8a0;
     }
 
     .btn {
-      padding: 8px 14px;
+      padding: 8px 16px;
       border: none;
-      border-radius: 6px;
+      border-radius: 8px;
       font-size: 13px;
       font-weight: 600;
       cursor: pointer;
-      margin-right: 6px;
-      transition: all 0.2s ease;
+      margin-right: 8px;
+      transition: all 0.3s ease;
       display: inline-block;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
     }
 
     .btn-danger {
+      margin-top: 5px;
       background-color: #ef4444;
       color: #fff;
+      box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2);
     }
 
     .btn-danger:hover {
       background-color: #dc2626;
-      transform: translateY(-1px);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
     }
 
     .btn-success {
       background-color: #10b981;
       color: #fff;
+      box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);
     }
 
     .btn-success:hover {
       background-color: #059669;
-      transform: translateY(-1px);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
     }
 
     .btn-info {
-      background-color: #3b82f6;
+      background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
       color: #fff;
       margin-top: 4px;
+      box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
     }
 
     .btn-info:hover {
-      background-color: #2563eb;
-      transform: translateY(-1px);
+      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
     }
 
     .btn a {
@@ -185,116 +310,25 @@
       text-decoration: none;
     }
 
-    .input-group {
-      max-width: 450px;
-      margin: 0 auto;
-      display: flex;
-      border-radius: 6px;
-      overflow: hidden;
-      background-color: #fff;
-      border: 1px solid #e0e6ed;
-      transition: all 0.2s ease;
-    }
-
-    .input-group:focus-within {
-      border-color: #121110;
-      box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
-    }
-
-    .input-group input {
-      flex: 1;
-      border: none;
-      padding: 10px 12px;
-      outline: none;
-      font-size: 14px;
-      font-family: 'Inter', sans-serif;
-    }
-
-    .input-group button {
-      background-color: #110a08;
-      color: #fff;
-      border: none;
-      padding: 0 16px;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      font-weight: 600;
-      font-size: 13px;
-    }
-
-    .input-group button:hover {
-      background-color: #032a5a;
-    }
-
-    .pagination-container {
-      text-align: center;
-      margin-top: 24px;
-    }
-
-    .pagination a,
-    .pagination .current-page {
-      display: inline-block;
-      padding: 8px 12px;
-      margin: 0 4px;
-      border-radius: 6px;
-      background-color: #fff;
-      border: 1px solid #e0e6ed;
-      text-decoration: none;
-      color: #ff6b35;
-      font-weight: 600;
-      font-size: 13px;
-      transition: all 0.2s ease;
-    }
-
-    .pagination .current-page {
-      background-color: #ff6b35;
-      color: #fff;
-      border-color: #ff6b35;
-    }
-
-    .pagination a:hover {
-      background-color: #fff5f0;
-      border-color: #ff6b35;
-    }
-
-    .error-message {
-      color: #ef4444;
-      font-size: 13px;
-      margin-top: -12px;
-      margin-bottom: 10px;
-      font-weight: 500;
-    }
-
-    .card-header {
-      margin-bottom: 20px;
-    }
-
-    .card-body {
-      padding: 0;
-    }
-
     .row {
       display: flex;
-      gap: 24px;
+      gap: 32px;
     }
 
     .col-md-3 {
-      flex: 0 0 25%;
+      flex: 0 0 28%;
     }
 
     .col-md-8 {
       flex: 1;
     }
 
-    .ml-10 {
-      margin-left: 0;
-    }
-
     .mb-4 {
-      margin-bottom: 16px;
+      margin-bottom: 20px;
     }
 
     .mb-20 {
-      margin-bottom: 20px;
+      margin-bottom: 24px;
     }
 
     .d-grid {
@@ -313,19 +347,144 @@
       color: white;
     }
 
-    .table-responsive {
-      overflow-x: auto;
+    .error-message {
+      color: #c30000;
+      font-size: 12px;
+      margin-top: -12px;
+      margin-bottom: 12px;
+      font-weight: 600;
+      display: none;
+    }
+
+    .pagination-container {
+      text-align: center;
+      margin-top: 32px;
+      padding: 20px 0;
+    }
+
+    .pagination a,
+    .pagination .current-page {
+      display: inline-block;
+      padding: 10px 14px;
+      margin: 0 4px;
+      border-radius: 8px;
+      background-color: #fff;
+      border: 2px solid #e0e6ed;
+      text-decoration: none;
+      color: #000000;
+      font-weight: 600;
+      font-size: 13px;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+
+    .pagination .current-page {
+      background: linear-gradient(135deg, #080503 0%, #0a0503 100%);
+      color: #fff;
+      border-color: #040201;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .pagination a:hover {
+      background-color: #fff5f0;
+      border-color: #000000;
+      transform: translateY(-2px);
+    }
+
+    /* Modal Styles */
+    .modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease;
+}
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+
+   .modal-content {
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  padding: 40px 50px;
+  border-radius: 14px;
+  max-width: 700px;
+  width: 90%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  border: 1px solid #e8ecf1;
+  animation: slideDown 0.3s ease;
+  position: relative;
+}
+
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .modal-content h3 {
+      margin: 0 0 24px;
+      font-size: 20px;
+      font-weight: 700;
+      color: #1a202c;
+    }
+
+   .modal-content .form-label {
+  margin-top: 16px;
+  font-weight: 600;
+  color: #1a202c;
+}
+
+
+   .modal-content .form-control {
+  margin-bottom: 18px;
+  border: 2px solid #e0e6ed;
+  border-radius: 8px;
+  background-color: #f8f9fa;
+  transition: all 0.3s ease;
+}
+
+    .modal-content > div {
+      margin-top: 24px;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
     }
 
     @media (max-width: 768px) {
       .card {
-        margin: 10px;
-        padding: 16px;
+        margin: 15px;
+        padding: 20px;
+      }
+
+      .content-header {
+        padding: 20px 20px;
+      }
+
+      .content-title {
+        font-size: 24px;
       }
 
       .row {
         flex-direction: column;
-        gap: 16px;
+        gap: 20px;
       }
 
       .col-md-3,
@@ -335,18 +494,23 @@
 
       .input-group {
         max-width: 100%;
-        margin-left: 0;
       }
 
       .table th,
       .table td {
         font-size: 12px;
-        padding: 8px 12px;
+        padding: 10px 8px;
       }
 
       .btn {
         padding: 6px 10px;
-        font-size: 12px;
+        font-size: 11px;
+        margin-right: 4px;
+      }
+
+      .modal-content {
+        max-width: 90%;
+        padding: 20px;
       }
     }
   </style>
@@ -359,7 +523,7 @@
         <h2 class="content-title">Category</h2>
       </div>
     </div>
-    <header class="card-header text-center mb-20">
+    <header class="card-header text-center mb-20" style="padding: 0 30px;">
       <form action="/admin/category" method="get" class="d-inline">
         <div class="input-group">
           <input
@@ -383,18 +547,18 @@
           <div class="col-md-3">
             <form method="post" action="/admin/addCategory" onsubmit="return handleFormSubmit(event)">
               <div class="mb-4">
-                <label for="product_name" class="form-label">Name</label>
-                <input type="text" name="name" placeholder="Type here" class="form-control" id="product_name"/>
+                <label for="product_name" class="form-label">Category Name</label>
+                <input type="text" name="name" placeholder="Enter category name" class="form-control" id="product_name"/>
                 <div id="name-error" class="error-message"></div>
               </div>
               <div class="mb-4">
                 <label class="form-label">Description</label>
-                <textarea placeholder="Type here" name="description" class="form-control" id="descriptionId"></textarea>
+                <textarea placeholder="Enter category description" name="description" class="form-control" id="descriptionId"></textarea>
                 <div id="description-error" class="error-message"></div>
               </div>
               <div class="d-grid">
                 <button class="btn btn-primary" type="submit">
-                  Create category
+                  Create Category
                 </button>
               </div>
             </form>
@@ -426,14 +590,29 @@
                       </td>
                       <td>
                       </td>
-                      <td class="text-start">
-                        <button class="btn btn-info" style="width: 100px">
-                          <a href="#" class="text-white">Add Offer</a>
-                        </button>
-                        <button class="btn btn-info" style="width: 100px">
-                          <a href="#" class="text-white">Remove</a>
-                        </button>
-                      </td>
+                     <td class="text-start">
+  <% if (category.offer) { %>
+    <div>
+      <strong><%= category.offer.title %></strong><br>
+      <small>
+        <%= category.offer.discountType === 'percentage' 
+              ? category.offer.discountValue + '%' 
+              : '₹' + category.offer.discountValue %> 
+        off
+      </small><br>
+      <button class="btn btn-info" style="width: 100px" 
+              onclick="removeOffer('<%= category.offer.offerId %>')">
+        Remove
+      </button>
+    </div>
+  <% } else { %>
+    <button class="btn btn-info" style="width: 100px" 
+            onclick="openOfferModal('<%= category._id %>')">
+      Add Offer
+    </button>
+  <% } %>
+</td>
+
                       <td class="text-start">
                         <% if (category.isListed) { %>
                           <span class="badge alert-success">Listed</span>
@@ -464,8 +643,42 @@
         </div>
       </div>
     </div>
+
+    <!-- Category Offer Modal -->
+<div id="offerModal" class="modal">
+  <div class="modal-content">
+    <h3>Add Category Offer</h3>
+    <form id="offerForm">
+      <input type="hidden" id="categoryId" />
+
+      <label class="form-label">Title</label>
+      <input type="text" id="offerTitle" class="form-control" required />
+
+      <label class="form-label">Discount Type</label>
+      <select id="discountType" class="form-control" required>
+        <option value="percentage">Percentage</option>
+        <option value="flat">Flat</option>
+      </select>
+
+      <label class="form-label">Discount Value</label>
+      <input type="number" id="discountValue" class="form-control" required />
+
+      <label class="form-label">Start Date</label>
+      <input type="date" id="startDate" class="form-control" required />
+
+      <label class="form-label">End Date</label>
+      <input type="date" id="endDate" class="form-control" required />
+
+      <div>
+        <button type="submit" class="btn btn-primary">Save Offer</button>
+        <button type="button" class="btn btn-danger" onclick="closeOfferModal()">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
     <div class="pagination-container">
-      <div class="pagination-container">
+      <div class="pagination">
         <% if (currentPage > 1) { %>
           <a href="?page=<%= currentPage - 1 %><%= searchQuery ? '&search=' + encodeURIComponent(searchQuery) : '' %>">&laquo; Previous</a>
         <% } %>
@@ -651,7 +864,79 @@
         }
       });
     });
+
+     function openOfferModal(categoryId) {
+    document.getElementById("categoryId").value = categoryId;
+    document.getElementById("offerModal").style.display = "flex";
+  }
+
+  // Close Offer Modal
+  function closeOfferModal() {
+    document.getElementById("offerModal").style.display = "none";
+  }
+
+  document.getElementById("offerForm").addEventListener("submit", async function (e) {
+    e.preventDefault();
+
+    const data = {
+      title: document.getElementById("offerTitle").value.trim(),
+      categoryId: document.getElementById("categoryId").value,
+      discountType: document.getElementById("discountType").value,
+      discountValue: parseFloat(document.getElementById("discountValue").value),
+      startDate: document.getElementById("startDate").value,
+      endDate: document.getElementById("endDate").value,
+    };
+
+    try {
+      const res = await fetch("/admin/category-offer", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+
+      const result = await res.json();
+
+      if (result.success) {
+        Swal.fire({
+          icon: "success",
+          title: "Offer Applied",
+          text: result.message,
+          timer: 1500,
+          showConfirmButton: false,
+        }).then(() => location.reload());
+      } else {
+        Swal.fire({ icon: "error", title: "Failed", text: result.message });
+      }
+    } catch (err) {
+      console.error("Error applying offer:", err);
+      Swal.fire({ icon: "error", title: "Error", text: "Something went wrong!" });
+    }
+
+    closeOfferModal();
+  });
+
+  async function removeOffer(offerId) {
+  const confirmDelete = await Swal.fire({
+    title: 'Remove Offer?',
+    text: 'This will remove the offer from this category and all related products.',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#ef4444',
+    confirmButtonText: 'Yes, remove it!'
+  });
+
+  if (confirmDelete.isConfirmed) {
+    const res = await fetch(`/admin/remove-offer/${offerId}`, { method: 'DELETE' });
+    const result = await res.json();
+
+    if (result.success) {
+      Swal.fire('Removed!', result.message, 'success').then(() => location.reload());
+    } else {
+      Swal.fire('Error', result.message, 'error');
+    }
+  }
+}
+
   </script>
 </body>
-
 </html>

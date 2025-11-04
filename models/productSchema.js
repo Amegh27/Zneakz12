@@ -60,6 +60,10 @@ const productSchema = new Schema({
      type: Number,
       default: 0 
     },
+      offerApplied: { 
+        type: String, enum: ['none', 'product', 'category'], default: 'none' 
+      },
+
   isDeleted: {
     type: Boolean,
     default: false

@@ -1,7 +1,7 @@
 
 const Category = require('../../models/categorySchema')
 const Product = require('../../models/productSchema')
-
+const Offer = require('../../models/offerSchema')
 
 
 const categoryInfo = async (req, res) => {
@@ -22,6 +22,25 @@ const categoryInfo = async (req, res) => {
       .skip(skip)
       .limit(limit)
       .lean();
+
+       for (const cat of categoryData) {
+      const activeOffer = await Offer.findOne({
+        category: cat._id,
+        offerType: 'category',
+        endDate: { $gte: new Date() },
+      }).lean();
+
+      if (activeOffer) {
+        cat.offer = {
+          title: activeOffer.title,
+          discountType: activeOffer.discountType,
+          discountValue: activeOffer.discountValue,
+          startDate: activeOffer.startDate,
+          endDate: activeOffer.endDate,
+          offerId: activeOffer._id,
+        };
+      }
+    }
 
     const totalCategories = await Category.countDocuments(query);
     const totalPages = Math.ceil(totalCategories / limit);

@@ -3,6 +3,9 @@ const Category = require('../../models/categorySchema')
 const User = require('../../models/userSchema')
 const Cart = require("../../models/cartSchema");
 const cartSchema = require('../../models/cartSchema');
+const Offer = require("../../models/offerSchema"); 
+const mongoose = require("mongoose");
+
 
 const searchProducts = async (req, res) => {
   try {
@@ -58,46 +61,134 @@ const searchProducts = async (req, res) => {
   }
 };
 
-
 const productDetails = async (req, res) => {
   try {
     const userId = req.session.user;
-    const userdata = userId ? await User.findById(userId) : null;
+    const userdata = userId ? await User.findById(userId).lean() : null;
     const productId = req.query.id;
 
-    const product = await Product.findById(productId).populate('category');
-
+    // fetch product with category
+    const product = await Product.findById(productId).populate("category").lean();
     if (!product || product.isDeleted || !product.isListed || product.isBlocked) {
-      return res.redirect('/');
+      return res.redirect("/");
     }
 
-    let relatedProducts = [];
+    const now = new Date();
 
+    // fetch active product offer
+    const productOffer = await Offer.findOne({
+      offerType: "Product",
+      product: new mongoose.Types.ObjectId(product._id),
+      startDate: { $lte: now },
+      endDate: { $gte: now },
+      isActive: true
+    }).lean();
+
+    // fetch active category offer
+    const categoryOffer = await Offer.findOne({
+      offerType: "Category",
+      category: new mongoose.Types.ObjectId(product.category?._id),
+      startDate: { $lte: now },
+      endDate: { $gte: now },
+      isActive: true
+    }).lean();
+
+    // choose the better offer (higher effective %)
+    let appliedOffer = null;
+    if (productOffer && categoryOffer) {
+      const productDiscountPercent =
+        productOffer.discountType === "percentage"
+          ? productOffer.discountValue
+          : (productOffer.discountValue / product.price) * 100;
+
+      const categoryDiscountPercent =
+        categoryOffer.discountType === "percentage"
+          ? categoryOffer.discountValue
+          : (categoryOffer.discountValue / product.price) * 100;
+
+      appliedOffer = productDiscountPercent >= categoryDiscountPercent ? productOffer : categoryOffer;
+    } else {
+      appliedOffer = productOffer || categoryOffer || null;
+    }
+
+    // prepare appliedOffer fields to pass to view (safe primitives)
+    let appliedOfferFields = null;
+    if (appliedOffer) {
+      // compute discount price (floor to integer, not negative)
+      let discountPrice = product.price;
+      if (appliedOffer.discountType === "percentage") {
+        discountPrice = product.price - (product.price * appliedOffer.discountValue) / 100;
+      } else {
+        discountPrice = product.price - appliedOffer.discountValue;
+      }
+      product.discountPrice = Math.max(0, Math.floor(discountPrice));
+
+      // prepare simple fields to render to client
+      appliedOfferFields = {
+        id: appliedOffer._id?.toString?.() || "",
+        title: appliedOffer.title || "Special Offer",
+        offerType: appliedOffer.offerType || "",
+        discountType: appliedOffer.discountType || "",
+        discountValue: appliedOffer.discountValue ?? 0,
+        // make discount string friendly
+        discountString:
+          appliedOffer.discountType === "percentage"
+            ? `${Math.floor(appliedOffer.discountValue)}%`
+            : `₹${Math.floor(appliedOffer.discountValue)}`,
+        // formatted start/end dates (use ISO or locale as you prefer)
+        startDateISO: appliedOffer.startDate ? new Date(appliedOffer.startDate).toISOString() : "",
+        endDateISO: appliedOffer.endDate ? new Date(appliedOffer.endDate).toISOString() : "",
+        // also human readable
+        startDateStr: appliedOffer.startDate ? new Date(appliedOffer.startDate).toLocaleDateString("en-IN") : "—",
+        endDateStr: appliedOffer.endDate ? new Date(appliedOffer.endDate).toLocaleDateString("en-IN") : "—"
+      };
+    } else {
+      // If admin provided a product-level discountPrice already (non-offer), use that (floor)
+      if (product.discountPrice && product.discountPrice < product.price) {
+        product.discountPrice = Math.max(0, Math.floor(product.discountPrice));
+      } else {
+        product.discountPrice = product.price;
+      }
+    }
+
+    // related products
+    let relatedProducts = [];
     if (product.category && product.category._id) {
       relatedProducts = await Product.find({
         category: product.category._id,
         _id: { $ne: product._id },
         isDeleted: false,
         isListed: true,
-      }).limit(3);
+      })
+        .lean()
+        .limit(3);
     }
-
-    if (relatedProducts.length === 0) {
+    if (!relatedProducts || relatedProducts.length === 0) {
       relatedProducts = await Product.find({
         _id: { $ne: product._id },
         isDeleted: false,
         isListed: true,
-      }).limit(3);
+      })
+        .lean()
+        .limit(3);
     }
 
+    // floor discountPrice for related products as requested
+    relatedProducts = relatedProducts.map((p) => {
+      const dp = p.discountPrice && p.discountPrice < p.price ? Math.max(0, Math.floor(p.discountPrice)) : p.price;
+      return { ...p, discountPrice: dp };
+    });
+
+    // cart count
     let cartCount = 0;
     if (userId) {
-      const cart = await Cart.findOne({ user: userId });
-      if (cart && cart.items.length > 0) {
-        cartCount = cart.items.reduce((acc, item) => acc + item.quantity, 0);
+      const cart = await Cart.findOne({ user: userId }).lean();
+      if (cart && cart.items && cart.items.length > 0) {
+        cartCount = cart.items.reduce((acc, item) => acc + (item.quantity || 0), 0);
       }
     }
 
+    // render with explicit appliedOffer fields (primitives)
     res.render("product-details", {
       user: userdata,
       product,
@@ -105,14 +196,13 @@ const productDetails = async (req, res) => {
       quantity: product.quantity,
       category: product.category,
       relatedProducts,
+      appliedOfferFields // pass this in
     });
   } catch (error) {
-    console.error("Error fetching product details:", error);
+    console.error("❌ Error fetching product details:", error);
     res.redirect("/pageNotFound");
   }
 };
-
-
 
 
 

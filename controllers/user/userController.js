@@ -7,6 +7,9 @@ const nodemailer = require('nodemailer')
 const bcrypt = require('bcrypt')
 const mongoose = require("mongoose");
 const Cart = require("../../models/cartSchema");
+const Offer = require('../../models/offerSchema');
+const { applyBestOfferToProduct } = require('../../helpers/offerHelper');
+
 
 
 const pageNotFound =  async(req,res)=>{
@@ -16,7 +19,6 @@ const pageNotFound =  async(req,res)=>{
         res.redirect('/pageNotFound')
     }
 }
-
 const loadHomepage = async (req, res) => {
   try {
     res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, private");
@@ -25,7 +27,6 @@ const loadHomepage = async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = 4;
     const skip = (page - 1) * limit;
-
     const query = req.query.q?.trim() || '';
     const sort = req.query.sort || '';
     const selectedCategory = Array.isArray(req.query.category)
@@ -35,83 +36,117 @@ const loadHomepage = async (req, res) => {
       : [];
     const selectedPriceRange = req.query.priceRange || '';
 
-   let matchStage = {
-  isBlocked: false,
-  isListed: true,
-  $or: [
-    { quantity: { $gt: 0 } },                    
-    { "sizes.stock": { $gt: 0 } }                 
-  ]
-};
+    // Base filters
+    let matchStage = {
+      isBlocked: false,
+      isListed: true,
+      $or: [{ quantity: { $gt: 0 } }, { "sizes.stock": { $gt: 0 } }]
+    };
 
+    if (query) matchStage.productName = { $regex: query, $options: 'i' };
 
-    if (query) {
-      matchStage.productName = { $regex: query, $options: 'i' };
-    }
-
+    // Exclude base categories
     const excludeCategories = await Category.find({
       name: { $in: ["Men", "Women", "Kids"] }
     }).distinct("_id");
-
     matchStage.category = { $nin: excludeCategories };
 
     if (selectedCategory.length > 0) {
       const categoryDocs = await Category.find({
         name: { $in: selectedCategory }
       }).distinct('_id');
-
       matchStage.category = { $in: categoryDocs };
     }
 
+    // Pagination pipeline
     let pipeline = [
       { $match: matchStage },
-      {
-        $addFields: {
-          effectivePrice: { $ifNull: ["$discountPrice", "$price"] }
-        }
-      }
+      { $sort: sort === 'priceAsc' ? { price: 1 } :
+                sort === 'priceDesc' ? { price: -1 } :
+                sort === 'nameAsc' ? { productName: 1 } :
+                sort === 'nameDesc' ? { productName: -1 } :
+                { createdAt: -1 }},
+      { $skip: skip },
+      { $limit: limit }
     ];
 
-    if (selectedPriceRange) {
-      const [min, max] = selectedPriceRange.split('-').map(Number);
-      if (!isNaN(min) && !isNaN(max)) {
-        pipeline.push({
-          $match: { effectivePrice: { $gte: min, $lte: max } }
-        });
-      }
-    }
+    let products = await Product.aggregate(pipeline);
 
-    if (sort === 'priceAsc') pipeline.push({ $sort: { effectivePrice: 1 } });
-    else if (sort === 'priceDesc') pipeline.push({ $sort: { effectivePrice: -1 } });
-    else if (sort === 'nameAsc') pipeline.push({ $sort: { productName: 1 } });
-    else if (sort === 'nameDesc') pipeline.push({ $sort: { productName: -1 } });
-    else pipeline.push({ $sort: { createdAt: -1 } });
-    
-    pipeline.push({ $skip: skip });
-    pipeline.push({ $limit: limit });
+    // Fetch active offers
+    const now = new Date();
+    const activeOffers = await Offer.find({
+      startDate: { $lte: now },
+      endDate: { $gte: now }
+    });
 
-    const products = await Product.aggregate(pipeline);
+    // 🧠 Apply best offer or discount logic
+    products = await Promise.all(products.map(async (product) => {
+      const productOffers = activeOffers.filter(o =>
+        o.offerType === 'product' && o.product?.toString() === product._id.toString()
+      );
 
-    let countPipeline = [
-      { $match: matchStage },
-      {
-        $addFields: {
-          effectivePrice: { $ifNull: ["$discountPrice", "$price"] }
+      const categoryOffers = activeOffers.filter(o =>
+        o.offerType === 'category' && o.category?.toString() === product.category?.toString()
+      );
+
+      let bestOffer = null;
+      let bestDiscountValue = 0;
+
+      const calcDiscount = (offer) => {
+        return offer.discountType === 'percentage'
+          ? (product.price * offer.discountValue) / 100
+          : offer.discountValue;
+      };
+
+      for (const offer of [...productOffers, ...categoryOffers]) {
+        const discountVal = calcDiscount(offer);
+        if (discountVal > bestDiscountValue) {
+          bestDiscountValue = discountVal;
+          bestOffer = offer;
         }
       }
-    ];
-    if (selectedPriceRange) {
-      const [min, max] = selectedPriceRange.split('-').map(Number);
-      if (!isNaN(min) && !isNaN(max)) {
-        countPipeline.push({
-          $match: { effectivePrice: { $gte: min, $lte: max } }
-        });
+
+      if (!bestOffer && product.discountPrice && product.discountPrice < product.price) {
+        const discountVal = product.price - product.discountPrice;
+        const discountPercent = Math.round((discountVal / product.price) * 100);
+
+        return {
+          ...product,
+          finalPrice: Number(product.discountPrice.toFixed(1)),
+          discountPercent,
+          appliedOffer: null
+        };
       }
-    }
-    countPipeline.push({ $count: "total" });
-    const countResult = await Product.aggregate(countPipeline);
-    const totalProducts = countResult[0] ? countResult[0].total : 0;
-    const totalPages = Math.ceil(totalProducts / limit);
+
+      // If offer found
+      if (bestOffer) {
+        const discountPercent =
+          bestOffer.discountType === 'percentage'
+            ? bestOffer.discountValue
+            : Math.round((bestDiscountValue / product.price) * 100);
+
+        return {
+          ...product,
+          finalPrice: Number(Math.max(product.price - bestDiscountValue, 0).toFixed(1)),
+          discountPercent,
+          appliedOffer: {
+            title: bestOffer.title,
+            offerType: bestOffer.offerType,
+            discountType: bestOffer.discountType,
+            discountValue: bestOffer.discountValue,
+            startDate: bestOffer.startDate,
+            endDate: bestOffer.endDate
+          }
+        };
+      }
+
+      // No offer or discount
+      return { ...product, finalPrice: product.price, discountPercent: 0, appliedOffer: null };
+    }));
+
+    // Count for pagination
+    const countResult = await Product.countDocuments(matchStage);
+    const totalPages = Math.ceil(countResult / limit);
 
     const categories = await Category.find({
       isListed: true,
@@ -137,7 +172,6 @@ const loadHomepage = async (req, res) => {
     res.status(500).send("Internal Server Error");
   }
 };
-
 
 
 

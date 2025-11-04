@@ -4,6 +4,8 @@ const User = require('../../models/userSchema')
 const fs = require('fs')
 const path = require('path')
 const sharp = require('sharp')
+const Offer = require('../../models/offerSchema');
+
 
 
 const getProductAddpage = async (req, res) => {
@@ -88,7 +90,7 @@ const newProduct = new Product({
 
 const getAllProducts = async (req, res) => {
   try {
-    const searchQuery = req.query.search || ""; 
+    const searchQuery = req.query.search || "";
     const page = parseInt(req.query.page) || 1;
     const limit = 7;
 
@@ -111,6 +113,7 @@ const getAllProducts = async (req, res) => {
     });
 
     const category = await Category.find({ isListed: true });
+    const offers = await Offer.find({ offerType: "product", isActive: true });
 
     if (category) {
       res.render('products', {
@@ -118,7 +121,8 @@ const getAllProducts = async (req, res) => {
         currentPage: page,
         totalPages: Math.ceil(count / limit),
         cat: category,
-        searchQuery // <-- pass it here
+        offers,
+        searchQuery
       });
     } else {
       res.render("page-404");
@@ -128,6 +132,7 @@ const getAllProducts = async (req, res) => {
     res.redirect('/pageError');
   }
 };
+
 
 
 const blockProduct = async (req, res) => {

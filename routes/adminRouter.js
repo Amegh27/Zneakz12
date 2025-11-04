@@ -7,6 +7,7 @@ const {userAuth,adminAuth} = require('../middlewares/auth')
 const uploads = require('../middlewares/multerConfig')
 const productController = require('../controllers/admin/productController')
 const orderController = require('../controllers/admin/orderController')
+const offerController = require('../controllers/admin/offerController')
 
 
 router.get('/pageError',adminController.pageError)
@@ -52,6 +53,15 @@ router.get('/return/:id', orderController.viewReturnDetails);
 router.post('/returns/:orderId/:itemId/approve', orderController.approveReturn);
 router.post('/returns/:orderId/:itemId/reject', orderController.rejectReturn);
 
+
+// offer management
+// Product Offer Routes
+router.post('/product-offer', offerController.createProductOffer);
+router.delete('/remove-product-offer/:productId', offerController.removeProductOffer);
+
+// Category Offer Routes
+router.post('/category-offer', offerController.createCategoryOffer);
+router.delete('/remove-category-offer/:offerId', offerController.removeOffer);
 
 
 module.exports = router
