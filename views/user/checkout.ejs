@@ -633,7 +633,9 @@
           <strong>Total:</strong>
           <strong>₹<%= finalTotal.toFixed(2) %></strong>
         </div>
+        <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
+<button id="razorpayBtn" class="btn btn-dark mt-3">Pay with Razorpay</button>
         <button id="placeOrderBtn" class="btn btn-primary w-100 mt-3">Place Order (COD)</button>
 
       <% } else { %>
@@ -904,19 +906,62 @@
     }
   });
 
-  document.getElementById('removeCouponBtn')?.addEventListener('click', async () => {
-    try {
-      const res = await fetch('/checkout/remove-coupon', { method: 'DELETE' });
-      const data = await res.json();
-      if (data.success) {
-        Swal.fire('Removed', data.message, 'success').then(() => window.location.reload());
-      } else {
-        Swal.fire('Error', data.message || 'Failed to remove coupon.', 'error');
-      }
-    } catch (err) {
-      Swal.fire('Error', 'Unable to remove coupon.', 'error');
-    }
-  });
+  document.getElementById("razorpayBtn").addEventListener("click", async () => {
+  try {
+    const res = await fetch("/create-razorpay-order", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ totalAmount: <%= finalTotal %> })
+    });
+
+    const data = await res.json();
+    if (!data.success) return alert("Failed to initiate payment");
+
+    const options = {
+      key: data.key,
+      amount: data.amount * 100,
+      currency: "INR",
+      name: "ZNEAKZ",
+      description: "Secure Payment",
+      order_id: data.orderId,
+
+      handler: async function (response) {
+        const orderDetails = {
+          items: <%- JSON.stringify(cart.items.map(i => ({
+            productId: i.product._id,
+            quantity: i.quantity,
+            size: i.size,
+            price: i.product.discountPrice || i.product.price
+          }))) %>,
+          address: <%- JSON.stringify(defaultAddress) %>,
+          totalAmount: <%= finalTotal %>
+        };
+
+        const verifyRes = await fetch("/verify-payment", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            razorpay_order_id: response.razorpay_order_id,
+            razorpay_payment_id: response.razorpay_payment_id,
+            razorpay_signature: response.razorpay_signature,
+            orderDetails
+          })
+        });
+
+        const verifyData = await verifyRes.json();
+        window.location.href = verifyData.redirect;
+      },
+
+      theme: { color: "#000" }
+    };
+
+    const rzp = new Razorpay(options);
+    rzp.open();
+  } catch (err) {
+    console.error("Razorpay initiation error:", err);
+    alert("Unable to start Razorpay payment. Please try again.");
+  }
+});
 </script>
 
 <%- include("../partials/user/footer") %>

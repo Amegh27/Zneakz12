@@ -132,7 +132,6 @@ document.addEventListener("DOMContentLoaded", () => {
           showConfirmButton: false
         });
 
-        // ✅ Remove the row
         const row = btn.closest("tr");
         if (row) row.remove();
 
@@ -234,7 +233,6 @@ document.querySelectorAll(".quantity-input").forEach(container => {
   });
 });
 
-// Helper function to update total dynamically
 function updateCartTotals() {
   let newTotal = 0;
   document.querySelectorAll(".cart-table tbody tr").forEach(tr => {
@@ -262,12 +260,10 @@ const handleCartAction = async (productId, action) => {
     const data = await res.json();
 
     if (data.success) {
-      // Update quantity input and total
       const row = document.querySelector(`[data-id="${productId}"]`).closest("tr");
       const input = row.querySelector("input");
       input.value = action === "increase" ? parseInt(input.value) + 1 : parseInt(input.value) - 1;
 
-      // Update total
       document.querySelector(".fw-bold").textContent = `₹${data.total.toFixed(2)}`;
     } else {
       Swal.fire({

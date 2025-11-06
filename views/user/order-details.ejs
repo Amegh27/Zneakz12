@@ -511,16 +511,22 @@ Price: Rs <%= item.price.toFixed(0) %><br>
 <% }) %>
 
     </ul>
+<h5 class="mt-3">Shipping Address:</h5>
+<% 
+  const addr = order.address && typeof order.address === 'object'
+    ? order.address
+    : (order.address && order.address[0] ? order.address[0] : null);
+%>
 
-   <h5 class="mt-3">Shipping Address:</h5>
-<% if (order.address && order.address.name) { %>
+<% if (addr && (addr.name || addr.city || addr.state)) { %>
   <p class="mb-0">
-    <strong><%= order.address.name %></strong><br>
-    <%= order.address.city %>, <%= order.address.state %> - <%= order.address.pincode %>
+    <strong><%= addr.name %></strong><br>
+    <%= addr.city %>, <%= addr.state %> - <%= addr.pincode %>
   </p>
 <% } else { %>
   <p class="text-muted">Address not available</p>
 <% } %>
+
     <h5 class="mt-4">Delivery Information:</h5>
     <ul class="list-group mb-3">
       <li class="list-group-item">
@@ -601,7 +607,6 @@ let couponCode = order.coupon?.code || null;
 <script>
 document.addEventListener("DOMContentLoaded", () => {
 
-  // ✅ Cancel Entire Order
   const cancelOrderBtn = document.getElementById("cancelOrderBtn");
   if (cancelOrderBtn) {
     cancelOrderBtn.addEventListener("click", async () => {
@@ -661,7 +666,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // ✅ Cancel Individual Item
   document.querySelectorAll(".cancel-btn").forEach(btn => {
     btn.addEventListener("click", async (e) => {
       e.preventDefault();
@@ -720,6 +724,14 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
+});
+const selectedAddressIndex = [...document.querySelectorAll('input[name="selectedAddress"]')]
+  .findIndex(radio => radio.checked);
+
+const res = await fetch("/checkout/place-order", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ addressIndex: selectedAddressIndex })
 });
 </script>
 

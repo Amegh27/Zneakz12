@@ -133,5 +133,10 @@ router.post('/checkout/apply-coupon', checkoutController.applyCoupon);
 router.delete('/checkout/remove-coupon', checkoutController.removeCoupon);
 
 
+// razorpay
+router.post("/create-razorpay-order", checkoutController.createRazorpayOrder);
+router.post("/verify-payment", checkoutController.verifyRazorpayPayment);
+router.get("/order-failure", checkoutController.orderFailurePage);
+
 
 module.exports = router
