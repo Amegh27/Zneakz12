@@ -138,5 +138,9 @@ router.post("/create-razorpay-order", checkoutController.createRazorpayOrder);
 router.post("/verify-payment", checkoutController.verifyRazorpayPayment);
 router.get("/order-failure", checkoutController.orderFailurePage);
 
+// wallet
+router.get("/wallet", checkoutController.getWalletPage);
+router.get("/balance", checkoutController.getWalletBalance);
+
 
 module.exports = router

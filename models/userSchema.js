@@ -52,10 +52,22 @@ const userSchema = new Schema({
     ],
     default: []  
   },
-  wallet: {
-    type: walletSchema,
-    default: {}
-  },
+ wallet: {
+  balance: { type: Number, default: 0 },
+  transactions: [
+    {
+      type: {
+        type: String, 
+        enum: ["credit", "debit"], 
+        required: true
+      },
+      amount: { type: Number, required: true },
+      description: { type: String },
+      date: { type: Date, default: Date.now }
+    }
+  ]
+},
+
   isBlocked: {
     type: Boolean,
     default: false

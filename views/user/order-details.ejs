@@ -492,12 +492,13 @@ Price: Rs <%= item.price.toFixed(0) %><br>
       </span>
     </div>
 
-    <% if(item.status === "Placed") { %>
-      <!-- Cancel Button -->
-      <form action="/orders/<%= order._id %>/items/<%= item._id %>/cancel" method="POST" class="d-inline">
-        <button type="submit" class="btn btn-sm btn-outline-danger cancel-btn">Cancel Item</button>
-      </form>
-    <% } else if(item.status === "Delivered" && item.returnStatus === "None") { %>
+   <% if(item.status === "Placed") { %>
+  <button class="btn btn-sm btn-outline-danger cancel-btn"
+          data-order-id="<%= order._id %>"
+          data-item-id="<%= item._id %>">
+    Cancel Item
+  </button>
+<% } else if(item.status === "Delivered" && item.returnStatus === "None") { %>
       <!-- Return Button -->
       <a href="/orders/<%= order._id %>/items/<%= item._id %>/return" class="btn btn-sm btn-outline-warning">Return Item</a>
     <% } else if(item.returnStatus === "Requested") { %>
@@ -590,9 +591,11 @@ let couponCode = order.coupon?.code || null;
 
     <div class="mt-4 d-flex flex-wrap gap-2">
       <% if(order.status === "Placed") { %>
-        <form id="cancelOrderForm" action="/orders/<%= order._id %>/cancel" method="POST" class="me-2">
-          <button type="button" id="cancelOrderBtn" class="btn btn-danger">Cancel Entire Order</button>
-        </form>
+<button id="cancelOrderBtn"
+        data-order-id="<%= order._id %>"
+        class="btn btn-danger">
+  Cancel Entire Order
+</button>
       <% } %>
       <a href="/orders/<%= order._id %>/invoice" class="btn btn-outline-success">Download Invoice</a>
     </div>
@@ -605,134 +608,97 @@ let couponCode = order.coupon?.code || null;
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
-document.addEventListener("DOMContentLoaded", () => {
+  document.addEventListener("DOMContentLoaded", () => {
+    console.log("DOM loaded, attaching cancel handlers...");
 
-  const cancelOrderBtn = document.getElementById("cancelOrderBtn");
-  if (cancelOrderBtn) {
-    cancelOrderBtn.addEventListener("click", async () => {
-      const result = await Swal.fire({
-        title: "Are you sure?",
-        text: "This will cancel your entire order.",
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonText: "Yes, cancel it",
-        cancelButtonText: "No, keep it",
-        confirmButtonColor: "#d33",
-        cancelButtonColor: "#3085d6",
-      });
+    const cancelOrderBtn = document.getElementById("cancelOrderBtn");
+    if (cancelOrderBtn) {
+      cancelOrderBtn.addEventListener("click", async (e) => {
+        e.preventDefault();
+        const orderId = cancelOrderBtn.dataset.orderId;
 
-      if (result.isConfirmed) {
+        const confirm = await Swal.fire({
+          title: "Cancel this order?",
+          text: "This will cancel your entire order.",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonText: "Yes, cancel it",
+          cancelButtonText: "No, keep it",
+          confirmButtonColor: "#d33",
+        });
+
+        if (!confirm.isConfirmed) return;
+
         try {
-          const res = await fetch(`/orders/<%= order._id %>/cancel`, {
+          const response = await fetch(`/orders/${orderId}/cancel`, {
             method: "POST",
             headers: { "Content-Type": "application/json" }
           });
+          const data = await response.json();
 
-          if (res.ok) {
-            Swal.fire({
-              toast: true,
-              position: "top-end",
+          if (data.success) {
+            await Swal.fire({
               icon: "success",
-              title: "Order cancelled successfully!",
-              showConfirmButton: false,
+              title: "Order Cancelled!",
+              text: data.message,
               timer: 2000,
-              timerProgressBar: true,
+              showConfirmButton: false,
             });
-
             setTimeout(() => window.location.href = "/orders", 2000);
           } else {
-            Swal.fire({
-              toast: true,
-              position: "top-end",
-              icon: "error",
-              title: "Failed to cancel order. Try again.",
-              showConfirmButton: false,
-              timer: 2000,
-              timerProgressBar: true,
-            });
+            Swal.fire("Failed!", data.message, "error");
           }
         } catch (err) {
-          Swal.fire({
-            toast: true,
-            position: "top-end",
-            icon: "error",
-            title: "Something went wrong!",
-            showConfirmButton: false,
-            timer: 2000,
-            timerProgressBar: true,
-          });
+          console.error("Cancel order error:", err);
+          Swal.fire("Error", "Server error. Please try again.", "error");
         }
-      }
-    });
-  }
-
-  document.querySelectorAll(".cancel-btn").forEach(btn => {
-    btn.addEventListener("click", async (e) => {
-      e.preventDefault();
-      const form = btn.closest("form");
-      const url = form.action;
-
-      const result = await Swal.fire({
-        title: "Cancel this item?",
-        text: "This action cannot be undone.",
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonText: "Yes, cancel it",
-        cancelButtonText: "No",
-        confirmButtonColor: "#d33",
-        cancelButtonColor: "#3085d6",
       });
+    }
 
-      if (result.isConfirmed) {
+    document.querySelectorAll(".cancel-btn").forEach(btn => {
+      btn.addEventListener("click", async (e) => {
+        e.preventDefault();
+        const orderId = btn.dataset.orderId;
+        const itemId = btn.dataset.itemId;
+
+        const confirm = await Swal.fire({
+          title: "Cancel this item?",
+          text: "Refund will be added to your wallet if paid online.",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonText: "Yes, cancel it",
+          cancelButtonText: "No, keep it",
+          confirmButtonColor: "#d33",
+        });
+
+        if (!confirm.isConfirmed) return;
+
         try {
-          const res = await fetch(url, { method: "POST" });
-          if (res.ok) {
-            Swal.fire({
-              toast: true,
-              position: "top-end",
-              icon: "success",
-              title: "Item cancelled successfully!",
-              showConfirmButton: false,
-              timer: 2000,
-              timerProgressBar: true,
-            });
+          const response = await fetch(`/orders/${orderId}/items/${itemId}/cancel`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" }
+          });
+          const data = await response.json();
 
+          if (data.success) {
+            await Swal.fire({
+              icon: "success",
+              title: "Item Cancelled!",
+              text: data.message,
+              timer: 2000,
+              showConfirmButton: false,
+            });
             setTimeout(() => location.reload(), 2000);
           } else {
-            Swal.fire({
-              toast: true,
-              position: "top-end",
-              icon: "error",
-              title: "Failed to cancel item.",
-              showConfirmButton: false,
-              timer: 2000,
-              timerProgressBar: true,
-            });
+            Swal.fire("Failed!", data.message, "error");
           }
         } catch (err) {
-          Swal.fire({
-            toast: true,
-            position: "top-end",
-            icon: "error",
-            title: "Something went wrong!",
-            showConfirmButton: false,
-            timer: 2000,
-            timerProgressBar: true,
-          });
+          console.error("Cancel item error:", err);
+          Swal.fire("Error", "Please try again.", "error");
         }
-      }
+      });
     });
   });
-
-});
-const selectedAddressIndex = [...document.querySelectorAll('input[name="selectedAddress"]')]
-  .findIndex(radio => radio.checked);
-
-const res = await fetch("/checkout/place-order", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ addressIndex: selectedAddressIndex })
-});
 </script>
 
 <%- include("../partials/user/footer") %>

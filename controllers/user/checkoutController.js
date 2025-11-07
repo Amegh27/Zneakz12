@@ -94,7 +94,7 @@ const placeOrder = async (req, res) => {
     const userId = req.session.user;
     if (!userId) return res.json({ success: false, message: "Login required" });
 
-    const { addressIndex } = req.body;
+    const { addressIndex, useWallet } = req.body; 
 
     const user = await User.findById(userId);
     if (!user || !user.address || user.address.length === 0) {
@@ -102,12 +102,12 @@ const placeOrder = async (req, res) => {
     }
 
     const addr = user.address[addressIndex];
-const selectedAddress = addr ? {
-  name: addr.name || "N/A",
-  city: addr.city || "N/A",
-  state: addr.state || "N/A",
-  pincode: addr.pincode || "N/A"
-} : {};
+    const selectedAddress = addr ? {
+      name: addr.name || "N/A",
+      city: addr.city || "N/A",
+      state: addr.state || "N/A",
+      pincode: addr.pincode || "N/A"
+    } : {};
 
     const cart = await Cart.findOne({ user: userId }).populate("items.product");
     if (!cart || !cart.items.length)
@@ -139,8 +139,27 @@ const selectedAddress = addr ? {
 
     const tax = subtotal * 0.05;
     const shipping = 50;
-    const totalAmount = subtotal + tax + shipping - discountAmount;
+    let totalAmount = subtotal + tax + shipping - discountAmount;
 
+    // ✅ Step 1: Check if user wants to use wallet
+    let walletUsed = 0;
+    if (useWallet && user.wallet && user.wallet.balance > 0) {
+      walletUsed = Math.min(user.wallet.balance, totalAmount);
+      totalAmount -= walletUsed;
+
+      // Deduct from wallet immediately
+      user.wallet.balance -= walletUsed;
+      user.wallet.transactions.push({
+        type: "debit",
+        amount: walletUsed,
+        description: `Used ₹${walletUsed} for COD order payment`,
+        date: new Date()
+      });
+
+      await user.save();
+    }
+
+    // 🟢 Existing stock check logic — keep as is
     for (let item of cart.items) {
       const product = await Product.findById(item.product._id);
       if (product) {
@@ -157,25 +176,26 @@ const selectedAddress = addr ? {
         }
       }
     }
-const newOrder = new Order({
-  user: user._id,
-  items: orderItems,
-  address: selectedAddress,
-  paymentMethod: "Cash on Delivery",
-  totalAmount,
-  status: "Placed",
-  coupon: req.session.appliedCoupon
-    ? {
-        code: req.session.appliedCoupon.code,
-        discountAmount: discountAmount,
-      }
-    : undefined,
-});
 
-
+    // ✅ Step 2: Create the order as usual
+    const newOrder = new Order({
+      user: user._id,
+      items: orderItems,
+      address: selectedAddress,
+      paymentMethod: useWallet && totalAmount === 0 ? "Wallet" : "Cash on Delivery", // ✅ new condition
+      totalAmount,
+      status: "Placed",
+      coupon: req.session.appliedCoupon
+        ? {
+            code: req.session.appliedCoupon.code,
+            discountAmount: discountAmount,
+          }
+        : undefined,
+    });
 
     await newOrder.save();
 
+    // 🟢 Empty cart and clear coupon
     cart.items = [];
     cart.total = 0;
     await cart.save();
@@ -190,6 +210,7 @@ const newOrder = new Order({
     });
   }
 };
+
 
 
 const orderSuccessPage = async (req, res) => {
@@ -312,72 +333,149 @@ const couponCode = order.coupon?.code || null;
 const cancelOrder = async (req, res) => {
   try {
     const orderId = req.params.id;
-    const order = await Order.findById(orderId).populate("items.product");
+    const userId = req.session.user;
 
-    if (!order) return res.status(404).send("Order not found");
+    const order = await Order.findById(orderId)
+      .populate("items.product")
+      .populate("user");
+
+    if (!order) return res.json({ success: false, message: "Order not found" });
     if (order.status === "Cancelled")
-      return res.status(400).send("Order already cancelled");
+      return res.json({ success: false, message: "Order already cancelled" });
 
+    // ✅ Restore stock
     for (const item of order.items) {
       const product = await Product.findById(item.product._id);
       if (product) {
         const sizeObj = product.sizes.find((s) => s.size === item.size);
         if (sizeObj) sizeObj.stock += item.quantity;
-
-        product.status = "Available";
         await product.save();
       }
     }
 
+    // ✅ Refund wallet only if Razorpay
+    if (order.paymentMethod === "Razorpay") {
+      const user = await User.findById(userId);
+      if (!user.wallet) {
+        user.wallet = { balance: 0, transactions: [] };
+      }
+
+      user.wallet.balance += order.totalAmount;
+
+      user.wallet.transactions.push({
+        type: "credit",
+        amount: order.totalAmount,
+        description: `Refund for cancelled order ${order._id}`,
+        date: new Date(),
+      });
+
+      await user.save();
+    }
+
+    // ✅ Mark order as cancelled
     order.status = "Cancelled";
     order.items.forEach((i) => (i.status = "Cancelled"));
     await order.save();
 
-    res.redirect("/orders");
+    return res.json({
+      success: true,
+      message:
+        order.paymentMethod === "Razorpay"
+          ? "Order cancelled and amount refunded to wallet."
+          : "Order cancelled successfully.",
+    });
   } catch (error) {
     console.error("Error cancelling order:", error);
-    res.status(500).send("Internal server error");
+    res.json({
+      success: false,
+      message: "Internal server error while cancelling order.",
+    });
   }
 };
 
-const cancelItem = async (req, res) => {
-   try {
-    const userId = req.session.user;
-    const orderId = req.params.orderId;
-    const itemId = req.params.itemId;
 
-    const order = await Order.findOne({ _id: orderId, user: userId }).populate("items.product");
-    if (!order) return res.status(404).json({ success: false, message: "Order not found" });
+
+const cancelItem = async (req, res) => {
+  try {
+    const userId = req.session.user;
+    const { orderId, itemId } = req.params;
+
+    const order = await Order.findOne({ _id: orderId, user: userId })
+      .populate("items.product")
+      .populate("user");
+
+    if (!order)
+      return res
+        .status(404)
+        .json({ success: false, message: "Order not found" });
 
     const item = order.items.id(itemId);
-    if (!item) return res.status(404).json({ success: false, message: "Item not found" });
+    if (!item)
+      return res
+        .status(404)
+        .json({ success: false, message: "Item not found" });
 
     if (item.status === "Cancelled") {
-      return res.json({ success: false, message: "Item already cancelled" });
+      return res.json({
+        success: false,
+        message: "Item already cancelled",
+      });
     }
 
+    // ✅ Restore stock
     const product = await Product.findById(item.product._id);
     if (product) {
-      const sizeIndex = product.sizes.findIndex(s => s.size === item.size);
+      const sizeIndex = product.sizes.findIndex((s) => s.size === item.size);
       if (sizeIndex !== -1) {
         product.sizes[sizeIndex].stock += item.quantity;
         await product.save();
       }
     }
 
+    // ✅ Refund wallet if Razorpay payment
+    if (order.paymentMethod === "Razorpay") {
+      const user = await User.findById(userId);
+      if (!user.wallet) {
+        user.wallet = { balance: 0, transactions: [] };
+      }
+
+      const refundAmount = item.price * item.quantity;
+      user.wallet.balance += refundAmount;
+
+      user.wallet.transactions.push({
+        type: "credit",
+        amount: refundAmount,
+        description: `Refund for cancelled item from order ${order._id}`,
+        date: new Date(),
+      });
+
+      await user.save();
+    }
+
+    // ✅ Update item & order status
     item.status = "Cancelled";
 
-    const allCancelled = order.items.every(i => i.status === "Cancelled");
+    const allCancelled = order.items.every((i) => i.status === "Cancelled");
     if (allCancelled) order.status = "Cancelled";
 
     await order.save();
 
-    res.json({ success: true, message: "Item cancelled successfully", allCancelled });
+    res.json({
+      success: true,
+      message:
+        order.paymentMethod === "Razorpay"
+          ? "Item cancelled and amount refunded to wallet."
+          : "Item cancelled successfully.",
+      allCancelled,
+    });
   } catch (error) {
     console.error("Error cancelling item:", error);
-    res.status(500).json({ success: false, message: "Error cancelling item" });
+    res
+      .status(500)
+      .json({ success: false, message: "Error cancelling item." });
   }
 };
+
 
 
 
@@ -757,8 +855,147 @@ const orderFailurePage = async (req, res) => {
   }
 };
 
+const getWalletPage = async (req, res) => {
+  try {
+    const userId = req.session.user;
+    if (!userId) return res.redirect("/login");
 
+    const user = await User.findById(userId).lean();
+    if (!user) return res.redirect("/login");
 
+    const wallet = user.wallet || {};
+    const balance = typeof wallet.balance === "number" ? wallet.balance : 0;
+    const transactions = Array.isArray(wallet.transactions)
+      ? wallet.transactions
+      : [];
+
+    res.render("wallet", { balance, transactions });
+  } catch (err) {
+    console.error("Error loading wallet:", err);
+    res.status(500).send("Error loading wallet");
+  }
+};
+
+const getWalletBalance = async (req, res) => {
+  try {
+    const userId = req.session.user;
+    if (!userId) return res.status(401).json({ success: false, message: "Login required" });
+
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ success: false, message: "User not found" });
+
+    const balance = user.wallet?.balance || 0;
+    res.json({ success: true, balance });
+  } catch (err) {
+    console.error("Error fetching wallet balance:", err);
+    res.status(500).json({ success: false, message: "Error fetching wallet" });
+  }
+};
+
+const payWithWallet = async (req, res) => {
+  
+  try {
+    const { addressId } = req.body;
+    const userId = req.session.user;
+
+    console.log(" Wallet payment initiated for user:", userId);
+
+    const [address, cart, user] = await Promise.all([
+      Address.findOne({ _id: addressId, user: userId }),
+      Cart.findOne({ user: userId }).populate("items.product"),
+      User.findById(userId)
+    ]);
+
+    if (!address || !cart || cart.items.length === 0) {
+      throw new Error("Invalid address or empty cart");
+    }
+
+    const subtotal = cart.items.reduce(
+      (sum, i) => sum + (i.product.discountPrice || i.product.price) * i.quantity,
+      0
+    );
+    const tax = subtotal * 0.05;
+    const shipping = 50;
+
+    let couponDiscount = 0;
+    if (req.session.appliedCoupon) {
+      const c = req.session.appliedCoupon;
+      couponDiscount =
+        c.discountType === "percentage"
+          ? (subtotal * c.discountValue) / 100
+          : c.discountValue;
+      if (c.maxDiscount)
+        couponDiscount = Math.min(couponDiscount, c.maxDiscount);
+      couponDiscount = Math.min(couponDiscount, subtotal);
+    }
+
+    const total = subtotal + tax + shipping - couponDiscount;
+
+    if (!user.wallet) {
+      user.wallet = { balance: 0, transactions: [] };
+    }
+
+    if (user.wallet.balance < total) {
+      throw new Error("Insufficient wallet balance");
+    }
+
+    console.log("Before deduction:", user.wallet.balance);
+    user.wallet.balance = user.wallet.balance - total;
+
+    user.wallet.transactions.push({
+      type: "debit",
+      amount: total,
+      description: `Wallet payment for order – #ZNK${Date.now()}`,
+      date: new Date()
+    });
+    user.markModified('wallet');
+
+    await user.save(); 
+
+    console.log(" After deduction:", user.wallet.balance);
+
+    const order = new Order({
+      user: userId,
+      orderID: `ZNK${Date.now()}${Math.floor(Math.random() * 100)}`,
+      items: cart.items.map(i => ({
+        product: i.product._id,
+        productName: i.product.productName,
+        productImage: i.product.productImage,
+        quantity: i.quantity,
+        size: i.size,
+        price: i.product.discountPrice || i.product.price
+      })),
+      address: {
+        name: address.name,
+        city: address.city,
+        state: address.state,
+        pincode: address.pincode
+      },
+      totalAmount: total,
+      paymentMethod: "Wallet",
+      status: "Placed",
+      coupon: req.session.appliedCoupon ? {
+        code: req.session.appliedCoupon.code,
+        discountAmount: couponDiscount
+      } : null
+    });
+
+    await order.save();
+    await Cart.deleteOne({ user: userId });
+    delete req.session.appliedCoupon;
+
+    console.log("🎉 Order placed with wallet.");
+
+    res.json({
+      success: true,
+      message: "Wallet payment successful",
+      redirect: `/order-success/${order._id}`
+    });
+  } catch (err) {
+    console.error(" Wallet payment error:", err);
+    res.json({ success: false, message: err.message || "Server error" });
+  }
+};
 
 
 
@@ -778,6 +1015,9 @@ module.exports = {
      availableCoupons,
      createRazorpayOrder,
      verifyRazorpayPayment,
-     orderFailurePage
+     orderFailurePage,
+     getWalletPage,
+     getWalletBalance,
+     payWithWallet
 
     };
