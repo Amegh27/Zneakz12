@@ -1,0 +1,250 @@
+<%- include("../partials/user/header2") %>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+
+<style>
+  :root {
+    --primary-color: #000;
+    --secondary-color: #333;
+    --accent-color: #7c747d;
+  }
+
+  body {
+    background: linear-gradient(135deg, #f2f2f2 0%, #fafafa 100%);
+    min-height: 100vh;
+  }
+
+  /* Sidebar styling (unchanged from your version) */
+  .profile-sidebar {
+    background: #fff;
+    border-radius: 20px;
+    overflow: hidden;
+    min-height: 500px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+  }
+
+  .profile-sidebar .user-box {
+    background: linear-gradient(135deg, #000 0%, #3b3b3b 100%);
+    color: #fff;
+    padding: 30px 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+  }
+
+  .profile-sidebar .list-group-item {
+    border: none;
+    padding: 16px 20px;
+    color: #6c757d;
+    font-weight: 500;
+    transition: all 0.3s ease;
+  }
+
+  .profile-sidebar .list-group-item.active,
+  .profile-sidebar .list-group-item:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+    color: #000;
+    font-weight: 600;
+  }
+
+  /* ======= REFERRAL SECTION ======= */
+  .referral-section {
+    text-align: center;
+    background: #fff;
+    padding: 80px 40px;
+    border-radius: 24px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+    max-width: 700px;
+    margin: 40px auto;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .referral-section::before {
+    content: '';
+    position: absolute;
+    top: -100px;
+    left: -100px;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(0,0,0,0.05) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+
+  .referral-section h2 {
+    font-size: 2.4rem;
+    font-weight: 800;
+    color: #000;
+    margin-bottom: 20px;
+    letter-spacing: 1px;
+  }
+
+  .referral-section p {
+    color: #555;
+    font-size: 1.1rem;
+    margin-bottom: 40px;
+  }
+
+  .referral-box {
+    background: linear-gradient(135deg, #f7f7f7 0%, #ffffff 100%);
+    border-radius: 16px;
+    padding: 30px;
+    box-shadow: inset 0 0 0 1px #eee;
+  }
+
+  .referral-link-group {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    max-width: 550px;
+    margin: 0 auto 20px;
+  }
+
+  .referral-link-group input {
+    flex: 1;
+    border: 2px solid #ccc;
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-size: 1rem;
+    font-weight: 600;
+    text-align: center;
+    color: #222;
+    background: #fafafa;
+  }
+
+  .referral-link-group button {
+    background: #000;
+    border: none;
+    color: #fff;
+    padding: 12px 16px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .referral-link-group button:hover {
+    background: #333;
+    transform: scale(1.05);
+  }
+
+  .referral-code {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #000;
+    margin-top: 15px;
+  }
+
+  .referral-reward {
+    font-size: 1rem;
+    color: #555;
+    margin-top: 10px;
+  }
+
+  @media (max-width: 768px) {
+    .referral-section {
+      padding: 50px 20px;
+    }
+    .referral-section h2 {
+      font-size: 1.9rem;
+    }
+    .referral-link-group {
+      flex-direction: column;
+    }
+    .referral-link-group input {
+      font-size: 0.95rem;
+    }
+  }
+</style>
+
+<div class="container profile-container">
+  <div class="row g-4">
+    <!-- Sidebar -->
+    <div class="col-lg-3">
+      <div class="profile-sidebar">
+        <div class="user-box">
+          <div class="profile-avatar">
+            <img id="sidebarAvatar" src="<%= user.avatar || '/images/user-avatar.png' %>" alt="User Avatar"
+                 class="rounded-circle" style="width: 56px; height: 56px; object-fit: cover;">
+          </div>
+          <div class="user-info">
+            <div class="user-label">Welcome</div>
+            <div class="user-name"><%= user.name || 'User' %></div>
+          </div>
+        </div>
+
+        <div class="list-group">
+          <a href="/profile" class="list-group-item list-group-item-action">
+            <i class="bi bi-person-fill"></i> Profile
+          </a>
+          <a href="/wallet" class="list-group-item list-group-item-action">
+            <i class="bi bi-wallet2"></i> Wallet
+          </a>
+          <a href="/address" class="list-group-item list-group-item-action">
+            <i class="bi bi-geo-alt-fill"></i> Address
+          </a>
+          <a href="/orders" class="list-group-item list-group-item-action">
+            <i class="bi bi-bag-fill"></i> Orders
+          </a>
+          <a href="/refer" class="list-group-item list-group-item-action active">
+            <i class="bi bi-gift-fill"></i> Refer & Earn
+          </a>
+          <a href="/logout" id="logout-link" class="list-group-item list-group-item-action">
+            <i class="bi bi-box-arrow-right"></i> Logout
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Centered Referral Section -->
+    <div class="col-lg-9 d-flex justify-content-center align-items-center">
+      <div class="referral-section">
+        <h2><i class="bi bi-megaphone-fill me-2"></i> Refer & Earn</h2>
+        <p>Invite your friends to join ZNEAKZ and earn <strong>₹100</strong> for each successful signup!</p>
+
+        <div class="referral-box">
+          <div class="referral-code">Your Code: <%= user.referralCode %></div>
+          <div class="referral-reward">Share this code with friends and earn instantly in your wallet!</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+  // Copy referral link
+  document.getElementById("copyReferralBtn")?.addEventListener("click", () => {
+    const refInput = document.getElementById("referralLink");
+    refInput.select();
+    refInput.setSelectionRange(0, 99999);
+    navigator.clipboard.writeText(refInput.value);
+    Swal.fire({
+      icon: 'success',
+      title: 'Referral Link Copied!',
+      text: 'Share it with your friends and start earning!',
+      timer: 2000,
+      toast: true,
+      position: 'top-end',
+      showConfirmButton: false
+    });
+  });
+
+  // Logout confirmation
+  document.getElementById("logout-link")?.addEventListener("click", (e) => {
+    e.preventDefault();
+    Swal.fire({
+      title: 'Logout?',
+      text: "You will be signed out.",
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#000',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: 'Yes, Logout'
+    }).then(result => {
+      if (result.isConfirmed) window.location.href = "/logout";
+    });
+  });
+</script>

@@ -71,6 +71,13 @@
             <input type="password" class="form-control" name="cPassword" placeholder="Confirm Password">
             <div id="error4" class="error-message"></div>
           </div>
+         <div class="mb-3">
+  <label for="referralCode" class="form-label">Referral Code (Optional)</label>
+  <input type="text" class="form-control" id="referralCode" name="referralCode" placeholder="Enter referral code">
+  <div id="referral-feedback" class="form-text text-danger"></div>
+</div>
+
+
 
           <% if (locals.message && message.length > 0) { %>
             <div class="alert alert-danger text-center">
@@ -114,7 +121,6 @@
       valid = false;
     }
 
-    //  Email validation
     if (email === "") {
       document.getElementById("error2").textContent = "Email is required.";
       valid = false;
@@ -140,6 +146,47 @@
 
     if (!valid) {
       e.preventDefault();
+    }
+  });
+
+  const referralInput = document.getElementById("referralCode");
+  const feedback = document.getElementById("referral-feedback");
+
+  referralInput?.addEventListener("blur", async () => {
+    const code = referralInput.value.trim();
+    feedback.textContent = ""; 
+
+    if (!code) return; 
+
+    try {
+      const res = await fetch(`/check-referral/${code}`);
+      const data = await res.json();
+
+      if (!data.valid) {
+        feedback.textContent = " Invalid referral code.";
+        referralInput.classList.add("is-invalid");
+      } else {
+        feedback.textContent = " Referral code applied!";
+        feedback.classList.remove("text-danger");
+        feedback.classList.add("text-success");
+        referralInput.classList.remove("is-invalid");
+        referralInput.classList.add("is-valid");
+      }
+    } catch (error) {
+      console.error("Referral check failed:", error);
+      feedback.textContent = "Error checking referral code.";
+    }
+  });
+
+  const signupForm = document.querySelector("form");
+  signupForm?.addEventListener("submit", (e) => {
+    if (referralInput.classList.contains("is-invalid")) {
+      e.preventDefault();
+      Swal.fire({
+        icon: "error",
+        title: "Invalid Referral Code",
+        text: "Please enter a valid referral code or leave it blank.",
+      });
     }
   });
 </script>

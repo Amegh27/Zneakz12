@@ -142,5 +142,9 @@ router.get("/order-failure", checkoutController.orderFailurePage);
 router.get("/wallet", checkoutController.getWalletPage);
 router.get("/balance", checkoutController.getWalletBalance);
 
+// refer
+router.get("/refer", userController.getReferPage);
+router.get("/check-referral/:code", userController.checkReferralCode);
+
 
 module.exports = router

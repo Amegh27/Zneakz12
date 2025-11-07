@@ -610,10 +610,8 @@
 
 <div class="container profile-container">
   <div class="row g-4">
-    <!-- Sidebar Navigation -->
     <div class="col-lg-3">
       <div class="profile-sidebar">
-        <!-- User Info Header -->
         <div class="user-box">
           <div class="profile-avatar">
             <img id="sidebarAvatar" src="<%= user.avatar || '/images/user-avatar.png' %>" alt="User Avatar" class="rounded-circle" style="width: 56px; height: 56px; object-fit: cover;">
@@ -624,7 +622,6 @@
           </div>
         </div>
 
-        <!-- Navigation Menu -->
         <div class="list-group">
           <a href="/profile" class="list-group-item list-group-item-action active" data-tab="profile">
             <i class="bi bi-person-fill"></i> Profile
@@ -638,6 +635,10 @@
           <a href="/orders" class="list-group-item list-group-item-action">
             <i class="bi bi-bag-fill"></i> Orders
           </a>
+          <a href="/refer" class="list-group-item list-group-item-action">
+        <i class="bi bi-gift-fill"></i> Refer & Earn
+      </a>
+
           <a href="/logout" id="logout-link" class="list-group-item list-group-item-action">
             <i class="bi bi-box-arrow-right"></i> Logout
           </a>
@@ -645,21 +646,17 @@
       </div>
     </div>
 
-    <!-- Main Content Area -->
     <div class="col-lg-9">
       <div class="profile-main">
-        <!-- Profile Section -->
         <div id="tab-profile" class="section-card">
           <h4 class="text-center">
             <i class="bi bi-person-circle"></i>My Profile
           </h4>
 
           <form id="profileForm" action="/profile/edit" method="POST" enctype="multipart/form-data" class="row g-4">
-            <!-- Hidden Inputs -->
             <input type="file" id="avatarInput" name="avatar" accept="image/*" style="display: none;">
             <input type="hidden" id="removeAvatarFlag" name="remove_avatar" value="0">
 
-            <!-- Avatar Section -->
             <div class="col-12 avatar-container">
               <div class="profile-avatar">
                 <img id="avatarPreview" src="<%= user.avatar || '/images/user-avatar.png' %>" alt="Profile Picture" class="rounded-circle" style="width: 140px; height: 140px; object-fit: cover;">
@@ -670,7 +667,6 @@
               </div>
             </div>
 
-            <!-- Form Fields -->
             <div class="col-md-6">
               <label class="form-label">Full Name</label>
               <div class="field-edit">
@@ -743,14 +739,13 @@
 <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
-  // ====================== VALIDATION HELPERS ======================
   const validateName = (name) => {
     const regex = /^[A-Za-z\s]{1,20}$/;
     return regex.test(name.trim());
   };
 
   const validatePhone = (phone) => {
-    const regex = /^[1-9]\d{9}$/; // 10 digits, doesn't start with 0
+    const regex = /^[1-9]\d{9}$/; 
     return regex.test(phone);
   };
 
@@ -759,7 +754,6 @@
     return regex.test(email);
   };
 
-  // ====================== AVATAR HANDLING ======================
   const avatarInput = document.getElementById('avatarInput');
   const sidebarAvatar = document.getElementById('sidebarAvatar');
   const avatarPreview = document.getElementById('avatarPreview');
@@ -831,7 +825,6 @@
     };
     reader.readAsDataURL(file);
 
-    // Auto-upload if email not changing
     const currentEmail = form.email.value.trim();
     const originalEmail = originalValues.email;
 
@@ -854,7 +847,6 @@
     }
   });
 
-  // ====================== FORM LOGIC ======================
   const form = document.getElementById('profileForm');
   const editBtn = document.getElementById('editProfileBtn');
   const saveBtn = document.getElementById('saveProfileBtn');
@@ -888,7 +880,6 @@
     cancelBtn.style.display = 'none';
   });
 
-  // ====================== FORM SUBMIT WITH VALIDATION ======================
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
 
@@ -897,7 +888,6 @@
     const phone = form.phone.value.trim();
     const gender = form.querySelector('input[name="gender"]:checked');
 
-    // === VALIDATION ===
     if (!name) {
       return Swal.fire('Required', 'Name is required', 'error');
     }
@@ -920,7 +910,6 @@
       return Swal.fire('Required', 'Please select your gender', 'error');
     }
 
-    // === EMAIL CHANGE OTP FLOW ===
     if (email !== originalValues.email) {
       const otp = generateOtp();
       console.log("EMAIL VERIFICATION OTP:", otp);
@@ -944,7 +933,6 @@
       }
     }
 
-    // === SUBMIT FORM ===
     saveBtn.disabled = true;
     saveBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Saving...';
 
@@ -975,12 +963,10 @@
     }
   });
 
-  // ====================== OTP GENERATOR ======================
   function generateOtp() {
     return Math.floor(100000 + Math.random() * 900000).toString();
   }
 
-  // ====================== LOGOUT ======================
   document.getElementById("logout-link").addEventListener("click", function(e) {
     e.preventDefault();
     Swal.fire({
