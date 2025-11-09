@@ -72,7 +72,7 @@ router.get('/coupons/toggle/:id', couponController.toggleCouponStatus);
 
 // sales-report
 router.get("/sales-report",  adminController.getSalesReport);
-router.get("/sales-report/excel", adminController.downloadExcel);
-router.get("/sales-report/pdf", adminController.downloadPDF);
+router.get("/sales-report/download-excel", adminController.downloadExcel);
+router.get("/sales-report/download-pdf", adminController.downloadPDF);
 
 module.exports = router

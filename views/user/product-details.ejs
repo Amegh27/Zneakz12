@@ -632,50 +632,126 @@
       };
     });
 
-    document.querySelectorAll('.wishlist-icon').forEach(icon => {
-      icon.addEventListener('click', async function () {
-        const productId = this.getAttribute('data-id');
+    window.selectedSize = null;
 
-        try {
-          const response = await fetch(`/wishlist/add/${productId}`, {
-            method: 'POST',
-            credentials: 'include',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ productId })
-          });
 
-          const data = await response.json();
+document.addEventListener("DOMContentLoaded", () => {
+  const wishlistBtn = document.querySelector('.wishlist-btn');
+  const heartIcon = wishlistBtn?.querySelector('i');
 
-          if (data.success) {
-            this.classList.add('bi-heart-fill', 'text-danger');
-            this.classList.remove('bi-heart');
-            this.setAttribute('title', 'Remove from Wishlist');
-            showToast(data.message, 'success');
-          } else if (data.message && data.message.includes('already')) {
-            const removeResponse = await fetch(`/wishlist/remove/${productId}`, {
-              method: 'DELETE',
-              credentials: 'include',
-              headers: { 'Content-Type': 'application/json' },
-            });
-            const removeData = await removeResponse.json();
+  if (!wishlistBtn) return;
 
-            if (removeData.success) {
-              this.classList.remove('bi-heart-fill', 'text-danger');
-              this.classList.add('bi-heart');
-              this.setAttribute('title', 'Add to Wishlist');
-              showToast('Removed from wishlist.', 'success');
-            } else {
-              showToast('Failed to remove from wishlist.', 'danger');
-            }
-          } else {
-            showToast(data.message || 'Something went wrong.', 'danger');
-          }
-        } catch (err) {
-          console.error('Wishlist error:', err);
-          showToast('Network error. Please try again.', 'danger');
-        }
+  wishlistBtn.addEventListener('click', async () => {
+    const productId = wishlistBtn.dataset.id;
+
+    const activeOption = document.querySelector('.size-option.active');
+    if (!activeOption) {
+      Swal.fire({
+        icon: "error",
+        title: "Select Size",
+        text: "Please select a size before adding to wishlist.",
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 1500,
       });
-    });
+      return;
+    }
+
+    const selectedSize = activeOption.textContent.trim();
+    const stock = parseInt(activeOption.dataset.stock || 0);
+
+    if (stock <= 0) {
+      Swal.fire({
+        icon: "error",
+        title: "Out of Stock",
+        text: "This size is currently out of stock.",
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 1500,
+      });
+      return;
+    }
+
+    try {
+      const isInWishlist = heartIcon.classList.contains('bi-heart-fill');
+
+      if (!isInWishlist) {
+        const res = await fetch(`/wishlist/add/${productId}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ productId, size: selectedSize })
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          heartIcon.classList.remove("bi-heart");
+          heartIcon.classList.add("bi-heart-fill", "text-danger");
+          Swal.fire({
+            icon: "success",
+            title: "Added to Wishlist",
+            toast: true,
+            position: "top-end",
+            showConfirmButton: false,
+            timer: 1200,
+          });
+        } else if (data.message?.includes("already")) {
+          Swal.fire({
+            icon: "info",
+            title: "Already in Wishlist",
+            toast: true,
+            position: "top-end",
+            showConfirmButton: false,
+            timer: 1200,
+          });
+        } else {
+          Swal.fire({
+            icon: "error",
+            title: "Error",
+            text: data.message || "Failed to add to wishlist.",
+            toast: true,
+            position: "top-end",
+            showConfirmButton: false,
+            timer: 1500,
+          });
+        }
+      } else {
+        const res = await fetch(`/wishlist/remove/${productId}`, {
+          method: "DELETE",
+          credentials: "include",
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          heartIcon.classList.remove("bi-heart-fill", "text-danger");
+          heartIcon.classList.add("bi-heart");
+          Swal.fire({
+            icon: "success",
+            title: "Removed from Wishlist",
+            toast: true,
+            position: "top-end",
+            showConfirmButton: false,
+            timer: 1200,
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Wishlist Error:", error);
+      Swal.fire({
+        icon: "error",
+        title: "Server Error",
+        text: "Something went wrong. Please try again later.",
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 1500,
+      });
+    }
+  });
+});
 
  document.addEventListener("DOMContentLoaded", function() {
   const offerButtons = document.querySelectorAll('[data-bs-target="#offerModal"]');

@@ -10,12 +10,43 @@ const createProductOffer = async (req, res) => {
       return res.json({ success: false, message: 'All fields are required' });
     }
 
+    if (discountType === "percentage" && discountValue > 80) {
+      return res.json({
+        success: false,
+        message: "Percentage discount cannot exceed 80%.",
+      });
+    }
+
+    if (discountType === "flat" && discountValue > 2000) {
+      return res.json({
+        success: false,
+        message: "Flat discount cannot exceed ₹2000.",
+      });
+    }
+
+    if (discountValue <= 0) {
+      return res.json({
+        success: false,
+        message: "Discount value must be greater than zero.",
+      });
+    }
+
+    const end = new Date(endDate);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (isNaN(end.getTime()) || end < today) {
+      return res.json({
+        success: false,
+        message: 'End date must be today or a future date.',
+      });
+    }
+
     const product = await Product.findById(productId);
     if (!product) {
       return res.json({ success: false, message: 'Product not found' });
     }
 
-    // Store the base discount before applying offer
     const baseDiscountPrice = product.discountPrice && product.discountPrice < product.price
       ? product.discountPrice
       : product.price;
@@ -63,6 +94,39 @@ const createProductOffer = async (req, res) => {
 const createCategoryOffer = async (req, res) => {
   try {
     const { title, categoryId, discountType, discountValue, startDate, endDate } = req.body;
+
+
+        if (discountType === "percentage" && discountValue > 80) {
+      return res.json({
+        success: false,
+        message: "Percentage discount cannot exceed 80%.",
+      });
+    }
+
+    if (discountType === "flat" && discountValue > 2000) {
+      return res.json({
+        success: false,
+        message: "Flat discount cannot exceed ₹2000.",
+      });
+    }
+
+    if (discountValue <= 0) {
+      return res.json({
+        success: false,
+        message: "Discount value must be greater than zero.",
+      });
+    }
+
+     const end = new Date(endDate);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (isNaN(end.getTime()) || end < today) {
+      return res.json({
+        success: false,
+        message: 'End date must be today or a future date.',
+      });
+    }
 
     const category = await Category.findById(categoryId);
     if (!category) {
@@ -204,17 +268,17 @@ const removeProductOffer = async (req, res) => {
       return res.status(404).json({ success: false, message: "Product not found." });
     }
 
-    // Find and delete the offer related to this product
     const offer = await Offer.findOne({ offerType: "product", product: productId });
     if (offer) {
       await offer.deleteOne();
     }
 
-    // Restore previous discount if available
-    if (product.previousDiscountPrice && product.previousDiscountPrice < product.price) {
+    if (product.previousDiscountPrice && product.previousDiscountPrice > 0) {
       product.discountPrice = product.previousDiscountPrice;
+    } else if (product.discountPrice && product.discountPrice > 0) {
+      product.discountPrice = product.discountPrice;
     } else {
-      product.discountPrice = product.price;
+      product.discountPrice = product.price; 
     }
 
     product.offerApplied = null;
@@ -228,9 +292,13 @@ const removeProductOffer = async (req, res) => {
     });
   } catch (error) {
     console.error("Error removing product offer:", error);
-    return res.status(500).json({ success: false, message: "Server error removing offer." });
+    return res.status(500).json({
+      success: false,
+      message: "Server error removing offer.",
+    });
   }
 };
+
 
 
 module.exports = {

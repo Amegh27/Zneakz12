@@ -652,22 +652,20 @@
       <input type="hidden" id="categoryId" />
 
       <label class="form-label">Title</label>
-      <input type="text" id="offerTitle" class="form-control" required />
+      <input type="text" id="offerTitle" class="form-control"  />
 
       <label class="form-label">Discount Type</label>
-      <select id="discountType" class="form-control" required>
+      <select id="discountType" class="form-control" >
         <option value="percentage">Percentage</option>
         <option value="flat">Flat</option>
       </select>
 
       <label class="form-label">Discount Value</label>
-      <input type="number" id="discountValue" class="form-control" required />
+      <input type="number" id="discountValue" class="form-control"  />
 
-      <label class="form-label">Start Date</label>
-      <input type="date" id="startDate" class="form-control" required />
 
       <label class="form-label">End Date</label>
-      <input type="date" id="endDate" class="form-control" required />
+      <input type="date" id="endDate" class="form-control"  />
 
       <div>
         <button type="submit" class="btn btn-primary">Save Offer</button>
@@ -870,7 +868,6 @@
     document.getElementById("offerModal").style.display = "flex";
   }
 
-  // Close Offer Modal
   function closeOfferModal() {
     document.getElementById("offerModal").style.display = "none";
   }
@@ -883,9 +880,38 @@
       categoryId: document.getElementById("categoryId").value,
       discountType: document.getElementById("discountType").value,
       discountValue: parseFloat(document.getElementById("discountValue").value),
-      startDate: document.getElementById("startDate").value,
       endDate: document.getElementById("endDate").value,
     };
+
+
+    if (!discountValue || discountValue <= 0) {
+    return Swal.fire({ icon: "warning", title: "Invalid Discount", text: "Please enter a valid discount amount." });
+  }
+
+  if (discountType === "percentage" && discountValue > 80) {
+    return Swal.fire({
+      icon: "error",
+      title: "Too High!",
+      text: "Percentage discount cannot exceed 80%.",
+    });
+  }
+
+  if (discountType === "flat" && discountValue > 2000) {
+    return Swal.fire({
+      icon: "error",
+      title: "Too High!",
+      text: "Flat discount cannot exceed ₹2000.",
+    });
+  }
+
+  if (!endDate) {
+    return Swal.fire({
+      icon: "warning",
+      title: "Missing Date",
+      text: "Please select an end date for the offer.",
+    });
+  }
+
 
     try {
       const res = await fetch("/admin/category-offer", {
@@ -936,6 +962,8 @@
     }
   }
 }
+
+
 
   </script>
 </body>

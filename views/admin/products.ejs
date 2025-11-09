@@ -407,7 +407,14 @@
 
         <div class="mb-3">
           <label class="form-label fw-semibold">End Date</label>
-          <input type="date" name="endDate" class="form-control" required>
+<input 
+  type="date" 
+  name="endDate" 
+  class="form-control" 
+  id="offerEndDate"
+  min="<%= new Date().toISOString().split('T')[0] %>"
+  
+>
         </div>
 
         <div class="modal-footer border-0">
@@ -450,58 +457,66 @@
       document.getElementById('createProductOfferLabel').textContent = `Add Offer for ${productName}`;
     });
   }
-  document.getElementById('productOfferForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const formData = Object.fromEntries(new FormData(e.target).entries());
+ document.getElementById('productOfferForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
 
-    try {
-      const response = await fetch('/admin/product-offer', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
-      });
-      const result = await response.json();
+  const formData = Object.fromEntries(new FormData(e.target).entries());
+  const discountType = formData.discountType;
+  const discountValue = parseFloat(formData.discountValue);
+  const endDate = formData.endDate;
 
-      if (result.success) {
-        Swal.fire('Success', result.message, 'success').then(() => location.reload());
-      } else {
-        Swal.fire('Error', result.message, 'error');
-      }
-    } catch (error) {
-      console.error('Error adding offer:', error);
-      Swal.fire('Error', 'Server error adding offer', 'error');
-    }
-  });
-
-  async function removeProductOffer(productId) {
-    Swal.fire({
-      title: 'Remove this product offer?',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonText: 'Yes, remove it',
-      cancelButtonText: 'Cancel'
-    }).then(async (result) => {
-      if (result.isConfirmed) {
-        try {
-      const response = await fetch(`/admin/remove-product-offer/${productId}`, {
-  method: 'DELETE'
-});
-
-
-          const result = await response.json();
-
-          if (result.success) {
-            Swal.fire('Removed!', result.message, 'success').then(() => location.reload());
-          } else {
-            Swal.fire('Error', result.message, 'error');
-          }
-        } catch (error) {
-          console.error('Error removing offer:', error);
-          Swal.fire('Error', 'Server error removing offer', 'error');
-        }
-      }
+  // 🚨 Frontend Validation
+  if (!discountValue || discountValue <= 0) {
+    return Swal.fire({
+      icon: "warning",
+      title: "Invalid Discount",
+      text: "Please enter a valid discount amount.",
     });
   }
+
+  if (discountType === "percentage" && discountValue > 80) {
+    return Swal.fire({
+      icon: "error",
+      title: "Too High!",
+      text: "Percentage discount cannot exceed 80%.",
+    });
+  }
+
+  if (discountType === "flat" && discountValue > 2000) {
+    return Swal.fire({
+      icon: "error",
+      title: "Too High!",
+      text: "Flat discount cannot exceed ₹2000.",
+    });
+  }
+
+  if (!endDate) {
+    return Swal.fire({
+      icon: "warning",
+      title: "Missing End Date",
+      text: "Please select a valid end date.",
+    });
+  }
+
+  try {
+    const response = await fetch('/admin/product-offer', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(formData)
+    });
+
+    const result = await response.json();
+
+    if (result.success) {
+      Swal.fire('Success', result.message, 'success').then(() => location.reload());
+    } else {
+      Swal.fire('Error', result.message, 'error');
+    }
+  } catch (error) {
+    console.error('Error adding offer:', error);
+    Swal.fire('Error', 'Server error adding offer', 'error');
+  }
+});
 </script>
 
 <%- include("../partials/admin/footer") %>
