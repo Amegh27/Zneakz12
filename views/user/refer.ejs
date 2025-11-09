@@ -198,13 +198,16 @@
       </div>
     </div>
 
-    <!-- Centered Referral Section -->
     <div class="col-lg-9 d-flex justify-content-center align-items-center">
       <div class="referral-section">
         <h2><i class="bi bi-megaphone-fill me-2"></i> Refer & Earn</h2>
         <p>Invite your friends to join ZNEAKZ and earn <strong>₹100</strong> for each successful signup!</p>
 
         <div class="referral-box">
+           <!-- <div class="referral-link-group">
+            <input type="text" id="referralLink" readonly value="https://zneakz.com/signup?ref=<%= user.referralCode %>">
+            <button id="copyReferralBtn"><i class="bi bi-clipboard"></i> Copy</button>
+          </div> -->
           <div class="referral-code">Your Code: <%= user.referralCode %></div>
           <div class="referral-reward">Share this code with friends and earn instantly in your wallet!</div>
         </div>

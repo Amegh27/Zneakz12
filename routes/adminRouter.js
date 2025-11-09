@@ -70,6 +70,9 @@ router.post('/coupons/create', couponController.createCoupon);
 router.get('/coupons/delete/:id', couponController.deleteCoupon);
 router.get('/coupons/toggle/:id', couponController.toggleCouponStatus);
 
-
+// sales-report
+router.get("/sales-report",  adminController.getSalesReport);
+router.get("/sales-report/excel", adminController.downloadExcel);
+router.get("/sales-report/pdf", adminController.downloadPDF);
 
 module.exports = router
