@@ -9,7 +9,7 @@ const productController = require('../controllers/admin/productController')
 const orderController = require('../controllers/admin/orderController')
 const offerController = require('../controllers/admin/offerController')
 const couponController = require('../controllers/admin/couponController')
-
+const dashboardController = require('../controllers/admin/dashboardController')
 router.get('/pageError',adminController.pageError)
 // Login management
 router.get("/admin-login",adminController.loadLogin)
@@ -75,4 +75,11 @@ router.get("/sales-report",  adminController.getSalesReport);
 router.get("/sales-report/download-excel", adminController.downloadExcel);
 router.get("/sales-report/download-pdf", adminController.downloadPDF);
 
+
+
+// dashboard
+router.get("/dashboard", dashboardController.renderDashboard);
+router.get("/sales-data", dashboardController.getSalesData);
+router.get("/best-products", dashboardController.getBestSellingProducts);
+router.get("/best-categories", dashboardController.getBestSellingCategories);
 module.exports = router

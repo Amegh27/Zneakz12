@@ -847,11 +847,22 @@
         body: JSON.stringify({ addressId: selectedAddressId })
       });
       const data = await res.json();
-      if (data.success) {
-        window.location.href = data.redirect;
-      } else {
-        Swal.fire({ icon: 'error', title: 'Order Failed', text: data.message || 'Something went wrong.' });
-      }
+    if (data.success) {
+  window.location.href = data.redirect;
+} else {
+  Swal.fire({
+    toast: true,
+    position: "top-end",
+    icon: data.message.includes("Cash on Delivery")
+      ? "warning"
+      : "error",
+    title: data.message || "Something went wrong.",
+    showConfirmButton: false,
+    timer: 3000,
+    timerProgressBar: true,
+  });
+}
+
     } catch (err) {
       console.error(err);
       Swal.fire({ icon: 'error', title: 'Server Error', text: 'Unable to place order.' });

@@ -48,7 +48,6 @@ const checkoutPage = async (req, res) => {
     const tax = subtotal * taxRate;
     const shipping = 50;
 
-    // 🧩 Coupon application logic
     let discountAmount = 0;
     let appliedCoupon = null;
 
@@ -61,7 +60,6 @@ const checkoutPage = async (req, res) => {
         discountAmount = appliedCoupon.discountValue;
       }
 
-      // cap discount to subtotal
       if (discountAmount > subtotal) discountAmount = subtotal;
     }
 
@@ -141,13 +139,19 @@ const placeOrder = async (req, res) => {
     const shipping = 50;
     let totalAmount = subtotal + tax + shipping - discountAmount;
 
-    // ✅ Step 1: Check if user wants to use wallet
+    // 🚫 COD Restriction: prevent COD above ₹1000
+    if (!useWallet && totalAmount > 1000) {
+      return res.json({
+        success: false,
+        message: "Cash on Delivery is not available for orders above ₹1000.",
+      });
+    }
+
     let walletUsed = 0;
     if (useWallet && user.wallet && user.wallet.balance > 0) {
       walletUsed = Math.min(user.wallet.balance, totalAmount);
       totalAmount -= walletUsed;
 
-      // Deduct from wallet immediately
       user.wallet.balance -= walletUsed;
       user.wallet.transactions.push({
         type: "debit",
@@ -159,7 +163,6 @@ const placeOrder = async (req, res) => {
       await user.save();
     }
 
-    // 🟢 Existing stock check logic — keep as is
     for (let item of cart.items) {
       const product = await Product.findById(item.product._id);
       if (product) {
@@ -177,12 +180,11 @@ const placeOrder = async (req, res) => {
       }
     }
 
-    // ✅ Step 2: Create the order as usual
     const newOrder = new Order({
       user: user._id,
       items: orderItems,
       address: selectedAddress,
-      paymentMethod: useWallet && totalAmount === 0 ? "Wallet" : "Cash on Delivery", // ✅ new condition
+      paymentMethod: useWallet && totalAmount === 0 ? "Wallet" : "Cash on Delivery", // ✅ unchanged
       totalAmount,
       status: "Placed",
       coupon: req.session.appliedCoupon
@@ -195,7 +197,6 @@ const placeOrder = async (req, res) => {
 
     await newOrder.save();
 
-    // 🟢 Empty cart and clear coupon
     cart.items = [];
     cart.total = 0;
     await cart.save();
@@ -210,6 +211,7 @@ const placeOrder = async (req, res) => {
     });
   }
 };
+
 
 
 
@@ -297,7 +299,6 @@ const couponCode = order.coupon?.code || null;
 
     const total = subtotal + tax + shipping - discount;
 
-    // Handle order status display
     let displayStatus = order.status;
     if (order.status === "Cancelled") {
       displayStatus = "Cancelled";
@@ -343,7 +344,6 @@ const cancelOrder = async (req, res) => {
     if (order.status === "Cancelled")
       return res.json({ success: false, message: "Order already cancelled" });
 
-    // ✅ Restore stock
     for (const item of order.items) {
       const product = await Product.findById(item.product._id);
       if (product) {
@@ -353,7 +353,6 @@ const cancelOrder = async (req, res) => {
       }
     }
 
-    // ✅ Refund wallet only if Razorpay
     if (order.paymentMethod === "Razorpay") {
       const user = await User.findById(userId);
       if (!user.wallet) {
@@ -372,7 +371,6 @@ const cancelOrder = async (req, res) => {
       await user.save();
     }
 
-    // ✅ Mark order as cancelled
     order.status = "Cancelled";
     order.items.forEach((i) => (i.status = "Cancelled"));
     await order.save();
@@ -422,7 +420,6 @@ const cancelItem = async (req, res) => {
       });
     }
 
-    // ✅ Restore stock
     const product = await Product.findById(item.product._id);
     if (product) {
       const sizeIndex = product.sizes.findIndex((s) => s.size === item.size);
@@ -432,7 +429,6 @@ const cancelItem = async (req, res) => {
       }
     }
 
-    // ✅ Refund wallet if Razorpay payment
     if (order.paymentMethod === "Razorpay") {
       const user = await User.findById(userId);
       if (!user.wallet) {
@@ -452,7 +448,6 @@ const cancelItem = async (req, res) => {
       await user.save();
     }
 
-    // ✅ Update item & order status
     item.status = "Cancelled";
 
     const allCancelled = order.items.every((i) => i.status === "Cancelled");
@@ -496,7 +491,6 @@ const downloadInvoice = async (req, res) => {
     doc.setFont(mainFont, "normal");
     doc.setFontSize(mainSize);
 
-    // ====== HEADER ======
     doc.setFont(mainFont, "bold");
     doc.setFontSize(20);
     doc.text("ZNEAKZ", 105, 20, { align: "center" });
@@ -508,13 +502,11 @@ const downloadInvoice = async (req, res) => {
     doc.setLineWidth(0.5);
     doc.line(14, 34, 196, 34);
 
-    // ====== ORDER DETAILS ======
     doc.setFontSize(mainSize);
     doc.text(`Order ID: ${order.orderID}`, 14, 44);
     doc.text(`Date: ${new Date(order.createdAt).toLocaleDateString()}`, 14, 50);
     doc.text(`Payment Method: ${order.paymentMethod}`, 14, 56);
 
-    // ====== SHIPPING ADDRESS ======
     doc.setFont(mainFont, "bold");
     doc.text("Shipping Address:", 14, 68);
     doc.setFont(mainFont, "normal");
@@ -525,7 +517,6 @@ const downloadInvoice = async (req, res) => {
 ${address.city || ""}, ${address.state || ""} - ${address.pincode || ""}`;
     doc.text(shippingText.split("\n"), 14, 74);
 
-    // ====== TABLE HEADER ======
     let y = 95;
     doc.setFont(mainFont, "bold");
     doc.setFillColor(230, 230, 230);
@@ -535,7 +526,6 @@ ${address.city || ""}, ${address.state || ""} - ${address.pincode || ""}`;
     doc.text("Price (Rs)", 140, y);
     doc.text("Total (Rs)", 170, y);
 
-    // ====== TABLE BODY ======
     doc.setFont(mainFont, "normal");
     y += 7;
 
@@ -592,13 +582,11 @@ ${address.city || ""}, ${address.state || ""} - ${address.pincode || ""}`;
     doc.setFont(mainFont, "bold");
     doc.text(`Grand Total: Rs ${grandTotal.toFixed(2)}`, 14, y);
 
-    // ====== FOOTER ======
     y += 20;
     doc.setFont(mainFont, "italic");
     doc.setFontSize(10);
     doc.text("Thank you for shopping with ZNEAKZ!", 105, y, { align: "center" });
 
-    // ====== SAVE & SEND FILE ======
     const filename = `invoice-${order.orderID}.pdf`;
     const filePath = path.join(__dirname, "../../public/invoices", filename);
     fs.mkdirSync(path.dirname(filePath), { recursive: true });
@@ -680,6 +668,13 @@ const applyCoupon = async (req, res) => {
 
     const coupon = await Coupon.findOne({ code, isActive: true });
     if (!coupon) return res.json({ success: false, message: "Invalid coupon code." });
+
+    if (coupon.usedBy.includes(userId)) {
+      return res.json({
+        success: false,
+        message: "You’ve already used this coupon before.",
+      });
+    }
 
     if (new Date(coupon.expiryDate) < new Date())
       return res.json({ success: false, message: "Coupon expired." });
@@ -984,7 +979,7 @@ const payWithWallet = async (req, res) => {
     await Cart.deleteOne({ user: userId });
     delete req.session.appliedCoupon;
 
-    console.log("🎉 Order placed with wallet.");
+    console.log(" Order placed with wallet.");
 
     res.json({
       success: true,

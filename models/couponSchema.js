@@ -34,7 +34,9 @@ const couponSchema = new mongoose.Schema({
   isActive: {
     type: Boolean,
     default: true
-  }
+  },
+   usageLimit: { type: Number, default: 0 }, 
+  usedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
 });
 
 module.exports = mongoose.model('Coupon', couponSchema);

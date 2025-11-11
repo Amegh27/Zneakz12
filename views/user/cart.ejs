@@ -16,10 +16,52 @@
     th, td { padding: 15px; text-align: left; border-bottom: 1px solid #f0f0f0; vertical-align: middle; }
     .product-info { display: flex; align-items: center; gap: 15px; }
     .product-img { width: 80px; height: 80px; object-fit: cover; border-radius: 5px; }
-    .quantity-input { display: flex; align-items: center; border: 1px solid #e0e0e0; border-radius: 3px; width: 80px; }
-    .quantity-input input { width: 40px; border: none; text-align: center; padding: 8px 0; font-size: 14px; }
-    .quantity-input button { background: transparent; border: none; padding: 8px 10px; cursor: pointer; font-size: 14px; }
-    .quantity-input button:hover { background-color: #f5f5f5; }
+    .quantity-input {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  overflow: hidden;
+  width: 90px;
+  height: 36px;
+  background: #fff;
+}
+
+.quantity-input button {
+  background: #f8f8f8;
+  border: none;
+  width: 30px;
+  height: 100%;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  color: #333;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease;
+}
+
+.quantity-input button:hover {
+  background: #eaeaea;
+}
+
+.quantity-input input {
+  width: 35px;
+  height: 100%;
+  text-align: center;
+  border: none;
+  font-size: 15px;
+  font-weight: 500;
+  color: #333;
+  outline: none;
+  background: transparent;
+  margin: 0;
+  padding: 0;
+}
+
   </style>
 </head>
 <body>
@@ -34,6 +76,7 @@
       <thead>
         <tr>
           <th>Product</th>
+          <th>Size</th>
           <th>Price</th>
           <th>Quantity</th>
           <th>Total</th>
@@ -48,7 +91,10 @@
                 <img src="/uploads/products/<%= item.product.productImage[0] %>" class="product-img" alt="">
                 <div><strong><%= item.product.productName %></strong></div>
               </td>
+              <td><%= (item.size) %></td>
+
 <td>₹<%= (item.product.discountPrice || item.product.price).toFixed(0) %></td>
+
 <td>
   <% if(item.product.stock === 0){ %>
     <span class="badge bg-danger">Out of Stock</span>
@@ -210,27 +256,37 @@ document.querySelectorAll(".quantity-input").forEach(container => {
     }
   });
 
-  container.querySelector(".decrease-btn").addEventListener("click", async () => {
-    try {
-      const res = await fetch("/cart/update", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ productId, action: "decrease" })
-      });
-      const data = await res.json();
-      if (data.success) {
-        let newQty = parseInt(input.value) - 1;
-        if (newQty <= 0) {
-          container.closest("tr").remove();
-        } else {
-          input.value = newQty;
-        }
-        updateCartTotals();
-      }
-    } catch (err) {
-      console.error(err);
+container.querySelector(".decrease-btn").addEventListener("click", async () => {
+  try {
+    const currentQty = parseInt(input.value);
+    if (currentQty <= 1) {
+      // Swal.fire({
+      //   icon: "info",
+      //   title: "Minimum quantity is 1",
+      //   toast: true,
+      //   position: "top-end",
+      //   timer: 1200,
+      //   showConfirmButton: false
+      // });
+      return; 
     }
-  });
+
+    const res = await fetch("/cart/update", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ productId, action: "decrease" })
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      input.value = currentQty - 1;
+      updateCartTotals();
+    }
+  } catch (err) {
+    console.error(err);
+  }
+});
+
 });
 
 function updateCartTotals() {

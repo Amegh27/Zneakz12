@@ -163,7 +163,6 @@
         </ul>
       </div>
 
-      <!-- RIGHT -->
       <div class="nav-right">
         <a href="/wishlist" title="Wishlist"><i class="bi bi-heart"></i></a>
         <a href="/cart" title="Cart" class="position-relative">
@@ -186,7 +185,6 @@
         const res = await fetch("/cart/count");
         const text = await res.text();
 
-        // Ensure it's valid JSON (in case backend sends text/plain)
         let data;
         try {
           data = JSON.parse(text);
@@ -220,7 +218,6 @@
         const data = await res.json();
 
         if (data.success) {
-          // Update badge immediately
           const cartCountEl = document.getElementById("cartCount");
           const count = data.cartCount || 0;
           if (cartCountEl) {
