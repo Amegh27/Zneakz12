@@ -62,16 +62,14 @@ const createProductOffer = async (req, res) => {
     });
     await newOffer.save();
 
-    // Calculate offer discount
     let offerDiscountedPrice =
       discountType === 'percentage'
         ? product.price - (product.price * discountValue / 100)
         : product.price - discountValue;
 
-    // Take the better (lower) price between base and offer
     const finalPrice = Math.min(baseDiscountPrice, Math.floor(offerDiscountedPrice));
 
-    product.previousDiscountPrice = baseDiscountPrice; // ✅ keep old discount
+    product.previousDiscountPrice = baseDiscountPrice;
     product.discountPrice = Math.max(0, finalPrice);
     product.offerApplied = 'product';
     product.offer = newOffer._id;
@@ -96,7 +94,7 @@ const createCategoryOffer = async (req, res) => {
     const { title, categoryId, discountType, discountValue, startDate, endDate } = req.body;
 
 
-        if (discountType === "percentage" && discountValue > 80) {
+    if (discountType === "percentage" && discountValue > 80) {
       return res.json({
         success: false,
         message: "Percentage discount cannot exceed 80%.",
@@ -117,7 +115,7 @@ const createCategoryOffer = async (req, res) => {
       });
     }
 
-     const end = new Date(endDate);
+    const end = new Date(endDate);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
@@ -143,6 +141,15 @@ const createCategoryOffer = async (req, res) => {
       endDate,
     });
     await offer.save();
+    category.offer = {
+      offerId: offer._id,
+      title: offer.title,
+      discountType: offer.discountType,
+      discountValue: offer.discountValue,
+      endDate: offer.endDate
+    };
+    await category.save();
+
 
     const products = await Product.find({ category: categoryId });
 
@@ -195,6 +202,7 @@ const removeOffer = async (req, res) => {
         await product.save();
       }
     } else if (offer.offerType === 'category') {
+      await Category.findByIdAndUpdate(offer.category, { $unset: { offer: 1 } });
       const products = await Product.find({ category: offer.category });
       for (const product of products) {
         product.discountPrice = 0;
@@ -236,7 +244,6 @@ const assignProductOffer = async (req, res) => {
       return res.status(404).json({ success: false, message: "Product not found." });
     }
 
-    // ✅ Calculate the new discounted price based on offer type
     let discountedPrice = product.price;
     if (offer.discountType === 'percentage') {
       discountedPrice = product.price - (product.price * offer.discountValue / 100);
@@ -278,7 +285,7 @@ const removeProductOffer = async (req, res) => {
     } else if (product.discountPrice && product.discountPrice > 0) {
       product.discountPrice = product.discountPrice;
     } else {
-      product.discountPrice = product.price; 
+      product.discountPrice = product.price;
     }
 
     product.offerApplied = null;

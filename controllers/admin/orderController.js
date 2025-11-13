@@ -1,5 +1,7 @@
 const Order = require("../../models/orderSchema");
 const Product = require("../../models/productSchema");
+const User = require("../../models/userSchema");
+
 
 const ALLOWED_STATUSES = [
   "Placed",
@@ -134,6 +136,43 @@ const getAllOrders = async (req, res) => {
   } catch (err) {
     console.error("Error fetching orders:", err);
     res.status(500).send("Server error");
+  }
+};
+
+const viewOrderDetails = async (req, res) => {
+  try {
+    const orderId = req.params.id;
+
+    const order = await Order.findById(orderId)
+      .populate("user", "name email phone")
+      .populate("items.product");
+
+    if (!order) return res.redirect("/admin/orders");
+
+    let subtotal = 0;
+    order.items.forEach(item => {
+      if (item.status !== "Cancelled") {
+        subtotal += item.price * item.quantity;
+      }
+    });
+
+    const tax = subtotal * 0.05;
+    const shipping = order.status === "Cancelled" ? 0 : 50;
+    const discount = order.coupon?.discountAmount || 0;
+    const total = subtotal + tax + shipping - discount;
+
+    res.render("orderDetails", {
+      order,
+      subtotal,
+      tax,
+      shipping,
+      discount,
+      total,
+    });
+
+  } catch (err) {
+    console.error("Admin viewOrderDetails error:", err);
+    res.redirect("/admin/orders");
   }
 };
 
@@ -336,6 +375,7 @@ const rejectReturn = async (req, res) => {
 
 module.exports = {
   getAllOrders,
+  viewOrderDetails,
   updateOrderStatus,
   updateItemStatus,
   viewReturns,

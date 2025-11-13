@@ -179,7 +179,6 @@ const editProduct = async (req, res) => {
       return res.status(404).send('Product not found');
     }
 
-    // Check duplicate product name
     const existingProduct = await Product.findOne({
       productName: data.productName.trim(),
       _id: { $ne: id },
@@ -221,17 +220,15 @@ if (data.size && data.stock) {
 }
 
 
-    // Prepare fields to update
     const updateFields = {
       productName: data.productName.trim(),
       description: data.description,
-      quantity: totalQuantity, // total stock calculated
+      quantity: totalQuantity,
       price: parseFloat(data.price) || 0,
       discountPrice: parseFloat(data.discountPrice) || parseFloat(data.price) || 0,
-      sizes, // updated sizes
+      sizes, 
     };
 
-    // Handle category
     if (data.category) {
       const categoryDoc = await Category.findOne({ name: data.category });
       if (!categoryDoc) {
@@ -240,12 +237,10 @@ if (data.size && data.stock) {
       updateFields.category = categoryDoc._id;
     }
 
-    // Merge new images
     if (newImages.length > 0) {
       updateFields.productImage = [...product.productImage, ...newImages];
     }
 
-    // Update the product
     await Product.findByIdAndUpdate(id, updateFields, { new: true });
 
     res.redirect('/admin/products');
@@ -263,10 +258,8 @@ const deleteSingleImage = async (req, res) => {
     const product = await Product.findById(productIdToServer);
     if (!product) return res.send({ status: false, message: 'Product not found' });
 
-    // Remove from DB
     await Product.findByIdAndUpdate(productIdToServer, { $pull: { productImage: imageNameToServer } });
 
-    // Remove file from disk
     const imagePath = path.join(__dirname, '../../public/uploads/products', imageNameToServer);
     if (fs.existsSync(imagePath)) {
       fs.unlinkSync(imagePath);

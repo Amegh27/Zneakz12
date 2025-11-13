@@ -92,20 +92,24 @@ const placeOrder = async (req, res) => {
     const userId = req.session.user;
     if (!userId) return res.json({ success: false, message: "Login required" });
 
-    const { addressIndex, useWallet } = req.body; 
+    const { addressId, useWallet } = req.body;
 
     const user = await User.findById(userId);
     if (!user || !user.address || user.address.length === 0) {
       return res.json({ success: false, message: "No address found" });
     }
 
-    const addr = user.address[addressIndex];
-    const selectedAddress = addr ? {
+    const addr = user.address.find(a => a._id.toString() === addressId);
+    if (!addr) {
+      return res.json({ success: false, message: "Selected address not found" });
+    }
+
+    const selectedAddress = {
       name: addr.name || "N/A",
       city: addr.city || "N/A",
       state: addr.state || "N/A",
       pincode: addr.pincode || "N/A"
-    } : {};
+    };
 
     const cart = await Cart.findOne({ user: userId }).populate("items.product");
     if (!cart || !cart.items.length)
@@ -118,14 +122,17 @@ const placeOrder = async (req, res) => {
       price: item.product.discountPrice || item.product.price,
     }));
 
-    let subtotal = orderItems.reduce(
+      const subtotal = orderItems.reduce(
       (sum, item) => sum + item.price * item.quantity,
       0
     );
 
     let discountAmount = 0;
+    let couponData = null;
+
     if (req.session.appliedCoupon) {
       const c = req.session.appliedCoupon;
+
       discountAmount =
         c.discountType === "percentage"
           ? (subtotal * c.discountValue) / 100
@@ -133,13 +140,19 @@ const placeOrder = async (req, res) => {
 
       if (c.maxDiscount && discountAmount > c.maxDiscount)
         discountAmount = c.maxDiscount;
+
+      couponData = {
+        code: c.code,
+        discountType: c.discountType,
+        discountValue: c.discountValue,
+        discountAmount,
+      };
     }
 
     const tax = subtotal * 0.05;
     const shipping = 50;
     let totalAmount = subtotal + tax + shipping - discountAmount;
 
-    // 🚫 COD Restriction: prevent COD above ₹1000
     if (!useWallet && totalAmount > 1000) {
       return res.json({
         success: false,
@@ -157,7 +170,7 @@ const placeOrder = async (req, res) => {
         type: "debit",
         amount: walletUsed,
         description: `Used ₹${walletUsed} for COD order payment`,
-        date: new Date()
+        date: new Date(),
       });
 
       await user.save();
@@ -184,15 +197,11 @@ const placeOrder = async (req, res) => {
       user: user._id,
       items: orderItems,
       address: selectedAddress,
-      paymentMethod: useWallet && totalAmount === 0 ? "Wallet" : "Cash on Delivery", // ✅ unchanged
+      paymentMethod: useWallet && totalAmount === 0 ? "Wallet" : "Cash on Delivery",
       totalAmount,
       status: "Placed",
-      coupon: req.session.appliedCoupon
-        ? {
-            code: req.session.appliedCoupon.code,
-            discountAmount: discountAmount,
-          }
-        : undefined,
+      coupon: couponData || undefined,
+
     });
 
     await newOrder.save();
@@ -211,6 +220,7 @@ const placeOrder = async (req, res) => {
     });
   }
 };
+
 
 
 
@@ -275,58 +285,74 @@ const viewOrderDetails = async (req, res) => {
     const orderId = req.params.id;
     if (!orderId) return res.redirect("/orders");
 
-    const order = await Order.findOne({ _id: orderId, user: userId })
-      .populate("items.product")
-
+    const order = await Order.findOne({ _id: orderId, user: userId }).populate("items.product");
     if (!order) return res.redirect("/orders");
 
+    // subtotal (exclude cancelled items)
     let subtotal = 0;
     let cancelledCount = 0;
-
     order.items.forEach(item => {
-      if (item.status === "Cancelled") {
-        cancelledCount++;
-      } else {
-        subtotal += item.price * item.quantity;
-      }
+      if (item.status === "Cancelled") cancelledCount++;
+      else subtotal += (item.price || 0) * (item.quantity || 0);
     });
 
-    const tax = subtotal * 0.05;
-    const shipping = 50;
+    const tax = +(subtotal * 0.05); // numeric
+    const shipping = (order.status === "Cancelled") ? 0 : 50;
 
- const discount = order.coupon?.discountAmount || 0;
-const couponCode = order.coupon?.code || null;
-
-    const total = subtotal + tax + shipping - discount;
-
-    let displayStatus = order.status;
-    if (order.status === "Cancelled") {
-      displayStatus = "Cancelled";
-    } else if (cancelledCount > 0 && cancelledCount < order.items.length) {
-      displayStatus = "Partially Cancelled";
+    // coupon - prefer stored discountAmount, but support other shapes
+    let discount = 0;
+    let couponCode = null;
+    if (order.coupon) {
+      couponCode = order.coupon.code || null;
+      if (typeof order.coupon.discountAmount === "number" && order.coupon.discountAmount > 0) {
+        discount = Number(order.coupon.discountAmount);
+      } else if (typeof order.coupon.discountValue === "number" && order.coupon.discountType === "percentage") {
+        discount = subtotal * (order.coupon.discountValue / 100);
+        if (order.coupon.maxDiscount && discount > order.coupon.maxDiscount) discount = order.coupon.maxDiscount;
+      } else if (typeof order.coupon.discountValue === "number" && order.coupon.discountType !== "percentage") {
+        discount = Number(order.coupon.discountValue);
+      }
     }
+
+    // round values to 2 decimals where useful
+    const subtotalRounded = Math.round(subtotal * 100) / 100;
+    const taxRounded = Math.round(tax * 100) / 100;
+    const shippingRounded = Math.round(shipping * 100) / 100;
+    const discountRounded = Math.round(discount * 100) / 100;
+
+    // total after discount
+    const total = Math.round((subtotalRounded + taxRounded + shippingRounded - discountRounded) * 100) / 100;
+
+    // status display logic
+    let displayStatus = order.status;
+    if (order.status === "Cancelled") displayStatus = "Cancelled";
+    else if (cancelledCount > 0 && cancelledCount < order.items.length) displayStatus = "Partially Cancelled";
 
     order.items.forEach(item => {
       item.displayStatus = item.status === "Cancelled" ? "Cancelled" : displayStatus;
     });
 
-    res.render("order-details", {  
+    // OPTIONAL: debug log to confirm coupon saved on order
+    console.log("Order coupon saved:", order.coupon);
+
+    // Pass server-calculated numbers to template and avoid calculating totals in EJS
+    res.render("order-details", {
       order,
-      subtotal,
-      tax,
-      shipping,
-      discount,
+      subtotal: subtotalRounded,
+      tax: taxRounded,
+      shipping: shippingRounded,
+      discount: discountRounded,
       couponCode,
       total,
       displayStatus,
       user: req.session.user
     });
-
   } catch (err) {
     console.error("Error fetching order details:", err);
     res.redirect("/orders");
   }
 };
+
 
 
 
@@ -551,7 +577,6 @@ ${address.city || ""}, ${address.state || ""} - ${address.pincode || ""}`;
       y += 7;
     });
 
-    // ====== SUMMARY ======
     const tax = subtotal * 0.05;
     const shipping = order.status === "Cancelled" ? 0 : 50;
     const discount = order.coupon?.discountAmount || 0;
@@ -701,7 +726,6 @@ const applyCoupon = async (req, res) => {
   }
 };
 
-// =================== REMOVE COUPON ===================
 const removeCoupon = (req, res) => {
   try {
     delete req.session.appliedCoupon;
@@ -711,7 +735,6 @@ const removeCoupon = (req, res) => {
   }
 };
 
-// =================== AVAILABLE COUPONS ===================
 const availableCoupons = async (req, res) => {
   try {
     const coupons = await Coupon.find({

@@ -60,10 +60,15 @@ const orderSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
-     coupon: {
+       coupon: {
       code: { type: String },
-      discountAmount: { type: Number, default: 0 }
+      discountType: { type: String },      
+      discountValue: { type: Number },     
+      discountAmount: { type: Number, default: 0 }, 
     },
+
+    walletUsed: { type: Number, default: 0 },
+
 
 
     status: {

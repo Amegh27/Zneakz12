@@ -577,17 +577,19 @@
   <h5>Order Summary</h5>
   <div class="card">
     <div class="card-body">
+<% if (cart && cart.items.length > 0) { %>
+  <% cart.items.forEach(item => { %>
+    <div class="d-flex justify-content-between border-bottom py-2">
+      <div>
+        <img src="/uploads/products/<%= item.product.productImage[0] %>" width="50" height="50">
+        <span><%= item.product.productName %> (x<%= item.quantity %>)</span>
+      </div>
+      <div>
+        ₹<%= ((item.product.discountPrice || item.product.price) * item.quantity).toFixed(0) %>
+      </div>
+    </div>
+  <% }) %>
 
-      <% if(cart && cart.items.length > 0) { %>
-        <% cart.items.forEach(item => { %>
-          <div class="d-flex justify-content-between border-bottom py-2">
-            <div>
-              <img src="/uploads/products/<%= item.product.productImage[0] %>" width="50" height="50">
-              <span><%= item.product.productName %> (x<%= item.quantity %>)</span>
-            </div>
-            <div>₹<%= (item.product.discountPrice || item.product.price) * item.quantity %></div>
-          </div>
-        <% }) %>
 
         <hr>
 
@@ -613,7 +615,7 @@
           <!-- Coupon Applied Message -->
           <% if (appliedCoupon) { %>
             <div class="alert alert-success py-2 mb-0">
-              Coupon <strong><%= appliedCoupon.code %></strong> applied! You saved ₹<%= discountAmount.toFixed(2) %>
+              Coupon <strong><%= appliedCoupon.code %></strong> applied! You saved ₹<%= discountAmount.toFixed(0) %>
             </div>
           <% } %>
         </div>
@@ -621,17 +623,17 @@
         <hr>
 
         <!-- Order Totals -->
-        <div class="d-flex justify-content-between"><span>Subtotal:</span><span>₹<%= subtotal %></span></div>
-        <div class="d-flex justify-content-between"><span>Tax (5%):</span><span>₹<%= tax.toFixed(2) %></span></div>
+        <div class="d-flex justify-content-between"><span>Subtotal:</span><span>₹<%= subtotal.toFixed(0) %></span></div>
+        <div class="d-flex justify-content-between"><span>Tax (5%):</span><span>₹<%= tax.toFixed(0) %></span></div>
         <div class="d-flex justify-content-between"><span>Shipping:</span><span>₹<%= shipping %></span></div>
         <% if (appliedCoupon) { %>
           <div class="d-flex justify-content-between text-success fw-semibold">
-            <span>Coupon Discount:</span><span>-₹<%= discountAmount.toFixed(2) %></span>
+            <span>Coupon Discount:</span><span>-₹<%= discountAmount.toFixed(0) %></span>
           </div>
         <% } %>
         <div class="d-flex justify-content-between mt-2">
           <strong>Total:</strong>
-          <strong>₹<%= finalTotal.toFixed(2) %></strong>
+          <strong>₹<%= finalTotal.toFixed(0) %></strong>
         </div>
         <div class="wallet-section mt-3">
 <div class="wallet-section mt-3">
@@ -925,6 +927,31 @@
       Swal.fire('Error', 'Server error applying coupon.', 'error');
     }
   });
+  document.getElementById('removeCouponBtn')?.addEventListener('click', async () => {
+  try {
+    const res = await fetch('/checkout/remove-coupon', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' }
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+      Swal.fire({
+        toast: true,
+        icon: 'success',
+        title: 'Coupon removed successfully',
+        position: 'top-end',
+        timer: 1500,
+        showConfirmButton: false
+      }).then(() => window.location.reload());
+    } else {
+      Swal.fire('Error', data.message || 'Failed to remove coupon', 'error');
+    }
+  } catch (err) {
+    Swal.fire('Error', 'Server error while removing coupon.', 'error');
+  }
+});
 
   document.getElementById("razorpayBtn").addEventListener("click", async () => {
   try {
@@ -1012,7 +1039,6 @@
     walletAppliedSpan.textContent = `₹${walletToUse.toFixed(0)}`;
     remainingAmountSpan.textContent = `₹${remaining.toFixed(2)}`;
 
-    // Update buttons
     placeOrderBtn.textContent = remaining > 0 ? 'Place Order (COD)' : 'Place Order';
     razorpayBtn.style.display = remaining > 0 ? 'block' : 'none';
     payWithWalletBtn.style.display = remaining === 0 ? 'block' : 'none';

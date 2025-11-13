@@ -230,7 +230,7 @@
   if (allCancelled) {
     displayStatus = "Cancelled";
   } else if (anyReturned) {
-    displayStatus = "Returned"; // ✅ top priority
+    displayStatus = "Returned";
   } else if (someCancelled && order.status === "Placed") {
     displayStatus = "Partially Cancelled";
   }

@@ -1,5 +1,6 @@
 const Coupon = require('../../models/couponSchema');
 
+// Get all coupons
 const getAllCoupons = async (req, res) => {
   try {
     const coupons = await Coupon.find().sort({ createdAt: -1 });
@@ -12,34 +13,95 @@ const getAllCoupons = async (req, res) => {
 
 const createCoupon = async (req, res) => {
   try {
-    const {
-      name,
-      code,
-      discountType,
-      discountValue,
-      minPurchase,
-      maxDiscount,
-      expiryDate,
-    } = req.body;
+    const { name, code, discountValue, minPurchase, expiryDate } = req.body;
 
-    const existing = await Coupon.findOne({ code });
-    if (existing) return res.status(400).send('Coupon code already exists');
+    if (!name || !code || !discountValue || !minPurchase || !expiryDate) {
+      return res.json({ success: false, message: 'All fields are required' });
+    }
+
+    if (discountValue < 1 || discountValue > 80) {
+      return res.json({
+        success: false,
+        message: 'Discount must be between 1% and 80%',
+      });
+    }
+
+    const existingCoupon = await Coupon.findOne({
+      $or: [{ name: name.trim() }, { code: code.trim().toUpperCase() }]
+    });
+    if (existingCoupon) {
+      return res.json({ success: false, message: 'Coupon with same name or code already exists' });
+    }
+
+    const now = new Date();
+    const exp = new Date(expiryDate);
+    if (exp < now.setHours(0, 0, 0, 0)) {
+      return res.json({ success: false, message: 'Expiry date cannot be in the past' });
+    }
 
     const coupon = new Coupon({
-      name,
-      code,
-      discountType,
+      name: name.trim(),
+      code: code.trim().toUpperCase(),
+      discountType: 'percentage',
       discountValue,
       minPurchase,
-      maxDiscount,
-      expiryDate,
+      expiryDate
     });
 
     await coupon.save();
-    res.redirect('/admin/coupons');
+    res.json({ success: true, message: 'Coupon created successfully!' });
   } catch (error) {
     console.error(error);
-    res.status(500).send('Error creating coupon');
+    res.json({ success: false, message: 'Server error while creating coupon' });
+  }
+};
+
+// Edit coupon
+const editCoupon = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, code, discountValue, minPurchase, expiryDate } = req.body;
+
+    if (discountValue < 1 || discountValue > 80) {
+  return res.json({
+    success: false,
+    message: 'Discount must be between 1% and 80%',
+  });
+}
+
+
+    const existingCoupon = await Coupon.findOne({
+      $or: [{ name: name.trim() }, { code: code.trim() }],
+      _id: { $ne: id } 
+    });
+    if (existingCoupon) {
+      return res.json({ success: false, message: 'Coupon with same name or code already exists' });
+    }
+
+    const now = new Date();
+    const exp = new Date(expiryDate);
+    if (exp < now.setHours(0, 0, 0, 0)) {
+      return res.json({ success: false, message: 'Expiry date cannot be in the past' });
+    }
+
+    const updated = await Coupon.findByIdAndUpdate(
+      id,
+      {
+        name: name.trim(),
+        code: code.trim().toUpperCase(),
+        discountValue,
+        minPurchase,
+        expiryDate
+      },
+      { new: true }
+    );
+
+    if (!updated) return res.json({ success: false, message: 'Coupon not found' });
+
+    return res.json({ success: true, message: 'Coupon updated successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: 'Server error while updating coupon' });
   }
 };
 
@@ -55,9 +117,10 @@ const deleteCoupon = async (req, res) => {
 
 const toggleCouponStatus = async (req, res) => {
   try {
-    const coupon = await Coupon.findById(req.params.id);
-    coupon.isActive = !coupon.isActive;
-    await coupon.save();
+   const coupon = await Coupon.findById(req.params.id);
+if (!coupon) return res.status(404).send('Coupon not found');
+coupon.isActive = !coupon.isActive;
+await coupon.save();
     res.redirect('/admin/coupons');
   } catch (error) {
     console.error(error);
@@ -65,51 +128,10 @@ const toggleCouponStatus = async (req, res) => {
   }
 };
 
-const applyCoupon = async (req, res) => {
-  try {
-    const { code, totalAmount } = req.body;
-
-    const coupon = await Coupon.findOne({ code, isActive: true });
-    if (!coupon) return res.json({ success: false, message: 'Invalid coupon code' });
-
-    const now = new Date();
-    if (coupon.expiryDate < now)
-      return res.json({ success: false, message: 'Coupon expired' });
-
-    if (totalAmount < coupon.minPurchase)
-      return res.json({
-        success: false,
-        message: `Minimum purchase of ₹${coupon.minPurchase} required`,
-      });
-
-    let discount = 0;
-    if (coupon.discountType === 'percentage') {
-      discount = (coupon.discountValue / 100) * totalAmount;
-    } else if (coupon.discountType === 'flat') {
-      discount = coupon.discountValue;
-    }
-
-    if (discount > coupon.maxDiscount) discount = coupon.maxDiscount;
-
-    const newTotal = totalAmount - discount;
-
-    return res.json({
-      success: true,
-      code: coupon.code,
-      discount,
-      newTotal,
-      message: 'Coupon applied successfully',
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, message: 'Server error' });
-  }
-};
-
 module.exports = {
   getAllCoupons,
   createCoupon,
+  editCoupon,
   deleteCoupon,
-  toggleCouponStatus,
-  applyCoupon,
+  toggleCouponStatus
 };

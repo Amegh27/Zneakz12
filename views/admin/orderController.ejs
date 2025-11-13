@@ -1,173 +1,185 @@
 <%- include('../partials/admin/header') %>
 
 <style>
-  /* ===== CSS Variables & Theme ===== */
   :root {
-    --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-    --dark-bg: #111;
-    --light-bg: #f8f6f6;
-    --card-bg: #ffffff;
-    --text-primary: #1a1a1a;
-    --text-secondary: #666;
-    --border-color: #e0e0e0;
-    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
-    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.12);
-    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.15);
-    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --primary: #000;
+    --primary-hover: #1a1a1a;
+    --light: #f8f9fa;
+    --border: #e9ecef;
+    --text: #212529;
+    --text-muted: #6c757d;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+    --shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
   }
 
   * {
-    transition: var(--transition);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   body {
-    background: var(--light-bg);
-    color: var(--text-primary);
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+    min-height: 100vh;
   }
 
-  /* ===== Container & Layout ===== */
   .container {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 2rem 1rem;
+    padding: 2.5rem 1rem;
   }
 
   /* ===== Header ===== */
   h2 {
-    font-size: 2rem;
-    font-weight: 700;
-    background: var(--primary-gradient);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    margin-bottom: 2rem;
-    letter-spacing: -0.5px;
+    color: var(--primary);
+    font-weight: 800;
+    letter-spacing: -1px;
+    margin-bottom: 2.5rem;
+    font-size: 2.5rem;
+    position: relative;
+    display: inline-block;
+  }
+
+  h2::after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    left: 0;
+    width: 60px;
+    height: 4px;
+    background: var(--primary);
+    border-radius: 2px;
   }
 
   /* ===== Search & Filter Form ===== */
   .search-filter-form {
-    background: var(--card-bg);
-    padding: 1.5rem;
-    border-radius: 12px;
+    background: white;
+    padding: 2rem;
+    border-radius: var(--radius-lg);
     box-shadow: var(--shadow-md);
-    margin-bottom: 2rem;
-    border: 1px solid var(--border-color);
+    margin-bottom: 2.5rem;
+    border: 1px solid var(--border);
   }
 
   .form-control,
   .form-select {
-    border: 1.5px solid var(--border-color);
-    border-radius: 8px;
-    padding: 0.75rem 1rem;
+    border: 2px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 0.875rem 1.25rem;
     font-size: 0.95rem;
-    background-color: #fafafa;
-    color: var(--text-primary);
-    transition: var(--transition);
-    margin-top: 10px;
+    background-color: #fafbfc;
+    color: var(--text);
+    transition: all 0.2s ease;
+    font-weight: 500;
   }
 
   .form-control:focus,
   .form-select:focus {
-    border-color: #667eea;
-    background-color: #fff;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    border-color: var(--primary);
+    box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.08);
     outline: none;
+    background-color: white;
   }
 
   .form-control::placeholder {
-    color: var(--text-secondary);
+    color: var(--text-muted);
+    font-weight: 400;
   }
 
   /* ===== Buttons ===== */
   .btn {
-    border-radius: 8px;
-    padding: 0.75rem 1.5rem;
-    font-weight: 600;
+    border-radius: var(--radius-sm);
+    padding: 0.875rem 1.75rem;
+    font-weight: 700;
     border: none;
     cursor: pointer;
-    transition: var(--transition);
-    position: relative;
-    overflow: hidden;
+    transition: all 0.2s ease;
+    font-size: 0.95rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    text-decoration: none;
   }
 
   .btn-dark {
-    background: var(--primary-gradient);
+    background: var(--primary);
     color: white;
-    box-shadow: var(--shadow-md);
-    margin-top: 10px;
+    box-shadow: var(--shadow-sm);
   }
 
   .btn-dark:hover {
+    background: var(--primary-hover);
     transform: translateY(-2px);
-    box-shadow: var(--shadow-lg);
+    box-shadow: var(--shadow-md);
+  }
+
+  .btn-dark:active {
+    transform: translateY(0);
   }
 
   .btn-outline-secondary {
-    border: 1.5px solid var(--border-color);
-    color: var(--text-primary);
-    background: transparent;
+    border: 2px solid var(--border);
+    color: var(--text);
+    background: white;
   }
 
   .btn-outline-secondary:hover {
-    background: #f5f5f5;
-    border-color: #667eea;
-    color: #667eea;
+    background: var(--primary);
+    border-color: var(--primary);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .btn-sm {
+    padding: 0.625rem 1.25rem;
+    font-size: 0.875rem;
   }
 
   /* ===== Empty State ===== */
   .empty-state {
-    background: var(--card-bg);
-    padding: 3rem 2rem;
-    border-radius: 12px;
+    background: white;
+    padding: 4rem 2rem;
+    border-radius: var(--radius-lg);
     box-shadow: var(--shadow-md);
     text-align: center;
-    border: 2px dashed var(--border-color);
+    border: 2px dashed var(--border);
   }
 
   .empty-state h5 {
-    color: var(--text-secondary);
-    font-size: 1.1rem;
+    color: var(--text-muted);
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0;
   }
 
   /* ===== Order Cards ===== */
   .order-card {
-    background: var(--card-bg);
-    border: 1px solid var(--border-color);
-    border-radius: 12px;
-    box-shadow: var(--shadow-md);
-    margin-bottom: 1.5rem;
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 2rem;
     overflow: hidden;
-    transition: var(--transition);
+    border-left: 5px solid var(--primary);
+    transition: all 0.3s ease;
   }
 
   .order-card:hover {
     box-shadow: var(--shadow-lg);
-    transform: translateY(-2px);
-    border-color: #667eea;
-  }
-
-  .order-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 3px;
-    background: var(--primary-gradient);
-    opacity: 0;
-    transition: var(--transition);
-  }
-
-  .order-card:hover::before {
-    opacity: 1;
+    transform: translateY(-4px);
+    border-left-width: 6px;
   }
 
   .card-header {
-    background: linear-gradient(135deg, #f5f7fa 0%, #f0f2f5 100%);
-    padding: 1.25rem;
-    border-bottom: 1px solid var(--border-color);
+    background: linear-gradient(135deg, #fafbfc 0%, #f8f9fa 100%);
+    padding: 1.5rem;
+    border-bottom: 2px solid var(--border);
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -175,124 +187,191 @@
     gap: 1rem;
   }
 
+  .card-header-info {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem;
+    flex: 1;
+  }
+
   .card-header strong {
-    color: var(--text-primary);
+    color: var(--primary);
     font-weight: 700;
+    font-size: 1rem;
   }
 
   .card-header small {
-    color: var(--text-secondary);
-    font-size: 0.85rem;
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+
+  .info-divider {
+    color: var(--border);
+    font-weight: 300;
   }
 
   .card-body {
-    padding: 1.5rem;
+    padding: 1.75rem;
   }
 
-  .badge {
-    padding: 0.5rem 1rem;
-    border-radius: 6px;
-    font-weight: 600;
-    font-size: 0.85rem;
+  h6 {
+    font-weight: 700;
+    color: var(--primary);
+    margin-top: 0;
+    margin-bottom: 1rem;
+    font-size: 1rem;
+    text-transform: uppercase;
     letter-spacing: 0.5px;
   }
 
-.bg-danger {
-  background: linear-gradient(135deg, #a90202 0%, #c80303 100%) !important;
-  color: #fff !important;
-}
+  /* ===== Status Badges ===== */
+  .badge {
+    padding: 0.5rem 1.25rem;
+    border-radius: 50px;
+    font-weight: 700;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .badge::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0.7;
+  }
+
+  .bg-danger {
+    background-color: #fee !important;
+    color: #c41e3a !important;
+  }
 
   .bg-success {
-    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%) !important;
+    background-color: #d4edda !important;
+    color: #155724 !important;
   }
 
   .bg-primary {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    background-color: #cfe2ff !important;
+    color: #084298 !important;
   }
 
   .bg-warning {
-    background: linear-gradient(135deg, #f0a910 0%, #edaf06 100%) !important;
-    color: white !important;
+    background-color: #fff3cd !important;
+    color: #997404 !important;
   }
 
   .bg-secondary {
-    background: linear-gradient(135deg, #05e177 0%, #39e305 100%) !important;
+    background-color: #e7f5e7 !important;
+    color: #1b5e20 !important;
   }
 
+  /* ===== Product List ===== */
   .list-group {
     border: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.875rem;
   }
-  .search-filter-form {
-  margin-bottom: 2.5rem;
-}
-
 
   .list-group-item {
-    background: #fafafa;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    margin-bottom: 0.75rem;
-    padding: 1rem;
-    transition: var(--transition);
-    border-left: 4px solid #667eea;
+    background: #fafbfc;
+    border: 2px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 1.25rem;
+    transition: all 0.2s ease;
+    border-left: 4px solid var(--primary);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
   }
 
   .list-group-item:hover {
-    background: #f5f5f5;
-    box-shadow: var(--shadow-sm);
-    transform: translateX(4px);
-  }
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 1rem;
-  overflow: visible; 
-}
-
-.card-header > div:last-child {
-  min-width: 150px;
-  flex-shrink: 0;
-}
-
-
-
-  .list-group-item strong {
-    color: var(--text-primary);
-    font-weight: 700;
-  }
-
-  .list-group-item small {
-    color: var(--text-secondary);
-    font-size: 0.85rem;
-  }
-
-  /* ===== Status Select ===== */
-  .status-update {
-    border: 1.5px solid var(--border-color);
-    border-radius: 6px;
-    padding: 0.5rem 0.75rem;
-    font-weight: 600;
     background: white;
-    cursor: pointer;
-    transition: var(--transition);
+    box-shadow: var(--shadow-sm);
+    border-color: var(--primary);
   }
 
-  .status-update:hover,
-  .status-update:focus {
-    border-color: #667eea;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  .product-info {
+    flex: 1;
+    min-width: 250px;
   }
 
-  /* ===== Total Amount ===== */
-  .total-amount {
-    font-size: 1.25rem;
+  .product-info strong {
+    color: var(--primary);
     font-weight: 700;
-    background: var(--primary-gradient);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    font-size: 1.05rem;
+    display: block;
+    margin-bottom: 0.5rem;
+  }
+
+  .product-details {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-top: 0.5rem;
+  }
+
+  .product-details small {
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  .product-status {
+    margin-top: 0.5rem;
+    padding: 0.375rem 0.875rem;
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    display: inline-block;
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+
+  .product-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-shrink: 0;
+  }
+
+  /* ===== Card Footer ===== */
+  .card-footer-custom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 1.5rem;
+    border-top: 2px solid var(--border);
+    margin-top: 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .total-amount {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .total-amount::before {
+    content: '₹';
+    font-size: 1.25rem;
+    opacity: 0.7;
   }
 
   /* ===== Pagination ===== */
@@ -300,35 +379,120 @@
     display: flex;
     gap: 0.5rem;
     justify-content: center;
-    margin-top: 2rem;
+    margin-top: 3rem;
+    flex-wrap: wrap;
+  }
+
+  .page-item {
+    list-style: none;
   }
 
   .page-item .page-link {
-    border: 1.5px solid var(--border-color);
-    border-radius: 6px;
-    color: var(--text-primary);
-    padding: 0.5rem 0.75rem;
-    transition: var(--transition);
+    border: 2px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--primary);
+    padding: 0.625rem 1rem;
+    transition: all 0.2s ease;
     cursor: pointer;
+    font-weight: 600;
+    text-decoration: none;
+    display: block;
+    min-width: 45px;
+    text-align: center;
   }
 
   .page-item .page-link:hover {
-    background: var(--primary-gradient);
+    background: var(--primary);
     color: white;
-    border-color: transparent;
+    border-color: var(--primary);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
   }
 
   .page-item.active .page-link {
-    background: var(--primary-gradient);
+    background: var(--primary);
     color: white;
-    border-color: transparent;
+    border-color: var(--primary);
+    box-shadow: var(--shadow-sm);
+  }
+
+  /* ===== Responsive Design ===== */
+  @media (max-width: 768px) {
+    .container {
+      padding: 1.5rem 1rem;
+    }
+
+    h2 {
+      font-size: 2rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .search-filter-form {
+      padding: 1.5rem;
+    }
+
+    .card-header {
+      flex-direction: column;
+      align-items: flex-start;
+      padding: 1.25rem;
+    }
+
+    .card-header-info {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.5rem;
+    }
+
+    .info-divider {
+      display: none;
+    }
+
+    .card-body {
+      padding: 1.25rem;
+    }
+
+    .list-group-item {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .product-actions {
+      width: 100%;
+    }
+
+    .product-actions .btn {
+      flex: 1;
+    }
+
+    .card-footer-custom {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .btn {
+      width: 100%;
+    }
+
+    .total-amount {
+      justify-content: center;
+    }
+  }
+
+  @media (max-width: 576px) {
+    .search-filter-form .d-flex {
+      flex-direction: column;
+    }
+
+    .search-filter-form .btn {
+      width: 100%;
+    }
   }
 
   /* ===== Animations ===== */
-  @keyframes slideInUp {
+  @keyframes fadeIn {
     from {
       opacity: 0;
-      transform: translateY(20px);
+      transform: translateY(10px);
     }
     to {
       opacity: 1;
@@ -337,230 +501,243 @@
   }
 
   .order-card {
-    animation: slideInUp 0.5s ease-out forwards;
+    animation: fadeIn 0.4s ease-out;
   }
 
   .order-card:nth-child(1) { animation-delay: 0.1s; }
   .order-card:nth-child(2) { animation-delay: 0.2s; }
   .order-card:nth-child(3) { animation-delay: 0.3s; }
-  .order-card:nth-child(n+4) { animation-delay: 0.4s; }
-
-  /* ===== Responsive ===== */
-  @media (max-width: 768px) {
-    h2 {
-      font-size: 1.5rem;
-    }
-
-    .card-header {
-      flex-direction: column;
-      align-items: flex-start;
-    }
-
-    .status-update {
-      width: 100%;
-    }
-
-    .search-filter-form .row {
-      flex-direction: column;
-    }
-
-    .search-filter-form .col-md-4,
-    .search-filter-form .col-md-3,
-    .search-filter-form .col-md-2 {
-      width: 100%;
-    }
-  }
 </style>
 
 <div class="container">
   <h2>Order Management</h2>
 
+  <!-- Search & Filter Form -->
   <form class="search-filter-form row g-3 align-items-end" method="GET" action="/admin/orders">
-  <div class="col-md-4">
-<input 
-  type="text" 
-  name="q" 
-  value="<%= q %>" 
-  placeholder="Search by Product Name" 
-  class="form-control"
-/>
+    <div class="col-md-5">
+      <label class="form-label" style="font-weight: 600; color: var(--text); margin-bottom: 0.5rem;">Search Products</label>
+      <input 
+        type="text" 
+        name="q" 
+        value="<%= q %>" 
+        placeholder="Enter product name..." 
+        class="form-control"
+      />
+    </div>
 
+    <div class="col-md-3">
+      <label class="form-label" style="font-weight: 600; color: var(--text); margin-bottom: 0.5rem;">Filter by Status</label>
+      <select name="status" class="form-select">
+        <option value="">All Status</option>
+        <% statuses.forEach(s => { %>
+          <option value="<%= s %>" <%= s===status?'selected':'' %>><%= s %></option>
+        <% }) %>
+      </select>
+    </div>
 
-  </div>
-
-  <div class="col-md-3">
-    <select name="status" class="form-select">
-      <option value="">All Status</option>
-      <% statuses.forEach(s => { %>
-        <option value="<%= s %>" <%= s===status?'selected':'' %>><%= s %></option>
-      <% }) %>
-    </select>
-  </div>
-
-  <div class="col-md-2 d-flex gap-2">
-    <button class="btn btn-dark flex-fill">Search</button>
-    <% if ((q && q.trim() !== "") || (status && status !== "")) { %>
-      <a href="/admin/orders" class="btn btn-outline-secondary flex-fill">Clear</a>
-    <% } %>
-  </div>
-</form>
-
+    <div class="col-md-4">
+      <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-dark flex-fill" style="margin-top: 10px;">
+          <span></span> Search
+        </button>
+        <% if ((q && q.trim() !== "") || (status && status !== "")) { %>
+          <a href="/admin/orders" class="btn btn-dark flex-fill" style="margin-top: 10px;">
+            <span></span> Clear
+          </a>
+        <% } %>
+      </div>
+    </div>
+  </form>
 
   <% if (orders.length === 0) { %>
     <div class="empty-state">
-      <h5>No orders found.</h5>
+      <h5>📦 No orders found</h5>
+      <p style="color: var(--text-muted); margin-top: 0.5rem;">Try adjusting your search filters</p>
     </div>
   <% } else { %>
     <% orders.forEach(order => { %>
       <div class="order-card">
+        <!-- Card Header -->
         <div class="card-header">
-          <div>
-            <strong>Order:</strong> <%= order.orderID %> | 
-            <small><%= new Date(order.createdAt).toLocaleString() %></small> |
-            <strong>User:</strong> <%= order.user?.name || 'N/A' %>
+          <div class="card-header-info">
+            <div>
+              <strong>Order:</strong> <span style="color: var(--text-muted);">#<%= order.orderID %></span>
+            </div>
+            <span class="info-divider">|</span>
+            <div>
+              <small>📅 <%= new Date(order.createdAt).toLocaleString() %></small>
+            </div>
+            <span class="info-divider">|</span>
+            <div>
+              <strong>Customer:</strong> <span style="color: var(--text-muted);"><%= order.user?.name || 'N/A' %></span>
+            </div>
           </div>
         </div>
 
-        <% 
-          let displayStatus = order.status;
-          if (order.items.some(item => item.status === 'Cancelled') && order.items.some(item => item.status !== 'Cancelled')) {
-            displayStatus = 'Partially Cancelled';
-          }
-        %>
+        <!-- Card Body -->
+        <div class="card-body">
+          <!-- Order Status -->
+          <% 
+            let displayStatus = order.status;
+            if (order.items.some(item => item.status === 'Cancelled') && order.items.some(item => item.status !== 'Cancelled')) {
+              displayStatus = 'Partially Cancelled';
+            }
+          %>
+          
+          <div style="margin-bottom: 1.5rem;">
+            <h6 style="display: inline-block; margin-right: 1rem;">Order Status</h6>
+            <span class="badge 
+              <%= displayStatus==='Cancelled' ? 'bg-danger' 
+              : displayStatus==='Delivered' ? 'bg-success' 
+              : displayStatus==='Shipped' ? 'bg-primary' 
+              : displayStatus==='Partially Cancelled' ? 'bg-warning' 
+              : 'bg-secondary' %>">
+              <%= displayStatus %>
+            </span>
+          </div>
 
-        <h6>Status: 
-          <span class="badge 
-            <%= displayStatus==='Cancelled' ? 'bg-danger' 
-            : displayStatus==='Delivered' ? 'bg-success' 
-            : displayStatus==='Shipped' ? 'bg-primary' 
-            : displayStatus==='Partially Cancelled' ? 'bg-warning' 
-            : 'bg-secondary' %>">
-            <%= displayStatus %>
-          </span>
-        </h6>
+          <!-- Products List -->
+          <h6>Products</h6>
+          <ul class="list-group">
+            <% order.items.forEach(item => { %>
+              <li class="list-group-item">
+                <div class="product-info">
+                  <strong><%= item.product?.productName || 'Product N/A' %></strong>
+                  <div class="product-details">
+                    <small><strong>Qty:</strong> <%= item.quantity %></small>
+                    <small><strong>Price:</strong> ₹<%= item.price.toFixed(0) %></small>
+                    <small><strong>Size:</strong> <%= item.size %></small>
+                  </div>
+                  <div class="product-status">
+                    <strong>Status:</strong> <%= item.status %>
+                    <% if (item.returnStatus && item.returnStatus !== 'None') { %>
+                      <span style="color: var(--text-muted);"> • </span>
+                      <strong>Return:</strong> <%= item.returnStatus %>
+                    <% } %>
+                  </div>
+                </div>
 
-        <h6 class="mt-3">Products</h6>
-        <ul class="list-group mb-3">
-       <% order.items.forEach(item => { %>
-  <li class="list-group-item d-flex justify-content-between align-items-center">
-    <div>
-      <strong><%= item.product?.productName %></strong>
-      <div><small>Qty: <%= item.quantity %> | ₹<%= item.price %> | Size: <%= item.size %></small></div>
-      <div>
-        <small>
-          Status: <%= item.status %>
-          <% if (item.returnStatus && item.returnStatus !== 'None') { %>
-            | Return: <%= item.returnStatus %>
-          <% } %>
-        </small>
-      </div>
-    </div>
+                <% if (item.status !== 'Cancelled' && (!item.returnStatus || item.returnStatus === 'None')) { %>
+                  <div class="product-actions">
+                  </div>
+                <% } %>
+              </li>
+            <% }) %>
+          </ul>
 
-    <!-- Status dropdown: only if item is not cancelled and not returned -->
-    <% if (item.status !== 'Cancelled' && (!item.returnStatus || item.returnStatus === 'None')) { %>
-  <div style="min-width:150px; flex-shrink:0;">
-    <select class="form-select form-select-sm item-status-update" 
-            data-order="<%= order._id %>" 
-            data-item="<%= item._id %>">
-
-      <% ['Placed', 'Shipped', 'Out for Delivery', 'Delivered'].forEach(s => { %>
-        <option value="<%= s %>" <%= s === item.status ? 'selected' : '' %>>
-          <%= s %>
-        </option>
-      <% }) %>
-
-    </select>
-  </div>
-<% } %>
-
-
-  </li>
-<% }) %>
-
-
-        </ul>
-
-        <div class="d-flex justify-content-between align-items-center">
-          <h6 class="total-amount">Total: ₹<%= order.totalAmount.toFixed(2) %></h6>
+          <!-- Card Footer -->
+          <div class="card-footer-custom">
+            <div class="total-amount">
+              <%= order.totalAmount.toFixed(0) %>
+            </div>
+            <a href="/admin/orders/<%= order._id %>" class="btn btn-dark btn-sm">
+              View Full Details →
+            </a>
+          </div>
         </div>
       </div>
     <% }) %>
   <% } %>
 
-  <nav aria-label="pages">
-    <ul class="pagination">
-      <% for (let i=1; i<=pages; i++) { %>
-        <li class="page-item <%= i===page ? 'active' : '' %>">
-          <a class="page-link" href="?page=<%= i %>&q=<%= q %>&status=<%= status %>"><%= i %></a>
-        </li>
-      <% } %>
-    </ul>
-  </nav>
+  <!-- Pagination -->
+  <% if (pages > 1) { %>
+    <nav aria-label="Order pages navigation">
+      <ul class="pagination">
+        <% for (let i=1; i<=pages; i++) { %>
+          <li class="page-item <%= i===page ? 'active' : '' %>">
+            <a class="page-link" href="?page=<%= i %>&q=<%= q %>&status=<%= status %>"><%= i %></a>
+          </li>
+        <% } %>
+      </ul>
+    </nav>
+  <% } %>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-  // Update individual item status
-  document.querySelectorAll('.item-status-update').forEach(sel => {
-    sel.addEventListener('change', async function() {
+  // Approve Return Handler
+  document.querySelectorAll('.approve-return').forEach(btn => {
+    btn.addEventListener('click', async function() {
       const orderId = this.dataset.order;
       const itemId = this.dataset.item;
-      const newStatus = this.value;
-
-      const confirm = await Swal.fire({
-        title: `Change item status to "${newStatus}"?`,
-        showCancelButton: true
-      });
-      if (!confirm.isConfirmed) {
-        this.value = this.querySelector('option[selected]')?.value || 'Placed';
-        return;
-      }
 
       try {
-        const res = await fetch(`/admin/orders/${orderId}/items/${itemId}/status`, {
+        const res = await fetch(`/admin/orders/${orderId}/items/${itemId}/return/approve`, { 
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ status: newStatus })
+          headers: {
+            'Content-Type': 'application/json'
+          }
         });
         const data = await res.json();
+        
         if (data.success) {
-          Swal.fire('Updated', data.message, 'success');
-          const small = sel.closest('.list-group-item').querySelector('small:last-child');
-          small.textContent = `Status: ${newStatus}`;
+          await Swal.fire({
+            icon: 'success',
+            title: 'Return Approved!',
+            text: 'The return request has been approved successfully.',
+            confirmButtonColor: '#000'
+          });
+          location.reload();
         } else {
-          Swal.fire('Error', data.message || 'Failed', 'error');
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: data.message || 'Something went wrong',
+            confirmButtonColor: '#000'
+          });
         }
-      } catch (err) {
-        console.error(err);
-        Swal.fire('Error', 'Something went wrong', 'error');
+      } catch (error) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'Failed to approve return request',
+          confirmButtonColor: '#000'
+        });
       }
     });
   });
 
-  document.querySelectorAll('.approve-return').forEach(btn => {
-  btn.addEventListener('click', async function() {
-    const orderId = this.dataset.order;
-    const itemId = this.dataset.item;
+  // Reject Return Handler
+  document.querySelectorAll('.reject-return').forEach(btn => {
+    btn.addEventListener('click', async function() {
+      const orderId = this.dataset.order;
+      const itemId = this.dataset.item;
 
-    const res = await fetch(`/admin/orders/${orderId}/items/${itemId}/return/approve`, { method: 'POST' });
-    const data = await res.json();
-    if (data.success) location.reload();
-    else Swal.fire('Error', data.message || 'Something went wrong', 'error');
+      try {
+        const res = await fetch(`/admin/orders/${orderId}/items/${itemId}/return/reject`, { 
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        const data = await res.json();
+        
+        if (data.success) {
+          await Swal.fire({
+            icon: 'success',
+            title: 'Return Rejected!',
+            text: 'The return request has been rejected.',
+            confirmButtonColor: '#000'
+          });
+          location.reload();
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: data.message || 'Something went wrong',
+            confirmButtonColor: '#000'
+          });
+        }
+      } catch (error) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'Failed to reject return request',
+          confirmButtonColor: '#000'
+        });
+      }
+    });
   });
-});
-
-document.querySelectorAll('.reject-return').forEach(btn => {
-  btn.addEventListener('click', async function() {
-    const orderId = this.dataset.order;
-    const itemId = this.dataset.item;
-
-    const res = await fetch(`/admin/orders/${orderId}/items/${itemId}/return/reject`, { method: 'POST' });
-    const data = await res.json();
-    if (data.success) location.reload();
-    else Swal.fire('Error', data.message || 'Something went wrong', 'error');
-  });
-});
-
-  
 </script>
+
 <%- include('../partials/admin/footer') %>

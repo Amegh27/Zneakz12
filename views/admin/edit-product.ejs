@@ -88,13 +88,16 @@
 
                         <div class="mb-4">
                             <label class="form-label">Category</label>
-                            <select class="form-select border" name="category" id="category">
-                                <% for (let i=0; i < cat.length; i++) { %>
-                                    <option value="<%= cat[i].name %>" <%= product.category === cat[i].name ? "selected" : "" %>>
-                                        <%= cat[i].name %>
-                                    </option>
-                                <% } %>
-                            </select>
+                      <select class="form-select border" name="category" id="category" required>
+  <% for (let i = 0; i < cat.length; i++) { %>
+    <option 
+      value="<%= cat[i]._id %>" 
+      <%= product.category.toString() === cat[i]._id.toString() ? "selected" : "" %>>
+      <%= cat[i].name %>
+    </option>
+  <% } %>
+</select>
+
                             <div id="category-error" class="error-message"></div>
                         </div>
 

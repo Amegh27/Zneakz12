@@ -46,6 +46,7 @@ router.get('/products/delete/:id', adminAuth, productController.softDeleteProduc
 // order management
 router.get("/orders", orderController.getAllOrders);
 router.post("/orders/:orderId/items/:itemId/status", orderController.updateItemStatus);
+router.get("/orders/:id", orderController.viewOrderDetails);
 
 // return management
 router.get('/return', orderController.viewReturns); 
@@ -69,6 +70,7 @@ router.get('/coupons', couponController.getAllCoupons);
 router.post('/coupons/create', couponController.createCoupon);
 router.get('/coupons/delete/:id', couponController.deleteCoupon);
 router.get('/coupons/toggle/:id', couponController.toggleCouponStatus);
+router.put('/coupons/edit/:id', couponController.editCoupon);
 
 // sales-report
 router.get("/sales-report",  adminController.getSalesReport);
@@ -82,4 +84,6 @@ router.get("/dashboard", dashboardController.renderDashboard);
 router.get("/sales-data", dashboardController.getSalesData);
 router.get("/best-products", dashboardController.getBestSellingProducts);
 router.get("/best-categories", dashboardController.getBestSellingCategories);
+
+
 module.exports = router

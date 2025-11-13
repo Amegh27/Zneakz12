@@ -304,7 +304,7 @@
                 </li>
 
                 <li class="menu-item logout-item">
-                <a class="menu-link btn-logout" href="/admin/logout" onclick="return confirmLogout()"> 
+                <a class="menu-link btn-logout" href="/admin/logout"> 
                     <i class="icon material-icons md-exit_to_app"></i>
                     <span class="text">LOGOUT</span>
                 </a>
@@ -328,44 +328,45 @@
         </header>
 
 
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-  function confirmLogout(event) {
-    event.preventDefault(); 
-    Swal.fire({
-      title: 'Logout Confirmation',
-      text: 'Are you sure you want to logout?',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#000',
-      cancelButtonColor: '#d33',
-      confirmButtonText: 'Yes, Logout',
-      cancelButtonText: 'Cancel',
-      background: '#fff',
-      customClass: {
-        title: 'fw-bold',
-        popup: 'rounded-3 shadow-lg',
-        confirmButton: 'px-4 py-2 rounded fw-semibold',
-        cancelButton: 'px-4 py-2 rounded fw-semibold'
-      }
-    }).then((result) => {
-      if (result.isConfirmed) {
-        Swal.fire({
-          icon: 'success',
-          title: 'Logged out successfully!',
-          showConfirmButton: false,
-          timer: 1000
-        }).then(() => {
-          window.location.href = '/admin/logout';
-        });
-      }
-    });
-  }
+document.addEventListener("DOMContentLoaded", function () {
+  const logoutBtn = document.querySelector(".btn-logout");
 
-  document.addEventListener("DOMContentLoaded", function() {
-    const logoutBtn = document.querySelector(".btn-logout");
-    if (logoutBtn) {
-      logoutBtn.addEventListener("click", confirmLogout);
+  if (!logoutBtn) return;
+
+  logoutBtn.addEventListener("click", async function (event) {
+    event.preventDefault(); 
+
+    const result = await Swal.fire({
+      title: "Logout Confirmation",
+      text: "Are you sure you want to logout?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#000",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes, Logout",
+      cancelButtonText: "Cancel",
+      background: "#fff",
+      customClass: {
+        title: "fw-bold",
+        popup: "rounded-3 shadow-lg",
+        confirmButton: "px-4 py-2 rounded fw-semibold",
+        cancelButton: "px-4 py-2 rounded fw-semibold",
+      },
+    });
+
+    if (result.isConfirmed) {
+      await Swal.fire({
+        icon: "success",
+        title: "Logged out successfully!",
+        showConfirmButton: false,
+        timer: 1000,
+        background: "#fff",
+      });
+      window.location.href = "/admin/logout";
     }
   });
+});
 </script>
 

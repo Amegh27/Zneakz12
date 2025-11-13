@@ -184,6 +184,95 @@
       background: #738096;
     }
 
+    .search-header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px 30px;
+  background: transparent;
+  box-shadow: none;
+  margin-bottom: 10px;
+}
+
+.search-form {
+  width: 100%;
+  max-width: 600px;
+}
+
+.search-group {
+  display: flex;
+  align-items: center;
+  border-radius: 50px;
+  overflow: hidden;
+  background-color: #fff;
+  border: 2px solid #e0e6ed;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.search-group:focus-within {
+  border-color: #000;
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.1);
+}
+
+.search-input {
+  flex: 1;
+  padding: 12px 18px;
+  border: none;
+  outline: none;
+  background: #f8f9fa;
+  font-size: 15px;
+  border-radius: 50px 0 0 50px;
+  transition: all 0.2s ease;
+}
+
+.search-btn {
+  background: #000;
+  color: #fff;
+  border: none;
+  padding: 12px 18px;
+  border-radius: 0 50px 50px 0;
+  transition: all 0.3s ease;
+}
+
+.search-btn:hover {
+  background: #333;
+}
+
+.clear-btn {
+  background: #e5e7eb;
+  color: #111;
+  font-weight: 600;
+  padding: 10px 14px;
+  border-radius: 50px;
+  margin-left: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border: none;
+  transition: all 0.2s ease;
+}
+
+.clear-btn:hover {
+  background: #000;
+  color: #fff;
+}
+
+@media (max-width: 768px) {
+  .search-form {
+    max-width: 100%;
+  }
+
+  .search-group {
+    flex-direction: row;
+    border-radius: 8px;
+  }
+
+  .search-btn,
+  .clear-btn {
+    border-radius: 0;
+  }
+}
+
     .table {
       width: 100%;
       border-collapse: collapse;
@@ -392,7 +481,6 @@
       transform: translateY(-2px);
     }
 
-    /* Modal Styles */
     .modal {
   position: fixed;
   top: 0;
@@ -523,24 +611,27 @@
         <h2 class="content-title">Category</h2>
       </div>
     </div>
-    <header class="card-header text-center mb-20" style="padding: 0 30px;">
-      <form action="/admin/category" method="get" class="d-inline">
-        <div class="input-group">
-          <input
-            type="text"
-            name="search"
-            class="form-control"
-            placeholder="Search categories"
-            value="<%= searchQuery || '' %>"
-          />
-          <button class="btn" type="submit">Search</button>
+    <header class="card-header search-header">
+  <form action="/admin/category" method="get" class="search-form">
+    <div class="input-group search-group">
+      <input
+        type="text"
+        name="search"
+        class="form-control search-input"
+        placeholder="Search categories..."
+        value="<%= searchQuery || '' %>"
+      />
+      <button class="btn btn-dark search-btn" type="submit">
+        <i class="fas fa-search"></i>
+      </button>
 
-          <% if (searchQuery && searchQuery.trim() !== '') { %>
-            <a href="/admin/category" class="btn">Clear</a>
-          <% } %>
-        </div>
-      </form>
-    </header>
+      <% if (searchQuery && searchQuery.trim() !== '') { %>
+        <a href="/admin/category" class="btn clear-btn">Clear</a>
+      <% } %>
+    </div>
+  </form>
+</header>
+
     <div class="card">
       <div class="card-body">
         <div class="row">
@@ -952,7 +1043,7 @@
   });
 
   if (confirmDelete.isConfirmed) {
-    const res = await fetch(`/admin/remove-offer/${offerId}`, { method: 'DELETE' });
+    const res = await fetch(`/admin/remove-category-offer/${offerId}`, { method: 'DELETE' });
     const result = await res.json();
 
     if (result.success) {
@@ -962,9 +1053,5 @@
     }
   }
 }
+ </script>
 
-
-
-  </script>
-</body>
-</html>

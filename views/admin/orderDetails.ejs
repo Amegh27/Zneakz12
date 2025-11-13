@@ -1,0 +1,700 @@
+<%- include('../partials/admin/header') %>
+
+<style>
+  :root {
+    --primary: #000;
+    --primary-hover: #1a1a1a;
+    --success: #10b981;
+    --success-light: #d1fae5;
+    --warning: #f59e0b;
+    --warning-light: #fef3c7;
+    --danger: #ef4444;
+    --danger-light: #fee2e2;
+    --light: #f8f9fa;
+    --border: #e9ecef;
+    --text: #212529;
+    --text-muted: #6c757d;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+    --shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+  }
+
+  * {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  body {
+    background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+    min-height: 100vh;
+  }
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2.5rem 1rem;
+  }
+
+  /* ===== Header ===== */
+  .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .page-header h2 {
+    color: var(--primary);
+    font-weight: 800;
+    letter-spacing: -1px;
+    font-size: 2.5rem;
+    position: relative;
+    display: inline-block;
+    margin: 0;
+  }
+
+  .page-header h2::after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    left: 0;
+    width: 60px;
+    height: 4px;
+    background: var(--primary);
+    border-radius: 2px;
+  }
+
+  /* ===== Main Card ===== */
+  .detail-card {
+    background: white;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    padding: 2.5rem;
+    margin-bottom: 2rem;
+    border: 1px solid var(--border);
+    animation: fadeIn 0.4s ease-out;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* ===== Section Headings ===== */
+  .section-heading {
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 1.5rem;
+    font-size: 1.25rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .section-heading::before {
+    content: '';
+    width: 4px;
+    height: 24px;
+    background: var(--primary);
+    border-radius: 2px;
+  }
+
+  /* ===== Info Grid ===== */
+  .info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2rem;
+    margin-bottom: 2.5rem;
+  }
+
+  .info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .info-label {
+    font-weight: 700;
+    color: var(--primary);
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .info-value {
+    color: var(--text);
+    font-size: 1rem;
+    font-weight: 500;
+  }
+
+  .info-value-muted {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+  }
+
+  /* ===== Status Badges ===== */
+  .status-badge {
+    padding: 0.5rem 1.25rem;
+    border-radius: 50px;
+    font-weight: 700;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: fit-content;
+  }
+
+  .status-badge::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0.7;
+  }
+
+  .status-placed { background: #e7f5e7; color: #1b5e20; }
+  .status-shipped { background: #cfe2ff; color: #084298; }
+  .status-delivered { background: #d4edda; color: #155724; }
+  .status-cancelled { background: #fee; color: #c41e3a; }
+  .status-return { background: #fff3cd; color: #997404; }
+
+  /* ===== Coupon Badge ===== */
+  .coupon-badge {
+    background: linear-gradient(135deg, var(--success-light) 0%, var(--success) 100%);
+    color: #065f46;
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-sm);
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .coupon-badge::before {
+    content: '🎉';
+    font-size: 1.1rem;
+  }
+
+  /* ===== Divider ===== */
+  .divider {
+    border: none;
+    border-top: 2px solid var(--border);
+    margin: 2.5rem 0;
+  }
+
+  /* ===== Product Items ===== */
+  .product-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .product-item {
+    background: linear-gradient(135deg, #fafbfc 0%, #f8f9fa 100%);
+    border: 2px solid var(--border);
+    border-left: 5px solid var(--primary);
+    border-radius: var(--radius-md);
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+  }
+
+  .product-item:hover {
+    box-shadow: var(--shadow-sm);
+    transform: translateX(4px);
+  }
+
+  .product-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+  }
+
+  .product-info {
+    flex: 1;
+    min-width: 250px;
+  }
+
+  .product-name {
+    font-weight: 700;
+    color: var(--primary);
+    font-size: 1.1rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .product-details {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.25rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .product-detail-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
+
+  .product-detail-item strong {
+    color: var(--text);
+  }
+
+  .product-status-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    align-items: center;
+  }
+
+  /* ===== Status Update Form ===== */
+  .status-update-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    min-width: 200px;
+  }
+
+  .form-select {
+    border: 2px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+    background-color: white;
+    color: var(--text);
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .form-select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.08);
+    outline: none;
+  }
+
+  /* ===== Buttons ===== */
+  .btn {
+    border-radius: var(--radius-sm);
+    padding: 0.75rem 1.5rem;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.95rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    text-decoration: none;
+  }
+
+  .btn-dark {
+    background: var(--primary);
+    color: white;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .btn-dark:hover {
+    background: var(--primary-hover);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+
+  .btn-outline {
+    border: 2px solid var(--border);
+    color: var(--text);
+    background: white;
+  }
+
+  .btn-outline:hover {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .btn-sm {
+    padding: 0.625rem 1.25rem;
+    font-size: 0.875rem;
+  }
+
+  /* ===== Address Card ===== */
+  .address-card {
+    background: linear-gradient(135deg, #fafbfc 0%, #f8f9fa 100%);
+    border: 2px solid var(--border);
+    border-left: 5px solid var(--primary);
+    border-radius: var(--radius-md);
+    padding: 1.5rem;
+  }
+
+  .address-name {
+    font-weight: 700;
+    color: var(--primary);
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .address-details {
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+
+  /* ===== Order Summary ===== */
+  .summary-card {
+    background: linear-gradient(135deg, #fafbfc 0%, #f8f9fa 100%);
+    border: 2px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 2rem;
+  }
+
+  .summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 0;
+    font-size: 0.95rem;
+  }
+
+  .summary-row:not(:last-child) {
+    border-bottom: 1px solid var(--border);
+  }
+
+  .summary-label {
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+
+  .summary-value {
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  .summary-discount {
+    color: var(--success);
+  }
+
+  .summary-total {
+    background: white;
+    border: 2px solid var(--primary);
+    border-radius: var(--radius-sm);
+    padding: 1rem;
+    margin-top: 1rem;
+  }
+
+  .summary-total .summary-label,
+  .summary-total .summary-value {
+    color: var(--primary);
+    font-weight: 800;
+    font-size: 1.25rem;
+  }
+
+  /* ===== Action Buttons ===== */
+  .action-buttons {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+    flex-wrap: wrap;
+  }
+
+  /* ===== Responsive Design ===== */
+  @media (max-width: 768px) {
+    .container {
+      padding: 1.5rem 1rem;
+    }
+
+    .page-header h2 {
+      font-size: 2rem;
+    }
+
+    .detail-card {
+      padding: 1.5rem;
+    }
+
+    .info-grid {
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+
+    .product-header {
+      flex-direction: column;
+    }
+
+    .status-update-form {
+      width: 100%;
+    }
+
+    .action-buttons {
+      flex-direction: column;
+    }
+
+    .action-buttons .btn {
+      width: 100%;
+    }
+
+    .summary-row {
+      font-size: 0.9rem;
+    }
+
+    .summary-total .summary-label,
+    .summary-total .summary-value {
+      font-size: 1.1rem;
+    }
+  }
+
+  /* ===== Print Styles ===== */
+  @media print {
+    body {
+      background: white;
+    }
+
+    .detail-card {
+      box-shadow: none;
+      border: 1px solid #ddd;
+    }
+
+    .action-buttons,
+    .status-update-form {
+      display: none;
+    }
+  }
+</style>
+
+<div class="container">
+  <!-- Page Header -->
+  <div class="page-header">
+    <h2>Order Details</h2>
+    <div style="display: flex; gap: 0.75rem;">
+   
+    </div>
+  </div>
+
+  <div class="detail-card">
+    <h5 class="section-heading">Order Information</h5>
+    
+    <div class="info-grid">
+      <div class="info-item">
+        <span class="info-label">Order ID</span>
+        <span class="info-value">#<%= order.orderID %></span>
+      </div>
+
+      <div class="info-item">
+        <span class="info-label">Order Status</span>
+        <span class="status-badge status-<%= order.status.toLowerCase().replace(/\s+/g, '-') %>">
+          <%= order.status %>
+        </span>
+      </div>
+
+      <div class="info-item">
+        <span class="info-label">Customer Name</span>
+        <span class="info-value"><%= order.user?.name || 'N/A' %></span>
+        <span class="info-value-muted"><%= order.user?.email || 'N/A' %></span>
+      </div>
+
+      <div class="info-item">
+        <span class="info-label">Order Date</span>
+        <span class="info-value"><%= new Date(order.createdAt).toLocaleDateString('en-IN', { 
+          day: 'numeric', 
+          month: 'long', 
+          year: 'numeric' 
+        }) %></span>
+        <span class="info-value-muted"><%= new Date(order.createdAt).toLocaleTimeString('en-IN', { 
+          hour: '2-digit', 
+          minute: '2-digit' 
+        }) %></span>
+      </div>
+
+      <div class="info-item">
+        <span class="info-label">Payment Method</span>
+        <span class="info-value"><%= order.paymentMethod %></span>
+      </div>
+
+      <% if (order.coupon && order.coupon.code) { %>
+        <div class="info-item">
+          <span class="info-label">Coupon Applied</span>
+          <div class="coupon-badge">
+            <%= order.coupon.code %>
+            <span style="margin-left: 0.25rem;">- ₹<%= order.coupon.discountAmount.toFixed(0) %></span>
+          </div>
+        </div>
+      <% } %>
+    </div>
+
+    <hr class="divider">
+
+    <!-- Products Section -->
+    <h5 class="section-heading">Order Items</h5>
+    
+    <div class="product-list">
+      <% order.items.forEach((item, index) => { %>
+        <div class="product-item">
+          <div class="product-header">
+            <div class="product-info">
+              <div class="product-name">
+                <%= item.product?.productName || 'Product N/A' %>
+              </div>
+
+              <div class="product-details">
+                <div class="product-detail-item">
+                  <span> Size:</span>
+                  <strong><%= item.size %></strong>
+                </div>
+                <div class="product-detail-item">
+                  <span> Quantity:</span>
+                  <strong><%= item.quantity %></strong>
+                </div>
+                <div class="product-detail-item">
+                  <span> Price:</span>
+                  <strong>₹<%= item.price.toFixed(0) %></strong>
+                </div>
+              </div>
+
+              <div class="product-status-row">
+                <span class="status-badge status-<%= item.status.toLowerCase().replace(/\s+/g, '-') %>">
+                  <%= item.status %>
+                </span>
+                <% if (item.returnStatus && item.returnStatus !== 'None') { %>
+                  <span class="status-badge status-return">
+                    Return: <%= item.returnStatus %>
+                  </span>
+                <% } %>
+              </div>
+            </div>
+
+            <% if (item.status !== "Cancelled") { %>
+              <form method="POST" action="/admin/orders/<%= order._id %>/items/<%= item._id %>/status" class="status-update-form">
+                <select name="status" class="form-select">
+                  <% ['Placed','Shipped','Out for Delivery','Delivered'].forEach(s => { %>
+                    <option value="<%= s %>" <%= s === item.status ? 'selected' : '' %>>
+                      <%= s %>
+                    </option>
+                  <% }) %>
+                </select>
+                <button type="submit" class="btn btn-dark btn-sm">
+                  ✓ Update Status
+                </button>
+              </form>
+            <% } %>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+
+    <hr class="divider">
+
+    <!-- Delivery Address -->
+    <h5 class="section-heading">Delivery Address</h5>
+    
+    <div class="address-card">
+      <div class="address-name">
+        📍 <%= order.address?.name || 'N/A' %>
+      </div>
+      <div class="address-details">
+        <% if (order.address) { %>
+          <%= order.address.addressLine1 || '' %><br>
+          <% if (order.address.addressLine2) { %>
+            <%= order.address.addressLine2 %><br>
+          <% } %>
+          <%= order.address.city || '' %>, <%= order.address.state || '' %> - <%= order.address.pincode || '' %><br>
+          <% if (order.address.phone) { %>
+             <%= order.address.phone %>
+          <% } %>
+        <% } else { %>
+          Address information not available
+        <% } %>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- Order Summary -->
+    <h5 class="section-heading">Payment Summary</h5>
+    
+    <div class="summary-card">
+      <div class="summary-row">
+        <span class="summary-label">Subtotal</span>
+        <span class="summary-value">₹<%= subtotal.toFixed(0) %></span>
+      </div>
+
+      <div class="summary-row">
+        <span class="summary-label">Tax (5%)</span>
+        <span class="summary-value">₹<%= tax.toFixed(0) %></span>
+      </div>
+
+      <div class="summary-row">
+        <span class="summary-label">Shipping Charges</span>
+        <span class="summary-value">₹<%= shipping.toFixed(0) %></span>
+      </div>
+
+      <% if (discount) { %>
+        <div class="summary-row">
+          <span class="summary-label summary-discount">Coupon Discount</span>
+          <span class="summary-value summary-discount">-₹<%= discount.toFixed(0) %></span>
+        </div>
+      <% } %>
+
+      <div class="summary-total">
+        <div class="summary-row">
+          <span class="summary-label">Total Amount</span>
+          <span class="summary-value">₹<%= total.toFixed(0) %></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="action-buttons">
+      <a href="/admin/orders" class="btn btn-outline">
+        ← Back to Orders
+      </a>
+     
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const items = document.querySelectorAll('.product-item');
+    items.forEach((item, index) => {
+      item.style.animationDelay = `${index * 0.1}s`;
+    });
+  });
+
+  document.querySelectorAll('form[action*="/status"]').forEach(form => {
+    form.addEventListener('submit', function(e) {
+      const select = this.querySelector('select[name="status"]');
+      const newStatus = select.value;
+      const currentStatus = select.querySelector('option[selected]').value;
+      
+      if (newStatus === currentStatus) {
+        e.preventDefault();
+        alert('Please select a different status to update.');
+        return;
+      }
+      
+      if (!confirm(`Are you sure you want to change the status to "${newStatus}"?`)) {
+        e.preventDefault();
+      }
+    });
+  });
+</script>
+
+<%- include('../partials/admin/footer') %>
