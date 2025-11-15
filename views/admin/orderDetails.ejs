@@ -670,31 +670,80 @@
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
-    const items = document.querySelectorAll('.product-item');
-    items.forEach((item, index) => {
-      item.style.animationDelay = `${index * 0.1}s`;
-    });
+document.addEventListener("DOMContentLoaded", function () {
+  // Fade-in animation
+  document.querySelectorAll('.product-item').forEach((item, i) => {
+    item.style.animationDelay = `${i * 0.1}s`;
   });
 
+  // SweetAlert Status Update
   document.querySelectorAll('form[action*="/status"]').forEach(form => {
-    form.addEventListener('submit', function(e) {
+    form.addEventListener("submit", async function (e) {
+      e.preventDefault();
+
       const select = this.querySelector('select[name="status"]');
       const newStatus = select.value;
-      const currentStatus = select.querySelector('option[selected]').value;
-      
-      if (newStatus === currentStatus) {
-        e.preventDefault();
-        alert('Please select a different status to update.');
+      const oldStatus = select.dataset.current;
+
+      if (newStatus === oldStatus) {
+        Swal.fire({
+          icon: "info",
+          title: "No change",
+          text: "Select a different status.",
+        });
         return;
       }
-      
-      if (!confirm(`Are you sure you want to change the status to "${newStatus}"?`)) {
-        e.preventDefault();
+
+      const confirm = await Swal.fire({
+        title: "Update Status?",
+        text: `Change status to "${newStatus}"?`,
+        icon: "question",
+        showCancelButton: true,
+        confirmButtonColor: "#000",
+      });
+
+      if (!confirm.isConfirmed) return;
+
+      try {
+        const response = await fetch(this.action, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: newStatus })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          Swal.fire({
+            icon: "success",
+            title: "Updated!",
+            text: result.message,
+            timer: 1500,
+            showConfirmButton: false
+          });
+          setTimeout(() => window.location.reload(), 1500);
+        } else {
+          Swal.fire({
+            icon: "error",
+            title: "Error",
+            text: result.message
+          });
+        }
+
+      } catch (err) {
+        Swal.fire({
+          icon: "error",
+          title: "Server Error",
+          text: "Something went wrong"
+        });
       }
     });
   });
+});
 </script>
+
 
 <%- include('../partials/admin/footer') %>

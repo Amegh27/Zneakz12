@@ -237,10 +237,30 @@ const postEditProfile = async (req, res) => {
     }
 
     user.name = name || user.name;
-    user.email = email || user.email;
     user.phone = phone || user.phone;
     user.gender = gender || user.gender;
 
+    if (email && email !== user.email) {
+
+      if (!req.session.otpVerified || req.session.newEmail !== email) {
+        return res.json({
+          success: false,
+          message: "Email not verified via OTP"
+        });
+      }
+
+      // OTP verified → apply email update
+      user.email = email;
+
+      // Clear OTP session after successful update
+      req.session.otpVerified = false;
+      req.session.emailChangeOtp = null;
+      req.session.newEmail = null;
+    }
+
+    // -----------------------------------------
+    // 🔥 Handle Avatar Removal
+    // -----------------------------------------
     if (remove_avatar === '1') {
       if (user.avatar && user.avatar !== '/images/user-avatar.png') {
         const oldAvatarPath = path.join(__dirname, '../../public', user.avatar);
@@ -251,6 +271,9 @@ const postEditProfile = async (req, res) => {
       user.avatar = null;
     }
 
+    // -----------------------------------------
+    // 🔥 Handle Avatar Upload
+    // -----------------------------------------
     if (req.file) {
       if (user.avatar && user.avatar !== '/images/user-avatar.png') {
         const oldAvatarPath = path.join(__dirname, '../../public', user.avatar);
@@ -258,17 +281,20 @@ const postEditProfile = async (req, res) => {
           if (err) console.log('Old avatar deletion error:', err.message);
         });
       }
+
       user.avatar = `/admin-assets/profile/${req.file.filename}`;
     }
 
     await user.save();
 
     res.json({ success: true, message: 'Profile updated successfully!' });
+
   } catch (error) {
     console.error('Error updating profile:', error);
     res.status(500).json({ success: false, message: 'Something went wrong while updating your profile.' });
   }
 };
+
 
 
 const getEmailOtpPage = (req, res) => {
@@ -395,6 +421,49 @@ const postChangePassword = async (req, res) => {
     res.status(500).json({ success: false, message: 'Server error' });
   }
 };
+const sendEmailChangeOtp = async (req, res) => {
+  try {
+    const { newEmail } = req.body;
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    req.session.emailChangeOtp = otp;
+    req.session.newEmail = newEmail;
+
+    console.log("EMAIL CHANGE OTP:", otp);
+
+    return res.json({ success: true });
+
+  } catch (err) {
+    console.error("Send OTP error:", err);
+    return res.json({ success: false, message: "Failed to send OTP" });
+  }
+};
+
+const verifyEmailChangeOtp = async (req, res) => {
+  try {
+    const { otp } = req.body;
+
+    if (!req.session.emailChangeOtp) {
+      return res.json({ success: false, message: "OTP expired" });
+    }
+
+    if (otp !== req.session.emailChangeOtp) {
+      return res.json({ success: false, message: "Incorrect OTP" });
+    }
+
+    req.session.otpVerified = true;
+    return res.json({ success: true });
+
+  } catch (err) {
+    console.error("Verify OTP error:", err);
+    res.json({ success: false, message: "Server error" });
+  }
+};
+
+
+
+
 
 const getAddressPage = async (req, res) => {
   try {
@@ -575,6 +644,8 @@ module.exports = {
     postEditProfile,
     getChangePasswordPage,
     postChangePassword,
+    sendEmailChangeOtp,
+    verifyEmailChangeOtp,
     getAddressPage,
     postAddAddress,
     postEditAddress,

@@ -150,191 +150,99 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 document.addEventListener("DOMContentLoaded", () => {
-  const tbody = document.querySelector(".cart-table tbody");
 
-  tbody.addEventListener("click", async (e) => {
+  // REMOVE ITEM
+  document.querySelector(".cart-table tbody").addEventListener("click", async (e) => {
     const btn = e.target.closest(".remove-btn");
     if (!btn) return;
 
     const productId = btn.dataset.id;
     const size = btn.dataset.size;
 
-    try {
-      const res = await fetch("/cart/remove", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ productId, size })
-      });
+    const res = await fetch("/cart/remove", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ productId, size })
+    });
 
-      const data = await res.json();
-      if (data.success) {
-        Swal.fire({
-          icon: "success",
-          title: "Removed",
-          text: data.message,
-          timer: 1000,
-          toast: true,
-          position: "top-end",
-          showConfirmButton: false
-        });
+    const data = await res.json();
 
-        const row = btn.closest("tr");
-        if (row) row.remove();
-
-        let newTotal = 0;
-        document.querySelectorAll(".cart-table tbody tr").forEach(tr => {
-          const totalCell = tr.querySelector("td:nth-child(4)");
-          if (totalCell) {
-            const val = parseFloat(totalCell.textContent.replace("₹", "").trim());
-            if (!isNaN(val)) newTotal += val;
-          }
-        });
-
-        const totalDisplay = document.querySelector(".fw-bold");
-        if (totalDisplay) {
-          totalDisplay.textContent = `₹${newTotal.toFixed(0)}`;
-        }
-
-        const cartCountBadge = document.getElementById("cartCount");
-        if (cartCountBadge) cartCountBadge.textContent = data.cartCount;
-
-        if (data.cartCount === 0) {
-          const totalSection = document.querySelector(".d-flex.justify-content-between");
-          if (totalSection) totalSection.remove();
-
-          const tbody = document.querySelector(".cart-table tbody");
-          tbody.innerHTML = `
-            <tr>
-              <td colspan="5" class="text-center text-muted py-4">
-                Your cart is empty
-              </td>
-            </tr>`;
-        }
-
-      } else {
-        Swal.fire({
-          icon: "error",
-          title: "Error",
-          text: data.message || "Failed to remove",
-          timer: 1500,
-          toast: true,
-          position: "top-end",
-          showConfirmButton: false
-        });
-      }
-    } catch (err) {
-      console.error(err);
-      Swal.fire({
-        icon: "error",
-        title: "Server Error",
-        text: "Something went wrong. Please try again later.",
-        toast: true,
-        position: "top-end"
-      });
+    if (!data.success) {
+      Swal.fire("Error", data.message, "error");
+      return;
     }
+
+    btn.closest("tr").remove();
+    updateCartTotals();
   });
-});
 
-document.querySelectorAll(".quantity-input").forEach(container => {
-  const productId = container.dataset.id;
-  const input = container.querySelector("input");
+  // QUANTITY BUTTONS
+  document.querySelectorAll(".quantity-input").forEach(container => {
+    const productId = container.dataset.id;
+    const size = container.dataset.size;
+    const input = container.querySelector("input");
 
-  container.querySelector(".increase-btn").addEventListener("click", async () => {
-    try {
+    // Increase
+    container.querySelector(".increase-btn").addEventListener("click", async () => {
       const res = await fetch("/cart/update", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ productId, action: "increase" })
+        body: JSON.stringify({ productId, size, action: "increase" })
       });
+
       const data = await res.json();
       if (data.success) {
-        input.value = parseInt(input.value) + 1;
+        input.value = Number(input.value) + 1;
+        updateRowTotal(container.closest("tr"));
         updateCartTotals();
       }
-    } catch (err) {
-      console.error(err);
-    }
-  });
-
-container.querySelector(".decrease-btn").addEventListener("click", async () => {
-  try {
-    const currentQty = parseInt(input.value);
-    if (currentQty <= 1) {
-      // Swal.fire({
-      //   icon: "info",
-      //   title: "Minimum quantity is 1",
-      //   toast: true,
-      //   position: "top-end",
-      //   timer: 1200,
-      //   showConfirmButton: false
-      // });
-      return; 
-    }
-
-    const res = await fetch("/cart/update", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ productId, action: "decrease" })
     });
-    const data = await res.json();
 
-    if (data.success) {
-      input.value = currentQty - 1;
-      updateCartTotals();
-    }
-  } catch (err) {
-    console.error(err);
-  }
+    // Decrease
+    container.querySelector(".decrease-btn").addEventListener("click", async () => {
+      if (Number(input.value) <= 1) return;
+
+      const res = await fetch("/cart/update", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ productId, size, action: "decrease" })
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        input.value = Number(input.value) - 1;
+        updateRowTotal(container.closest("tr"));
+        updateCartTotals();
+      }
+    });
+  });
 });
 
-});
+// UPDATE PER ROW TOTAL
+function updateRowTotal(tr) {
+  const priceCell = tr.querySelector("td:nth-child(3)");
+  const qty = tr.querySelector(".quantity-input input").value;
+  const totalCell = tr.querySelector("td:nth-child(5)");
+
+  const price = parseFloat(priceCell.textContent.replace("₹", "").trim());
+  totalCell.textContent = `₹${(price * qty).toFixed(0)}`;
+}
 
 function updateCartTotals() {
   let newTotal = 0;
+
   document.querySelectorAll(".cart-table tbody tr").forEach(tr => {
-    const qtyInput = tr.querySelector(".quantity-input input");
-    const priceCell = tr.querySelector("td:nth-child(2)");
-    if (qtyInput && priceCell) {
-      const qty = parseInt(qtyInput.value);
-      const price = parseFloat(priceCell.textContent.replace("₹", "").trim());
-      newTotal += qty * price;
-      const totalCell = tr.querySelector("td:nth-child(4)");
-      if (totalCell) totalCell.textContent = `₹${(qty * price).toFixed(0)}`;
+    const totalCell = tr.querySelector("td:nth-child(5)");
+    if (totalCell) {
+      const value = parseFloat(totalCell.textContent.replace("₹", "").trim());
+      if (!isNaN(value)) newTotal += value;
     }
   });
+
   const totalDisplay = document.querySelector(".fw-bold");
-  if (totalDisplay) totalDisplay.textContent = `₹${newTotal.toFixed(2)}`;
+  if (totalDisplay) totalDisplay.textContent = `₹${newTotal.toFixed(0)}`;
 }
 
-const handleCartAction = async (productId, action) => {
-  try {
-    const res = await fetch("/cart/update", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ productId, action })
-    });
-    const data = await res.json();
-
-    if (data.success) {
-      const row = document.querySelector(`[data-id="${productId}"]`).closest("tr");
-      const input = row.querySelector("input");
-      input.value = action === "increase" ? parseInt(input.value) + 1 : parseInt(input.value) - 1;
-
-      document.querySelector(".fw-bold").textContent = `₹${data.total.toFixed(2)}`;
-    } else {
-      Swal.fire({
-        icon: "warning",
-        title: data.message,
-        toast: true,
-        position: "top-end",
-        showConfirmButton: false,
-        timer: 1500
-      });
-    }
-  } catch (err) {
-    console.error(err);
-  }
-};
 
 
 

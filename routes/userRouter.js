@@ -82,12 +82,14 @@ router.get('/kids-details', productController.kidsDetails);
 
 router.get('/profile', userAuth, profileController.getProfilePage);
 router.get('/profile/edit', userAuth, profileController.getEditProfilePage); 
-router.post('/profile/edit', userAuth, uploads.single('avatar'), profileController.postEditProfile); 
+router.post('/profile/edit', userAuth, profileUpload.single('avatar'), profileController.postEditProfile); 
 router.get('/profile/verify-email-otp', profileController.getEmailOtpPage);
 router.post('/profile/verify-email-otp', profileController.verifyEmailOtp);
 router.post('/profile/resend-email-otp', profileController.resendEmailOtp);
 router.get('/change-password', userAuth, profileController.getChangePasswordPage);
 router.post('/change-password', userAuth, profileController.postChangePassword);
+router.post('/profile/send-otp', userAuth, profileController.sendEmailChangeOtp);
+router.post('/profile/verify-otp', userAuth, profileController.verifyEmailChangeOtp);
 router.get('/address', profileController.getAddressPage);
 router.post('/address', profileController.postAddAddress);
 router.put('/address/edit/:id', profileController.postEditAddress);
@@ -114,6 +116,7 @@ router.post("/orders/:id/cancel", checkoutController.cancelOrder);
 router.post("/orders/:orderId/items/:itemId/cancel", checkoutController.cancelItem);
 router.get("/orders/:orderId/items/:itemId/return", checkoutController.returnItemPage);
 router.post("/orders/:orderId/items/:itemId/return", checkoutController.submitReturnItem);
+router.get("/orders/:id", checkoutController.getUserOrders);
 
 
 router.get("/orders/:id/invoice", checkoutController.downloadInvoice);

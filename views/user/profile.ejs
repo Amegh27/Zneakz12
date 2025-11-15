@@ -717,14 +717,11 @@
 </div>
 
 
-            <!-- Form Actions -->
             <div class="col-12 form-actions">
               <a href="/change-password" class="btn btn-dark">
                 <i class="bi bi-key-fill"></i> Change Password
               </a>
-              <button type="submit" class="btn btn-dark">
-                <i class="bi bi-check-circle-fill"></i> Save Changes
-              </button>
+       
             </div>
           </form>
         </div>
@@ -739,118 +736,16 @@
 <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
-  const validateName = (name) => {
-    const regex = /^[A-Za-z\s]{1,20}$/;
-    return regex.test(name.trim());
-  };
-
-  const validatePhone = (phone) => {
-    const regex = /^[1-9]\d{9}$/; 
-    return regex.test(phone);
-  };
-
-  const validateEmail = (email) => {
-    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return regex.test(email);
-  };
+  const validateName = (name) => /^[A-Za-z\s]{1,20}$/.test(name.trim());
+  const validatePhone = (phone) => /^[1-9]\d{9}$/.test(phone);
+  const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
   const avatarInput = document.getElementById('avatarInput');
   const sidebarAvatar = document.getElementById('sidebarAvatar');
   const avatarPreview = document.getElementById('avatarPreview');
   const removeAvatarFlag = document.getElementById('removeAvatarFlag');
   const defaultAvatar = '/images/user-avatar.png';
-
-  document.querySelectorAll('.edit-overlay').forEach(overlay => {
-    overlay.addEventListener('click', (e) => {
-      e.stopPropagation();
-      avatarInput.click();
-      removeAvatarFlag.value = '0';
-    });
-  });
-
-  document.querySelectorAll('.remove-overlay').forEach(overlay => {
-    overlay.addEventListener('click', async (e) => {
-      e.stopPropagation();
-      const result = await Swal.fire({
-        title: 'Remove Picture?',
-        text: 'This cannot be undone.',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#dc3545',
-        cancelButtonColor: '#6c757d',
-        confirmButtonText: 'Yes, Remove',
-        cancelButtonText: 'Cancel'
-      });
-
-      if (result.isConfirmed) {
-        const fd = new FormData();
-        fd.append('remove_avatar', '1');
-        try {
-          const res = await fetch('/profile/edit', { method: 'POST', body: fd });
-          const json = await res.json();
-          if (json.success) {
-            sidebarAvatar.src = defaultAvatar;
-            avatarPreview.src = defaultAvatar;
-            removeAvatarFlag.value = '1';
-            Swal.fire({ icon: 'success', title: 'Removed!', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false });
-            setTimeout(() => location.reload(), 1000);
-          }
-        } catch (err) {
-          Swal.fire('Error', 'Server error', 'error');
-        }
-      }
-    });
-  });
-
-  avatarInput.addEventListener('change', async function(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    if (!file.type.startsWith('image/')) {
-      Swal.fire('Invalid', 'Please select an image file', 'error');
-      e.target.value = '';
-      return;
-    }
-    if (file.size > 2 * 1024 * 1024) {
-      Swal.fire('Too Large', 'Image must be under 2 MB', 'error');
-      e.target.value = '';
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = ev => {
-      sidebarAvatar.src = ev.target.result;
-      avatarPreview.src = ev.target.result;
-      removeAvatarFlag.value = '0';
-    };
-    reader.readAsDataURL(file);
-
-    const currentEmail = form.email.value.trim();
-    const originalEmail = originalValues.email;
-
-    if (currentEmail === originalEmail) {
-      const fd = new FormData();
-      fd.append('avatar', file);
-      fd.append('remove_avatar', '0');
-      try {
-        const res = await fetch('/profile/edit', { method: 'POST', body: fd });
-        const json = await res.json();
-        if (json.success) {
-          Swal.fire({ icon: 'success', title: 'Uploaded!', toast: true, position: 'top-end', timer: 1500 });
-          setTimeout(() => location.reload(), 1000);
-        }
-      } catch (err) {
-        Swal.fire('Error', 'Upload failed', 'error');
-      }
-    } else {
-      Swal.fire({ icon: 'info', title: 'Avatar will be saved after email verification', toast: true, timer: 2000 });
-    }
-  });
-
   const form = document.getElementById('profileForm');
-  const editBtn = document.getElementById('editProfileBtn');
-  const saveBtn = document.getElementById('saveProfileBtn');
-  const cancelBtn = document.getElementById('cancelEditBtn');
 
   let originalValues = {
     name: form.name.value,
@@ -859,8 +754,86 @@
     gender: form.gender.value
   };
 
+
+
+  document.querySelector('.edit-overlay')?.addEventListener('click', () => {
+    avatarInput.click();
+    removeAvatarFlag.value = '0';
+  });
+
+  document.querySelector('.remove-overlay')?.addEventListener('click', async () => {
+    const result = await Swal.fire({
+      title: 'Remove Picture?',
+      text: 'This cannot be undone.',
+      icon: 'warning',
+      showCancelButton: true
+    });
+
+    if (!result.isConfirmed) return;
+
+    const fd = new FormData();
+    fd.append('remove_avatar', '1');
+
+    const res = await fetch('/profile/edit', { method: 'POST', body: fd });
+    const json = await res.json();
+
+    if (json.success) {
+      sidebarAvatar.src = defaultAvatar;
+      avatarPreview.src = defaultAvatar;
+      removeAvatarFlag.value = '1';
+
+      Swal.fire({ icon: 'success', title: 'Removed!', timer: 1500, toast: true });
+      setTimeout(() => location.reload(), 1000);
+    }
+  });
+
+  avatarInput.addEventListener('change', async function () {
+    const file = this.files[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      Swal.fire('Invalid', 'Select an image file', 'error');
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      Swal.fire('Too Large', 'Max 2 MB', 'error');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      avatarPreview.src = ev.target.result;
+      sidebarAvatar.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+
+    if (form.email.value !== originalValues.email) {
+      Swal.fire('Info', 'Avatar will be saved after email verification', 'info');
+      return;
+    }
+
+    const fd = new FormData();
+    fd.append('avatar', file);
+    fd.append('remove_avatar', '0');
+
+    const res = await fetch('/profile/edit', { method: 'POST', body: fd });
+    const json = await res.json();
+
+    if (json.success) {
+      Swal.fire({ icon: 'success', title: 'Uploaded!', timer: 1500, toast: true });
+      setTimeout(() => location.reload(), 1000);
+    }
+  });
+
+
+
+  const editBtn = document.getElementById('editProfileBtn');
+  const saveBtn = document.getElementById('saveProfileBtn');
+  const cancelBtn = document.getElementById('cancelEditBtn');
+
   editBtn.addEventListener('click', () => {
-    form.querySelectorAll('input[readonly]').forEach(input => input.removeAttribute('readonly'));
+    form.querySelectorAll('input[readonly]').forEach((i) => i.removeAttribute('readonly'));
     editBtn.style.display = 'none';
     saveBtn.style.display = 'inline-block';
     cancelBtn.style.display = 'inline-block';
@@ -870,15 +843,16 @@
     form.name.value = originalValues.name;
     form.email.value = originalValues.email;
     form.phone.value = originalValues.phone;
-    if (originalValues.gender) {
+    if (originalValues.gender)
       form.querySelector(`input[name="gender"][value="${originalValues.gender}"]`).checked = true;
-    }
 
-    form.querySelectorAll('input').forEach(input => input.setAttribute('readonly', true));
+    form.querySelectorAll('input').forEach((i) => i.setAttribute('readonly', true));
     editBtn.style.display = 'inline-block';
     saveBtn.style.display = 'none';
     cancelBtn.style.display = 'none';
   });
+
+
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -888,95 +862,82 @@
     const phone = form.phone.value.trim();
     const gender = form.querySelector('input[name="gender"]:checked');
 
-    if (!name) {
-      return Swal.fire('Required', 'Name is required', 'error');
-    }
-    if (!validateName(name)) {
-      return Swal.fire('Invalid Name', 'Name must be 1–20 letters only (no numbers/symbols)', 'error');
-    }
-    if (!email) {
-      return Swal.fire('Required', 'Email is required', 'error');
-    }
-    if (!validateEmail(email)) {
-      return Swal.fire('Invalid Email', 'Please enter a valid email address', 'error');
-    }
-    if (!phone) {
-      return Swal.fire('Required', 'Phone number is required', 'error');
-    }
-    if (!validatePhone(phone)) {
-      return Swal.fire('Invalid Phone', 'Phone must be exactly 10 digits and not start with 0', 'error');
-    }
-    if (!gender) {
-      return Swal.fire('Required', 'Please select your gender', 'error');
-    }
+    if (!validateName(name)) return Swal.fire('Invalid Name', 'Only letters allowed', 'error');
+    if (!validateEmail(email)) return Swal.fire('Invalid Email', 'Enter a valid email', 'error');
+    if (!validatePhone(phone)) return Swal.fire('Invalid Phone', '10 digits required', 'error');
+    if (!gender) return Swal.fire('Required', 'Select gender', 'error');
 
-    if (email !== originalValues.email) {
-      const otp = generateOtp();
-      console.log("EMAIL VERIFICATION OTP:", otp);
+   if (email !== originalValues.email) {
 
-      const { value: userOtp } = await Swal.fire({
-        title: 'Verify Email Change',
-        input: 'text',
-        inputLabel: 'Enter the 6-digit OTP (check browser console)',
-        inputPlaceholder: '123456',
-        showCancelButton: true,
-        inputValidator: (value) => {
-          if (!value) return 'OTP is required';
-          if (!/^\d{6}$/.test(value)) return 'OTP must be 6 digits';
-        }
-      });
+  const otpResponse = await fetch('/profile/send-otp', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ newEmail: email })
+  });
 
-      if (!userOtp || userOtp !== otp) {
-        Swal.fire('Incorrect OTP', 'Email not updated. Try again.', 'error');
-        form.email.value = originalValues.email;
-        return;
-      }
+  const otpJson = await otpResponse.json();
+  if (!otpJson.success) {
+    Swal.fire("Error", "Failed to send OTP", "error");
+    return;
+  }
+
+  const { value: userOtp } = await Swal.fire({
+    title: 'Verify Email',
+    text: 'Enter the 6-digit OTP sent to your email (printed in console in dev mode)',
+    input: 'text',
+    inputPlaceholder: '123456',
+    showCancelButton: true,
+    inputValidator: (value) => {
+      if (!/^\d{6}$/.test(value)) return "Enter a valid 6-digit OTP";
     }
+  });
+
+  if (!userOtp) {
+    form.email.value = originalValues.email;
+    return;
+  }
+
+  const verifyRes = await fetch('/profile/verify-otp', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ otp: userOtp })
+  });
+
+  const verifyJson = await verifyRes.json();
+
+  if (!verifyJson.success) {
+    Swal.fire("Incorrect OTP", verifyJson.message, "error");
+    form.email.value = originalValues.email;
+    return;
+  }
+}
+
+
 
     saveBtn.disabled = true;
     saveBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Saving...';
 
-    const formData = new FormData(form);
+    const fd = new FormData(form);
+    const res = await fetch('/profile/edit', { method: 'POST', body: fd });
+    const json = await res.json();
 
-    try {
-      const res = await fetch('/profile/edit', { method: 'POST', body: formData });
-      const json = await res.json();
+    saveBtn.disabled = false;
+    saveBtn.innerHTML = '<i class="bi bi-check-circle-fill"></i> Save Changes';
 
-      if (json.success) {
-        Swal.fire({
-          icon: 'success',
-          title: 'Profile Updated!',
-          toast: true,
-          position: 'top-end',
-          timer: 2000,
-          showConfirmButton: false
-        }).then(() => location.reload());
-      } else {
-        Swal.fire('Error', json.message || 'Update failed', 'error');
-      }
-    } catch (err) {
-      console.error(err);
-      Swal.fire('Error', 'Server error. Please try again.', 'error');
-    } finally {
-      saveBtn.disabled = false;
-      saveBtn.innerHTML = '<i class="bi bi-check-circle-fill"></i> Save Changes';
+    if (json.success) {
+      Swal.fire({ icon: 'success', title: 'Profile Updated!', timer: 2000, toast: true })
+        .then(() => location.reload());
     }
   });
 
-  function generateOtp() {
-    return Math.floor(100000 + Math.random() * 900000).toString();
-  }
 
-  document.getElementById("logout-link").addEventListener("click", function(e) {
+
+  document.getElementById("logout-link").addEventListener("click", (e) => {
     e.preventDefault();
     Swal.fire({
       title: 'Logout?',
-      text: "You will be signed out.",
       icon: 'question',
-      showCancelButton: true,
-      confirmButtonColor: '#667eea',
-      cancelButtonColor: '#dc3545',
-      confirmButtonText: 'Yes, Logout'
+      showCancelButton: true
     }).then((result) => {
       if (result.isConfirmed) window.location.href = "/logout";
     });

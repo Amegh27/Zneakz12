@@ -12,6 +12,15 @@ const addToCart = async (req, res) => {
     const product = await Product.findById(productId);
     if (!product) return res.status(404).json({ success: false, message: "Product not found" });
 
+    const sizeData = product.sizes.find(s => s.size === size);
+    if (!sizeData) {
+      return res.json({ success: false, message: "Invalid size selected" });
+    }
+
+    if (sizeData.stock <= 0) {
+      return res.json({ success: false, message: "This size is out of stock" });
+    }
+
     let cart = await Cart.findOne({ user: userId }).populate("items.product");
     if (!cart) {
       cart = new Cart({ user: userId, items: [], total: 0 });
@@ -22,18 +31,35 @@ const addToCart = async (req, res) => {
       return res.json({ success: false, message: "Cart limit reached (10 items max)" });
     }
 
-    const itemIndex = cart.items.findIndex(item => item.product._id.equals(productId) && item.size === size);
+    const itemIndex = cart.items.findIndex(
+      item => item.product._id.equals(productId) && item.size === size
+    );
 
-    const itemPrice = product.discountPrice || product.price; 
-
+    let newQuantity = quantity;
     if (itemIndex > -1) {
-      cart.items[itemIndex].quantity += quantity;
+      newQuantity = cart.items[itemIndex].quantity + quantity;
+
+      if (newQuantity > sizeData.stock) {
+        return res.json({
+          success: false,
+          message: `Only ${sizeData.stock} items in stock`
+        });
+      }
+
+      cart.items[itemIndex].quantity = newQuantity;
     } else {
+      if (quantity > sizeData.stock) {
+        return res.json({
+          success: false,
+          message: `Only ${sizeData.stock} items in stock`
+        });
+      }
+
       cart.items.push({
         product: product._id,
         quantity,
         size,
-        price: itemPrice,
+        price: product.discountPrice || product.price
       });
     }
 
@@ -43,12 +69,19 @@ const addToCart = async (req, res) => {
     }, 0);
 
     await cart.save();
-    res.json({ success: true, message: "Added to cart", total: cart.total });
+
+    return res.json({
+      success: true,
+      message: "Added to cart",
+      total: cart.total
+    });
+
   } catch (err) {
     console.error(err);
-    res.status(500).json({ success: false, message: "Server error" });
+    return res.status(500).json({ success: false, message: "Server error" });
   }
 };
+
 
 
 

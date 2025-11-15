@@ -1,13 +1,355 @@
 <%- include("../partials/user/header2") %>
 
-<div class="text-center py-5" style="min-height: 70vh;">
-  <img src="/images/failure.svg" alt="Payment Failed" width="200" class="mb-4">
-  <h2 class="text-danger fw-bold mb-3">Payment Failed!</h2>
-  <p class="text-muted mb-4">Something went wrong with your transaction. Please try again.</p>
+<style>
+  :root {
+    --danger: #ef4444;
+    --danger-hover: #dc2626;
+    --danger-light: #fee2e2;
+    --warning: #f59e0b;
+    --warning-hover: #d97706;
+    --warning-light: #fef3c7;
+    --primary: #000;
+    --primary-hover: #1a1a1a;
+    --light: #f8f9fa;
+    --border: #e9ecef;
+    --text: #212529;
+    --text-muted: #6c757d;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+    --shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+  }
 
-  <div class="d-flex justify-content-center gap-3">
-    <a href="/checkout" class="btn btn-warning px-4">Retry Payment</a>
-    <a href="/orders" class="btn btn-outline-dark px-4">Go to My Orders</a>
+  .payment-failure-container {
+    min-height: 70vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 1rem;
+    background: linear-gradient(135deg, #fff5f5 0%, #fee2e2 100%);
+  }
+
+  .failure-card {
+    background: white;
+    border-radius: var(--radius-lg);
+    padding: 3rem 2.5rem;
+    max-width: 600px;
+    width: 100%;
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--border);
+    text-align: center;
+    animation: slideUp 0.5s ease-out;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .failure-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 5px;
+    background: linear-gradient(90deg, var(--danger) 0%, #dc2626 100%);
+  }
+
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .icon-wrapper {
+    width: 120px;
+    height: 120px;
+    margin: 0 auto 2rem;
+    background: linear-gradient(135deg, var(--danger-light) 0%, #fecaca 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: pulse 2s ease-in-out infinite;
+    border: 4px solid white;
+    box-shadow: var(--shadow-md);
+  }
+
+  @keyframes pulse {
+    0%, 100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.05);
+    }
+  }
+
+  .icon-wrapper svg {
+    width: 60px;
+    height: 60px;
+    color: var(--danger);
+  }
+
+  .failure-title {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--danger);
+    margin-bottom: 1rem;
+    letter-spacing: -0.5px;
+  }
+
+  .failure-message {
+    font-size: 1.1rem;
+    color: var(--text-muted);
+    margin-bottom: 2rem;
+    line-height: 1.6;
+    font-weight: 500;
+  }
+
+  .info-box {
+    background: linear-gradient(135deg, var(--danger-light) 0%, #fecaca 100%);
+    border-left: 4px solid var(--danger);
+    border-radius: var(--radius-sm);
+    padding: 1.25rem;
+    margin-bottom: 2.5rem;
+    text-align: left;
+  }
+
+  .info-box-title {
+    font-weight: 700;
+    color: #991b1b;
+    margin-bottom: 0.5rem;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .info-box-text {
+    color: #b91c1c;
+    font-size: 0.9rem;
+    margin: 0;
+    line-height: 1.5;
+  }
+
+  .info-box ul {
+    margin: 0.75rem 0 0 0;
+    padding-left: 1.25rem;
+  }
+
+  .info-box li {
+    color: #b91c1c;
+    font-size: 0.9rem;
+    line-height: 1.6;
+  }
+
+  .button-group {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    border-radius: var(--radius-sm);
+    padding: 1rem 2rem;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 1rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    text-decoration: none;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+  }
+
+  .btn:hover::before {
+    width: 300px;
+    height: 300px;
+  }
+
+  .btn-warning {
+    background: var(--warning);
+    color: white;
+    box-shadow: var(--shadow-md);
+    border: 2px solid var(--warning);
+  }
+
+  .btn-warning:hover {
+    background: var(--warning-hover);
+    border-color: var(--warning-hover);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+    color: white;
+  }
+
+  .btn-warning:active {
+    transform: translateY(0);
+  }
+
+  .btn-outline-dark {
+    background: white;
+    color: var(--primary);
+    border: 2px solid var(--border);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .btn-outline-dark:hover {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+
+  .btn-outline-dark:active {
+    transform: translateY(0);
+  }
+
+  .help-text {
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 2px solid var(--border);
+    color: var(--text-muted);
+    font-size: 0.9rem;
+  }
+
+  .help-text a {
+    color: var(--danger);
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.3s ease;
+  }
+
+  .help-text a:hover {
+    color: var(--danger-hover);
+    text-decoration: underline;
+  }
+
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .payment-failure-container {
+      padding: 2rem 1rem;
+    }
+
+    .failure-card {
+      padding: 2rem 1.5rem;
+    }
+
+    .icon-wrapper {
+      width: 100px;
+      height: 100px;
+      margin-bottom: 1.5rem;
+    }
+
+    .icon-wrapper svg {
+      width: 50px;
+      height: 50px;
+    }
+
+    .failure-title {
+      font-size: 1.75rem;
+    }
+
+    .failure-message {
+      font-size: 1rem;
+    }
+
+    .button-group {
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 0.875rem 1.5rem;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .failure-title {
+      font-size: 1.5rem;
+    }
+
+    .failure-card {
+      padding: 1.5rem 1rem;
+    }
+  }
+</style>
+
+<div class="payment-failure-container">
+  <div class="failure-card">
+    <!-- Icon -->
+    <div class="icon-wrapper">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+      </svg>
+    </div>
+
+    <!-- Title -->
+    <h2 class="failure-title">Payment Failed!</h2>
+
+    <!-- Message -->
+    <p class="failure-message">
+      Unfortunately, your payment could not be processed at this time. Don't worry, your order has not been placed.
+    </p>
+
+    <!-- Info Box -->
+    <div class="info-box">
+      <div class="info-box-title">
+        ⚠️ Possible Reasons:
+      </div>
+      <ul class="info-box-text">
+        <li>Insufficient funds in your account</li>
+        <li>Incorrect payment details entered</li>
+        <li>Network connection issues</li>
+        <li>Card expired or blocked</li>
+      </ul>
+    </div>
+
+    <!-- Buttons -->
+    <div class="button-group">
+      <a href="/checkout" class="btn btn-warning">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M11.534 7h3.932a.25.25 0 0 1 .192.41l-1.966 2.36a.25.25 0 0 1-.384 0l-1.966-2.36a.25.25 0 0 1 .192-.41zm-11 2h3.932a.25.25 0 0 0 .192-.41L2.692 6.23a.25.25 0 0 0-.384 0L.342 8.59A.25.25 0 0 0 .534 9z"/>
+          <path fill-rule="evenodd" d="M8 3c-1.552 0-2.94.707-3.857 1.818a.5.5 0 1 1-.771-.636A6.002 6.002 0 0 1 13.917 7H12.9A5.002 5.002 0 0 0 8 3zM3.1 9a5.002 5.002 0 0 0 8.757 2.182.5.5 0 1 1 .771.636A6.002 6.002 0 0 1 2.083 9H3.1z"/>
+        </svg>
+        Retry Payment
+      </a>
+      <a href="/" class="btn btn-outline-dark">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M0 2.5A.5.5 0 0 1 .5 2H2a.5.5 0 0 1 .485.379L2.89 4H14.5a.5.5 0 0 1 .485.621l-1.5 6A.5.5 0 0 1 13 11H4a.5.5 0 0 1-.485-.379L1.61 3H.5a.5.5 0 0 1-.5-.5zM3.14 5l1.25 5h8.22l1.25-5H3.14zM5 13a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm-2 1a2 2 0 1 1 4 0 2 2 0 0 1-4 0zm9-1a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm-2 1a2 2 0 1 1 4 0 2 2 0 0 1-4 0z"/>
+        </svg>
+        Back to Home
+      </a>
+    </div>
+
+    <!-- Help Text -->
+    <div class="help-text">
+      Need help? <a href="/contact">Contact our support team</a> or check your email for more details.
+    </div>
   </div>
 </div>
 

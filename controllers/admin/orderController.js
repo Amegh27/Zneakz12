@@ -248,15 +248,17 @@ const updateItemStatus = async (req, res) => {
 
 const viewReturns = async (req, res) => {
   try {
-  const returns = await Order.find({
-  $or: [
-    { 'items.returnStatus': { $ne: 'None' } },
-    { 'items.status': 'Partially Cancelled' }
-  ]
+ const returns = await Order.find({
+  items: {
+    $elemMatch: {
+      returnStatus: { $ne: "None" }
+    }
+  }
 })
 .populate('user', 'name email')
 .populate('items.product', 'productName productImage price brand category')
 .sort({ createdAt: -1 });
+
 
     res.render('return', { returns });
   } catch (err) {

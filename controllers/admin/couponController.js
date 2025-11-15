@@ -1,6 +1,5 @@
 const Coupon = require('../../models/couponSchema');
 
-// Get all coupons
 const getAllCoupons = async (req, res) => {
   try {
     const coupons = await Coupon.find().sort({ createdAt: -1 });
@@ -33,9 +32,11 @@ const createCoupon = async (req, res) => {
       return res.json({ success: false, message: 'Coupon with same name or code already exists' });
     }
 
-    const now = new Date();
-    const exp = new Date(expiryDate);
-    if (exp < now.setHours(0, 0, 0, 0)) {
+      const exp = new Date(expiryDate);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (exp < today) {
       return res.json({ success: false, message: 'Expiry date cannot be in the past' });
     }
 
@@ -56,7 +57,6 @@ const createCoupon = async (req, res) => {
   }
 };
 
-// Edit coupon
 const editCoupon = async (req, res) => {
   try {
     const { id } = req.params;

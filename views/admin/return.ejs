@@ -509,7 +509,6 @@
               <% order.items.forEach((item, itemIndex) => { %>
                 <% if (item.returnStatus && item.returnStatus !== 'None') { %>
                   <tr>
-                    <!-- Product -->
                     <td>
                       <div class="product-cell">
                         <% if (item.product?.productImage?.length > 0) { %>
@@ -525,29 +524,24 @@
                       </div>
                     </td>
 
-                    <!-- Size -->
                     <td>
                       <strong><%= item.size || '—' %></strong>
                     </td>
 
-                    <!-- Quantity -->
                     <td>
                       <span class="badge badge-quantity"><%= item.quantity %></span>
                     </td>
 
-                    <!-- Price -->
                     <td>
                       <span class="price-cell">₹<%= item.price.toFixed(2) %></span>
                     </td>
 
-                    <!-- Return Reason -->
                     <td>
                       <div class="reason-cell">
                         <%= item.returnReason || 'No reason provided' %>
                       </div>
                     </td>
 
-                    <!-- Status -->
                     <td>
                       <span class="badge 
                         <%= item.returnStatus === 'Approved' ? 'badge-success' 

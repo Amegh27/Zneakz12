@@ -498,7 +498,11 @@ Price: Rs <%= item.price.toFixed(0) %><br>
     Cancel Item
   </button>
 <% } else if(item.status === "Delivered" && item.returnStatus === "None") { %>
-      <a href="/orders/<%= order._id %>/items/<%= item._id %>/return" class="btn btn-sm btn-outline-warning">Return Item</a>
+<a href="/orders/<%= order._id %>/items/<%= item._id %>/return" 
+   class="btn btn-sm btn-outline-warning">
+  Request Return
+</a>
+
     <% } else if(item.returnStatus === "Requested") { %>
       <span class="badge bg-warning text-dark">Return Requested</span>
     <% } else if(item.returnStatus === "Approved") { %>

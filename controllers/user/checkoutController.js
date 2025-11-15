@@ -675,6 +675,40 @@ const submitReturnItem = async (req, res) => {
 };
 
 
+const requestReturn = async (req, res) => {
+  try {
+    const { orderId, itemId } = req.params;
+
+    const order = await Order.findById(orderId);
+    if (!order) {
+      return res.json({ success: false, message: "Order not found" });
+    }
+
+    const item = order.items.id(itemId);
+    if (!item) {
+      return res.json({ success: false, message: "Item not found" });
+    }
+
+    if (item.returnStatus !== "None") {
+      return res.json({ success: false, message: "Return already requested" });
+    }
+
+    item.returnStatus = "Requested";
+    item.returnDate = new Date();
+
+    await order.save();
+
+    return res.json({
+      success: true,
+      message: "Return request sent successfully"
+    });
+
+  } catch (err) {
+    console.error("Return request error:", err);
+    return res.json({ success: false, message: "Server error" });
+  }
+};
+
 
 const applyCoupon = async (req, res) => {
   try {
@@ -878,21 +912,35 @@ const getWalletPage = async (req, res) => {
     const userId = req.session.user;
     if (!userId) return res.redirect("/login");
 
+    const page = parseInt(req.query.page) || 1;
+    const limit = 10;  
+    const skip = (page - 1) * limit;
+
     const user = await User.findById(userId).lean();
     if (!user) return res.redirect("/login");
 
-    const wallet = user.wallet || {};
-    const balance = typeof wallet.balance === "number" ? wallet.balance : 0;
-    const transactions = Array.isArray(wallet.transactions)
-      ? wallet.transactions
-      : [];
+    let transactions = user.wallet?.transactions || [];
 
-    res.render("wallet", { balance, transactions });
+    transactions = [...transactions].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    const paginated = transactions.slice(skip, skip + limit);
+
+    const totalPages = Math.ceil(transactions.length / limit);
+
+    res.render("wallet", { 
+      balance: user.wallet.balance,
+      transactions: paginated,
+      page,
+      user,
+      totalPages
+    });
+
   } catch (err) {
     console.error("Error loading wallet:", err);
     res.status(500).send("Error loading wallet");
   }
 };
+
 
 const getWalletBalance = async (req, res) => {
   try {
@@ -911,12 +959,9 @@ const getWalletBalance = async (req, res) => {
 };
 
 const payWithWallet = async (req, res) => {
-  
   try {
     const { addressId } = req.body;
     const userId = req.session.user;
-
-    console.log(" Wallet payment initiated for user:", userId);
 
     const [address, cart, user] = await Promise.all([
       Address.findOne({ _id: addressId, user: userId }),
@@ -925,13 +970,23 @@ const payWithWallet = async (req, res) => {
     ]);
 
     if (!address || !cart || cart.items.length === 0) {
-      throw new Error("Invalid address or empty cart");
+      return res.json({ success: false, message: "Invalid address or empty cart" });
     }
 
+    // --- Make sure wallet object exists ---
+    if (!user.wallet) {
+      user.wallet = { balance: 0, transactions: [] };
+    }
+    if (!Array.isArray(user.wallet.transactions)) {
+      user.wallet.transactions = [];
+    }
+
+    // --- Calculate totals ---
     const subtotal = cart.items.reduce(
       (sum, i) => sum + (i.product.discountPrice || i.product.price) * i.quantity,
       0
     );
+
     const tax = subtotal * 0.05;
     const shipping = 50;
 
@@ -944,21 +999,17 @@ const payWithWallet = async (req, res) => {
           : c.discountValue;
       if (c.maxDiscount)
         couponDiscount = Math.min(couponDiscount, c.maxDiscount);
-      couponDiscount = Math.min(couponDiscount, subtotal);
     }
 
     const total = subtotal + tax + shipping - couponDiscount;
 
-    if (!user.wallet) {
-      user.wallet = { balance: 0, transactions: [] };
-    }
-
+    // --- Check wallet balance ---
     if (user.wallet.balance < total) {
-      throw new Error("Insufficient wallet balance");
+      return res.json({ success: false, message: "Insufficient wallet balance" });
     }
 
-    console.log("Before deduction:", user.wallet.balance);
-    user.wallet.balance = user.wallet.balance - total;
+    // --- WALLET DEDUCTION ---
+    user.wallet.balance -= total;
 
     user.wallet.transactions.push({
       type: "debit",
@@ -966,12 +1017,13 @@ const payWithWallet = async (req, res) => {
       description: `Wallet payment for order – #ZNK${Date.now()}`,
       date: new Date()
     });
-    user.markModified('wallet');
 
-    await user.save(); 
+    // 🔥 VERY IMPORTANT: tell Mongoose wallet was modified
+    user.markModified("wallet");
 
-    console.log(" After deduction:", user.wallet.balance);
+    await user.save();
 
+    // --- Place order ---
     const order = new Order({
       user: userId,
       orderID: `ZNK${Date.now()}${Math.floor(Math.random() * 100)}`,
@@ -1000,20 +1052,21 @@ const payWithWallet = async (req, res) => {
 
     await order.save();
     await Cart.deleteOne({ user: userId });
+
     delete req.session.appliedCoupon;
 
-    console.log(" Order placed with wallet.");
-
-    res.json({
+    return res.json({
       success: true,
       message: "Wallet payment successful",
       redirect: `/order-success/${order._id}`
     });
+
   } catch (err) {
     console.error(" Wallet payment error:", err);
     res.json({ success: false, message: err.message || "Server error" });
   }
 };
+
 
 
 
@@ -1028,6 +1081,7 @@ module.exports = {
      downloadInvoice,
      returnItemPage,
      submitReturnItem,
+     requestReturn ,
      applyCoupon,
      removeCoupon,
      availableCoupons,
@@ -1037,5 +1091,4 @@ module.exports = {
      getWalletPage,
      getWalletBalance,
      payWithWallet
-
     };
