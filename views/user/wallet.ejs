@@ -5,32 +5,31 @@
 <!-- BOOTSTRAP ICONS -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
 
-
 <% const active = 'wallet'; %> 
 <style>
-
   :root {
-    --primary-color: #070707;
-    --primary-dark: #5568d3;
-    --primary-light: #8b9ef5;
-    --secondary-color: #000000;
-    --accent-color: #7c747d;
-    --success-color: #28a745;
-    --danger-color: #dc3545;
-    --light-bg: #f8f9fa;
-    --card-bg: #ffffff;
-    --border-color: #e9ecef;
-    --text-primary: #1a1a1a;
-    --text-secondary: #6c757d;
-    --shadow-sm: 0 2px 8px rgba(102, 126, 234, 0.08);
-    --shadow-md: 0 4px 16px rgba(102, 126, 234, 0.12);
-    --shadow-lg: 0 8px 32px rgba(102, 126, 234, 0.2);
-    --shadow-xl: 0 12px 48px rgba(102, 126, 234, 0.25);
-    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --primary: #000;
+    --primary-hover: #1a1a1a;
+    --success: #10b981;
+    --success-hover: #059669;
+    --success-light: #d1fae5;
+    --danger: #ef4444;
+    --danger-hover: #dc2626;
+    --danger-light: #fee2e2;
+    --light: #f8f9fa;
+    --border: #e9ecef;
+    --text: #212529;
+    --text-muted: #6c757d;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+    --shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
   }
 
   * {
-    transition: var(--transition);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   html, body {
@@ -38,22 +37,9 @@
   }
 
   body {
-    background: linear-gradient(135deg, #d8d9dc 0%, #f5f4f7 50%, #e4dee4 100%);
+    background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
     min-height: 100vh;
     position: relative;
-  }
-
-  body::before {
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: radial-gradient(circle at 20% 50%, rgba(240, 147, 251, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 80% 80%, rgba(102, 126, 234, 0.1) 0%, transparent 50%);
-    pointer-events: none;
-    z-index: -1;
   }
 
   .profile-container {
@@ -62,16 +48,29 @@
     z-index: 1;
   }
 
+  /* ===== Sidebar Styles ===== */
   .profile-sidebar {
-    background: var(--card-bg);
-    border-radius: 20px;
+    background: white;
+    border-radius: var(--radius-lg);
     overflow: hidden;
     min-height: 500px;
-    border: 1px solid rgba(102, 126, 234, 0.1);
+    border: 1px solid var(--border);
     box-shadow: var(--shadow-lg);
     display: flex;
     flex-direction: column;
     position: relative;
+    animation: slideInLeft 0.5s ease-out;
+  }
+
+  @keyframes slideInLeft {
+    from {
+      opacity: 0;
+      transform: translateX(-30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
   }
 
   .profile-sidebar::before {
@@ -81,22 +80,22 @@
     left: 0;
     right: 0;
     height: 4px;
-    background: linear-gradient(90deg, var(--primary-color), var(--secondary-color), var(--accent-color));
+    background: linear-gradient(90deg, var(--primary) 0%, #4a4a4a 100%);
   }
 
   .profile-sidebar:hover {
-    box-shadow: var(--shadow-xl);
+    box-shadow: var(--shadow-lg);
     transform: translateY(-4px);
   }
 
   .profile-sidebar .user-box {
-    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    background: linear-gradient(135deg, var(--primary) 0%, #2d2d2d 100%);
     color: #ffffff;
-    padding: 32px 24px;
+    padding: 2rem 1.5rem;
     display: flex;
     align-items: center;
-    gap: 18px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+    gap: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     position: relative;
     overflow: hidden;
   }
@@ -110,6 +109,17 @@
     height: 200px;
     background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
     border-radius: 50%;
+    animation: float 6s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translate(0, 0); }
+    50% { transform: translate(-20px, -20px); }
+  }
+
+  .profile-avatar img {
+    border: 3px solid white;
+    box-shadow: var(--shadow-md);
   }
 
   .profile-sidebar .user-box .user-info {
@@ -121,9 +131,9 @@
   .profile-sidebar .user-box .user-label {
     font-size: 0.75rem;
     color: rgba(255, 255, 255, 0.85);
-    margin-bottom: 8px;
+    margin-bottom: 0.5rem;
     text-transform: uppercase;
-    letter-spacing: 1.2px;
+    letter-spacing: 1px;
     font-weight: 700;
   }
 
@@ -138,21 +148,22 @@
   .profile-sidebar .list-group {
     border: none;
     flex: 1;
-    padding: 12px 0;
+    padding: 0.75rem 0;
   }
 
   .profile-sidebar .list-group-item {
     border: none;
-    padding: 16px 20px;
-    color: var(--text-secondary);
+    padding: 1rem 1.25rem;
+    color: var(--text-muted);
     border-left: 4px solid transparent;
-    font-weight: 500;
+    font-weight: 600;
     font-size: 0.95rem;
     background: transparent;
     position: relative;
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 0.75rem;
+    text-decoration: none;
   }
 
   .profile-sidebar .list-group-item i {
@@ -162,123 +173,417 @@
   }
 
   .profile-sidebar .list-group-item:hover {
-    background-color: rgba(102, 126, 234, 0.1);
-    color: var(--primary-color);
-    border-left-color: var(--primary-color);
-    padding-left: 24px;
+    background: linear-gradient(90deg, rgba(0, 0, 0, 0.05) 0%, transparent 100%);
+    color: var(--primary);
+    border-left-color: var(--primary);
+    padding-left: 1.5rem;
   }
 
   .profile-sidebar .list-group-item.active {
-    background: linear-gradient(90deg, rgba(102, 126, 234, 0.15) 0%, transparent 100%);
-    color: var(--primary-color);
-    border-left-color: var(--primary-color);
+    background: linear-gradient(90deg, rgba(0, 0, 0, 0.08) 0%, transparent 100%);
+    color: var(--primary);
+    border-left-color: var(--primary);
     font-weight: 700;
-    padding-left: 24px;
+    padding-left: 1.5rem;
   }
 
+  /* ===== Main Content ===== */
   .profile-main {
-    background: var(--card-bg);
-    border-radius: 20px;
-    padding: 48px;
+    background: white;
+    border-radius: var(--radius-lg);
+    padding: 3rem;
     min-height: 550px;
     box-shadow: var(--shadow-lg);
-    border: 1px solid rgba(102, 126, 234, 0.1);
+    border: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+    animation: slideInRight 0.5s ease-out;
+  }
+
+  @keyframes slideInRight {
+    from {
+      opacity: 0;
+      transform: translateX(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  .profile-main::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary) 0%, #4a4a4a 100%);
+  }
+
+  /* ===== Page Title ===== */
+  .page-title {
+    text-align: center;
+    font-size: 2rem;
+    font-weight: 800;
+    letter-spacing: -1px;
+    margin-bottom: 2.5rem;
+    color: var(--primary);
+    position: relative;
+    display: inline-block;
+    width: 100%;
+  }
+
+  .page-title::after {
+    content: '';
+    position: absolute;
+    bottom: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 4px;
+    background: var(--primary);
+    border-radius: 2px;
+  }
+
+  /* ===== Balance Card ===== */
+  .balance-card {
+    background: linear-gradient(135deg, var(--success) 0%, #059669 100%);
+    border: none;
+    border-radius: var(--radius-lg);
+    padding: 2.5rem;
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow-lg);
+    text-align: center;
     position: relative;
     overflow: hidden;
   }
 
-  .section-card {
-    background: var(--card-bg);
-    border-radius: 16px;
-    padding: 40px;
-    border: 1px solid rgba(102, 126, 234, 0.08);
-    box-shadow: var(--shadow-sm);
+  .balance-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    animation: float 6s ease-in-out infinite;
+  }
+
+  .balance-label {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
     position: relative;
     z-index: 1;
   }
 
-  .section-card h4 {
-    color: var(--text-primary);
+  .balance-amount {
+    color: white;
+    font-size: 3rem;
     font-weight: 800;
-    letter-spacing: 0.5px;
-    margin-bottom: 36px;
-    padding-bottom: 24px;
-    border-bottom: 3px solid var(--border-color);
-    font-size: 1.5rem;
+    letter-spacing: -2px;
+    margin: 0;
+    position: relative;
+    z-index: 1;
+  }
+
+  .wallet-icon {
+    font-size: 3.5rem;
+    margin-bottom: 1rem;
+    opacity: 0.9;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ===== Transaction Card ===== */
+  .transaction-card {
+    background: linear-gradient(135deg, #fafbfc 0%, #f8f9fa 100%);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 2rem;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .transaction-header {
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    gap: 12px;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 2px solid var(--border);
   }
 
-  .form-label {
-    color: var(--text-primary);
-    font-size: 0.85rem;
-    font-weight: 700;
-    margin-bottom: 12px;
-    text-transform: uppercase;
-    letter-spacing: 0.6px;
-    display: block;
+  .transaction-title {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--primary);
+    margin: 0;
+    letter-spacing: -0.5px;
   }
 
-  .form-control {
-    border: 2px solid var(--border-color);
-    border-radius: 12px;
-    padding: 14px 18px;
-    font-size: 0.95rem;
-    background: #fafbfc;
-    color: var(--text-primary);
-    font-weight: 500;
+  /* ===== Table Styles ===== */
+  .table-responsive {
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    background: white;
   }
 
-  .form-control:focus {
-    border-color: var(--primary-color);
-    background: #ffffff;
-    box-shadow: 0 0 0 5px rgba(102, 126, 234, 0.15);
-    outline: none;
-    transform: translateY(-2px);
+  .table {
+    margin-bottom: 0;
   }
 
-  .btn-dark {
-    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
-    border: none;
+  .table thead {
+    background: linear-gradient(135deg, var(--primary) 0%, #2d2d2d 100%);
+  }
+
+  .table th {
     color: white;
     font-weight: 700;
-    padding: 14px 32px;
-    border-radius: 12px;
-    font-size: 0.95rem;
-    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.35);
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
+    text-transform: uppercase;
+    font-size: 0.875rem;
+    letter-spacing: 0.5px;
+    padding: 1.25rem 1.5rem;
+    border: none;
+    white-space: nowrap;
   }
 
+  .table td {
+    padding: 1.25rem 1.5rem;
+    vertical-align: middle;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.95rem;
+  }
+
+  .table tbody tr {
+    transition: all 0.2s ease;
+  }
+
+  .table tbody tr:hover {
+    background: linear-gradient(135deg, #fafbfc 0%, #f8f9fa 100%);
+    transform: scale(1.01);
+  }
+
+  .table tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  /* ===== Badges ===== */
+  .badge {
+    padding: 0.5rem 1rem;
+    border-radius: 50px;
+    font-weight: 700;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .badge::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0.8;
+  }
+
+  .bg-success {
+    background: var(--success-light) !important;
+    color: #065f46 !important;
+  }
+
+  .bg-danger {
+    background: var(--danger-light) !important;
+    color: #991b1b !important;
+  }
+
+  /* ===== Amount Cell ===== */
+  .amount-credit {
+    color: var(--success);
+    font-weight: 700;
+    font-size: 1.05rem;
+  }
+
+  .amount-debit {
+    color: var(--danger);
+    font-weight: 700;
+    font-size: 1.05rem;
+  }
+
+  /* ===== Empty State ===== */
+  .empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: white;
+    border-radius: var(--radius-md);
+    border: 2px dashed var(--border);
+  }
+
+  .empty-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+  }
+
+  .empty-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 0.5rem;
+  }
+
+  .empty-text {
+    color: var(--text-muted);
+    font-size: 1rem;
+  }
+
+  /* ===== Pagination ===== */
+  .pagination {
+    display: flex;
+    justify-content: center;
+    margin-top: 2rem;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .pagination .page-item {
+    list-style: none;
+  }
+
+  .pagination .page-link {
+    border: 2px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--primary);
+    padding: 0.625rem 1rem;
+    font-weight: 700;
+    background-color: white;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.2s ease;
+    cursor: pointer;
+    text-decoration: none;
+    min-width: 45px;
+    text-align: center;
+  }
+
+  .pagination .page-link:hover {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+
+  .pagination .active .page-link {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+    box-shadow: var(--shadow-md);
+  }
+
+  .pagination .disabled .page-link {
+    background: var(--light);
+    color: var(--text-muted);
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+
+  .pagination .disabled .page-link:hover {
+    background: var(--light);
+    color: var(--text-muted);
+    border-color: var(--border);
+    transform: none;
+    box-shadow: var(--shadow-sm);
+  }
+
+  /* ===== Responsive Design ===== */
   @media (max-width: 991px) {
-    .profile-main { padding: 32px; }
-    .section-card { padding: 28px; }
+    .profile-main {
+      padding: 2rem;
+    }
+    
+    .profile-sidebar {
+      margin-bottom: 2rem;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .profile-container {
+      padding: 2rem 0;
+    }
+
+    .page-title {
+      font-size: 1.75rem;
+      margin-bottom: 2rem;
+    }
+
+    .balance-card {
+      padding: 2rem 1.5rem;
+    }
+
+    .balance-amount {
+      font-size: 2.5rem;
+    }
+
+    .wallet-icon {
+      font-size: 3rem;
+    }
+
+    .transaction-card {
+      padding: 1.5rem;
+    }
+
+    .table th,
+    .table td {
+      padding: 1rem;
+      font-size: 0.85rem;
+    }
+
+    .transaction-title {
+      font-size: 1.1rem;
+    }
+
+    .table-responsive {
+      overflow-x: auto;
+    }
+
+    .pagination .page-link {
+      padding: 0.5rem 0.75rem;
+      font-size: 0.875rem;
+      min-width: 40px;
+    }
   }
 
   @media (max-width: 576px) {
-    .profile-main { padding: 24px; }
-    .section-card { padding: 24px; }
-  }
+    .profile-main {
+      padding: 1.5rem;
+    }
 
-  /* Animations */
-  @keyframes slideInUp {
-    from { opacity: 0; transform: translateY(30px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
+    .page-title {
+      font-size: 1.5rem;
+    }
 
-  .profile-sidebar {
-    animation: slideInUp 0.6s ease-out 0.1s both;
-  }
+    .balance-card {
+      padding: 1.5rem 1rem;
+    }
 
-  .profile-main {
-    animation: slideInUp 0.6s ease-out;
-  }
+    .balance-amount {
+      font-size: 2rem;
+    }
 
+    .table th,
+    .table td {
+      padding: 0.75rem 0.5rem;
+      font-size: 0.8rem;
+    }
+  }
 </style>
-
-
 
 <div class="container profile-container">
   <div class="row g-4">
@@ -295,10 +600,10 @@
         </div>
 
         <div class="list-group">
-          <a href="/profile" class="list-group-item list-group-item-action active" data-tab="profile">
+          <a href="/profile" class="list-group-item list-group-item-action" data-tab="profile">
             <i class="bi bi-person-fill"></i> Profile
           </a>
-          <a href="/wallet" class="list-group-item list-group-item-action" data-tab="wallet">
+          <a href="/wallet" class="list-group-item list-group-item-action active" data-tab="wallet">
             <i class="bi bi-wallet2"></i> Wallet
           </a>
           <a href="/address" class="list-group-item list-group-item-action" data-tab="address">
@@ -308,25 +613,24 @@
             <i class="bi bi-bag-fill"></i> Orders
           </a>
           <a href="/refer" class="list-group-item list-group-item-action">
-        <i class="bi bi-gift-fill"></i> Refer & Earn
-      </a>
-
+            <i class="bi bi-gift-fill"></i> Refer & Earn
+          </a>
           <a href="/logout" id="logout-link" class="list-group-item list-group-item-action">
             <i class="bi bi-box-arrow-right"></i> Logout
           </a>
         </div>
       </div>
     </div>
+
     <div class="col-lg-9">
       <div class="profile-main">
-
-        <h2 class="page-title text-center">My Wallet</h2>
+        <h2 class="page-title"> My Wallet</h2>
 
         <!-- Balance Card -->
         <div class="balance-card">
           <div class="wallet-icon">💳</div>
           <div class="balance-label">Available Balance</div>
-          <h2 class="balance-amount">₹<%= balance.toFixed(0) %></h2>
+          <h2 class="balance-amount">₹<%= balance.toFixed(2) %></h2>
         </div>
 
         <!-- Transaction Card -->
@@ -370,7 +674,7 @@
                   <td><%= tx.description || 'N/A' %></td>
 
                   <td class="<%= tx.type === 'credit' ? 'amount-credit' : 'amount-debit' %>">
-                    <%= tx.type === 'credit' ? '+' : '-' %>₹<%= tx.amount.toFixed(0) %>
+                    <%= tx.type === 'credit' ? '+' : '-' %>₹<%= tx.amount.toFixed(2) %>
                   </td>
                 </tr>
                 <% }) %>
@@ -459,8 +763,14 @@
     e.preventDefault();
     Swal.fire({
       title: 'Logout?',
+      text: 'Are you sure you want to logout?',
       icon: 'question',
-      showCancelButton: true
+      showCancelButton: true,
+      confirmButtonText: 'Yes, Logout',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: '#000',
+      cancelButtonColor: '#6c757d',
+      reverseButtons: true
     }).then(result => {
       if (result.isConfirmed) window.location.href = "/logout";
     });

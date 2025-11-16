@@ -32,7 +32,6 @@ const getSalesData = async (req, res) => {
       startDate = weekStart;
       groupBy = { $dayOfWeek: "$createdAt" };
     } else if (filter === "daily") {
-      // ✅ Group by 30-minute intervals for much finer time view
       startDate = new Date();
       startDate.setHours(now.getHours() - 24);
 
@@ -42,7 +41,7 @@ const getSalesData = async (req, res) => {
             $dateToString: {
               format: "%Y-%m-%d %H:",
               date: "$createdAt",
-              timezone: "Asia/Kolkata" // adjust to your region
+              timezone: "Asia/Kolkata" 
             }
           },
           {
@@ -73,7 +72,7 @@ const getSalesData = async (req, res) => {
 
     res.json({ success: true, data: salesData });
   } catch (err) {
-    console.error("❌ Error fetching sales data:", err);
+    console.error(" Error fetching sales data:", err);
     res.status(500).json({ success: false });
   }
 };

@@ -960,28 +960,23 @@ const getWalletBalance = async (req, res) => {
 
 const payWithWallet = async (req, res) => {
   try {
-    const { addressId } = req.body;
     const userId = req.session.user;
+    const { addressId } = req.body;
 
-    const [address, cart, user] = await Promise.all([
-      Address.findOne({ _id: addressId, user: userId }),
-      Cart.findOne({ user: userId }).populate("items.product"),
-      User.findById(userId)
-    ]);
+    const user = await User.findById(userId);
+    const cart = await Cart.findOne({ user: userId }).populate("items.product");
 
-    if (!address || !cart || cart.items.length === 0) {
-      return res.json({ success: false, message: "Invalid address or empty cart" });
+    if (!user || !cart || cart.items.length === 0) {
+      return res.json({ success: false, message: "Cart is empty." });
     }
 
-    // --- Make sure wallet object exists ---
-    if (!user.wallet) {
-      user.wallet = { balance: 0, transactions: [] };
-    }
-    if (!Array.isArray(user.wallet.transactions)) {
-      user.wallet.transactions = [];
+    const selectedAddress = user.address.find(a => a._id.toString() === addressId);
+
+    if (!selectedAddress) {
+      return res.json({ success: false, message: "Address not found." });
     }
 
-    // --- Calculate totals ---
+
     const subtotal = cart.items.reduce(
       (sum, i) => sum + (i.product.discountPrice || i.product.price) * i.quantity,
       0
@@ -991,81 +986,88 @@ const payWithWallet = async (req, res) => {
     const shipping = 50;
 
     let couponDiscount = 0;
+
     if (req.session.appliedCoupon) {
       const c = req.session.appliedCoupon;
       couponDiscount =
         c.discountType === "percentage"
           ? (subtotal * c.discountValue) / 100
           : c.discountValue;
+
       if (c.maxDiscount)
         couponDiscount = Math.min(couponDiscount, c.maxDiscount);
     }
 
     const total = subtotal + tax + shipping - couponDiscount;
 
-    // --- Check wallet balance ---
+
     if (user.wallet.balance < total) {
-      return res.json({ success: false, message: "Insufficient wallet balance" });
+      return res.json({
+        success: false,
+        message: "Insufficient wallet balance."
+      });
     }
 
-    // --- WALLET DEDUCTION ---
+
     user.wallet.balance -= total;
 
     user.wallet.transactions.push({
       type: "debit",
       amount: total,
-      description: `Wallet payment for order – #ZNK${Date.now()}`,
+      description: `Wallet payment for order`,
       date: new Date()
     });
 
-    // 🔥 VERY IMPORTANT: tell Mongoose wallet was modified
     user.markModified("wallet");
-
     await user.save();
 
-    // --- Place order ---
+
     const order = new Order({
       user: userId,
       orderID: `ZNK${Date.now()}${Math.floor(Math.random() * 100)}`,
       items: cart.items.map(i => ({
         product: i.product._id,
-        productName: i.product.productName,
-        productImage: i.product.productImage,
         quantity: i.quantity,
         size: i.size,
         price: i.product.discountPrice || i.product.price
       })),
       address: {
-        name: address.name,
-        city: address.city,
-        state: address.state,
-        pincode: address.pincode
+        name: selectedAddress.name,
+        city: selectedAddress.city,
+        state: selectedAddress.state,
+        pincode: selectedAddress.pincode
       },
       totalAmount: total,
       paymentMethod: "Wallet",
       status: "Placed",
-      coupon: req.session.appliedCoupon ? {
-        code: req.session.appliedCoupon.code,
-        discountAmount: couponDiscount
-      } : null
+      coupon: req.session.appliedCoupon
+        ? {
+            code: req.session.appliedCoupon.code,
+            discountAmount: couponDiscount
+          }
+        : null
     });
 
     await order.save();
-    await Cart.deleteOne({ user: userId });
 
+    await Cart.deleteOne({ user: userId });
     delete req.session.appliedCoupon;
 
     return res.json({
       success: true,
-      message: "Wallet payment successful",
-      redirect: `/order-success/${order._id}`
+      message: "Wallet payment successful.",
+      redirect: `/order-success?id=${order._id}`
     });
 
   } catch (err) {
-    console.error(" Wallet payment error:", err);
-    res.json({ success: false, message: err.message || "Server error" });
+    console.error("WALLET PAYMENT ERROR:", err);
+    return res.json({
+      success: false,
+      message: "Server error during wallet payment."
+    });
   }
 };
+
 
 
 

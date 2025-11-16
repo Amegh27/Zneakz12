@@ -143,7 +143,9 @@ router.get("/order-failure", checkoutController.orderFailurePage);
 
 // wallet
 router.get("/wallet", checkoutController.getWalletPage);
+router.post("/checkout/pay-wallet", checkoutController.payWithWallet);
 router.get("/balance", checkoutController.getWalletBalance);
+
 
 // refer
 router.get("/refer", userController.getReferPage);

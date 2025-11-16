@@ -883,7 +883,6 @@
 <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
-  // Generic validation function
   function validateAddress(formData) {
     const { name: address, city, state, pincode } = formData;
     if (!address || address.trim().length === 0) return { valid: false, msg: 'Address is required' };
@@ -892,11 +891,12 @@
     if (city.trim().length > 40) return { valid: false, msg: 'City must be 40 characters or less' };
     if (!state || state.trim().length === 0) return { valid: false, msg: 'State is required' };
     if (state.trim().length > 40) return { valid: false, msg: 'State must be 40 characters or less' };
-    if (!pincode || pincode.trim().length !== 6 || !/^\d{6}$/.test(pincode.trim())) return { valid: false, msg: 'Pincode must be exactly 6 digits' };
+if (!pincode || !/^[2-9][0-9]{5}$/.test(pincode.trim())) {
+  return { valid: false, msg: 'Pincode must be 6 digits and cannot start with 0 or 1' };
+}
     return { valid: true };
   }
 
-  // Trim form data
   function trimFormData(formData) {
     const trimmed = { ...formData };
     Object.keys(trimmed).forEach(key => {
@@ -905,7 +905,6 @@
     return trimmed;
   }
 
-  // Add New Address Handler
   document.getElementById('addAddressTrigger').addEventListener('click', () => {
     document.getElementById('addAddressTrigger').style.display = 'none';
     document.getElementById('addAddressForm').style.display = 'block';
@@ -963,7 +962,6 @@
     }
   });
 
-  // Edit Handlers (per address)
   document.querySelectorAll('.btn-edit').forEach(btn => {
     btn.addEventListener('click', (e) => {
       const addressItem = e.target.closest('.address-item');
@@ -971,14 +969,12 @@
     });
   });
 
-  // Cancel Edit
   document.addEventListener('click', (e) => {
     if (e.target.classList.contains('cancel-edit-btn')) {
       e.target.closest('.address-item').classList.remove('editing');
     }
   });
 
-  // Save Edit
   document.addEventListener('submit', async (e) => {
     if (e.target.classList.contains('address-edit-form')) {
       e.preventDefault();
@@ -1060,7 +1056,6 @@
     });
   });
 
-  // Set Default Address
   document.querySelectorAll('.btn-set-default').forEach(btn => {
   btn.addEventListener('click', async (e) => {
     const addressId = e.target.dataset.id;

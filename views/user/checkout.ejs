@@ -1087,13 +1087,12 @@
 
     const data = await res.json();
     if (data.success) {
-      window.location.href = data.redirect;
+      window.location.assign(data.redirect);
     } else {
       Swal.fire('Error', data.message || 'Wallet payment failed.', 'error');
     }
   });
 
-  // COD + Partial Wallet
   placeOrderBtn.addEventListener('click', async () => {
     const selectedAddressId = document.querySelector('input[name="selectedAddress"]:checked')?.value;
     if (!selectedAddressId) return Swal.fire('Error', 'Please select an address.', 'error');

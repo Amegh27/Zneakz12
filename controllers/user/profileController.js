@@ -71,13 +71,18 @@ const forgotEmailValid = async(req,res)=>{
     try {
         const {email} = req.body
         const findUser = await User.findOne({email:email})
-        if(!findUser){
-         res.render('forgot-password',{message:"Email not found"})
-
-        }
-        if(findUser.googleId){
-          res.render('forgot-password',{message:"Google user cant change password"})
-        }
+        if (!findUser) {
+      return res.render("forgot-password", {
+        message: "Email not found",
+        email
+      });
+    }
+         if (findUser.googleId) {
+      return res.render("forgot-password", {
+        message: "Google users cannot change password via email",
+        email
+      });
+    }
         if(findUser){
             const otp = generateOtp()
             const emailSend = await sendVerificationEmail(email,otp)
