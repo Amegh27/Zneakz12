@@ -781,7 +781,7 @@
       submitBtn.innerHTML = 'Saving...';
 
       try {
-        const res = await fetch(`/user/address/edit/${addressId}`, {
+        const res = await fetch(`/address/edit/${addressId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(formData)
@@ -828,7 +828,7 @@
 
       if (result.isConfirmed) {
         try {
-          const res = await fetch(`/user/address/delete/${addressId}`, { method: 'DELETE' });
+          const res = await fetch(`/address/delete/${addressId}`, { method: 'DELETE' });
           if (res.ok) {
             const data = await res.json();
             Swal.fire('Deleted!', data.message || 'Address has been deleted.', 'success').then(() => {
@@ -1024,291 +1024,276 @@
   }
 });
 
- const walletBalance = <%= user.wallet.balance %>;
-  let totalAmount = <%= finalTotal %>;
-  let walletUsed = false;
+ const walletBalance = Number(<%= (user.wallet && user.wallet.balance) ? user.wallet.balance : 0 %>);
+let totalAmount = Number(<%= finalTotal %>); // total order amount (finalTotal from server)
+const cartItems = <%- JSON.stringify(cart ? cart.items.map(i => ({
+  productId: i.product._id,
+  quantity: i.quantity,
+  size: i.size,
+  price: i.product.discountPrice || i.product.price
+})) : []) %>;
 
-  const useWalletBtn = document.getElementById('useWalletBtn');
-  const walletSummary = document.getElementById('walletSummary');
-  const walletAppliedSpan = document.getElementById('walletApplied');
-  const remainingAmountSpan = document.getElementById('remainingAmount');
-  const placeOrderBtn = document.getElementById('placeOrderBtn');
-  const razorpayBtn = document.getElementById('razorpayBtn');
-  const payWithWalletBtn = document.getElementById('payWithWalletBtn');
+// DOM elements
+const useWalletBtn = document.getElementById('useWalletBtn');
+const walletSummary = document.getElementById('walletSummary');
+const walletAppliedSpan = document.getElementById('walletApplied');
+const remainingAmountSpan = document.getElementById('remainingAmount');
+const placeOrderBtn = document.getElementById('placeOrderBtn');
+const razorpayBtn = document.getElementById('razorpayBtn');
+const payWithWalletBtn = document.getElementById('payWithWalletBtn');
 
-  function updateWalletUI() {
-    if (!walletUsed) {
-      useWalletBtn.classList.remove('btn-success');
-      useWalletBtn.classList.add('btn-outline-dark');
-      useWalletBtn.innerHTML = `<i class="bi bi-wallet2 me-2"></i>Use Wallet Balance (₹${walletBalance.toFixed(0)})`;
-      walletSummary.style.display = 'none';
-      payWithWalletBtn.style.display = 'none';
-      razorpayBtn.style.display = 'block';
-      placeOrderBtn.style.display = 'block';
-      return;
-    }
+// UI state
+let walletUsedToggle = false; // user clicked "Use Wallet"
+let computedWalletToUse = 0;  // actual wallet amount applied (number)
 
-    const walletToUse = Math.min(walletBalance, totalAmount);
-    const remaining = totalAmount - walletToUse;
+// Utility: format rupee
+function formatRupee(n) {
+  return Number(n).toFixed(2);
+}
 
-    walletAppliedSpan.textContent = `₹${walletToUse.toFixed(0)}`;
-    remainingAmountSpan.textContent = `₹${remaining.toFixed(0)}`;
-    walletSummary.style.display = 'block';
-    useWalletBtn.classList.remove('btn-outline-dark');
-    useWalletBtn.classList.add('btn-success');
-    useWalletBtn.innerHTML = `<i class="bi bi-check-circle-fill me-2"></i>Wallet Applied`;
-
-    if (remaining === 0) {
-      payWithWalletBtn.style.display = 'block';
-      razorpayBtn.style.display = 'none';
-      placeOrderBtn.style.display = 'none'; // Hide COD
-    } else {
-      payWithWalletBtn.style.display = 'none';
-      razorpayBtn.style.display = 'block';
-      placeOrderBtn.style.display = 'block';
-    }
+function updateWalletUI() {
+  if (!walletUsedToggle) {
+    useWalletBtn.classList.remove('btn-success');
+    useWalletBtn.classList.add('btn-outline-dark');
+    useWalletBtn.innerHTML = `<i class="bi bi-wallet2 me-2"></i> Use Wallet Balance (₹${Math.round(walletBalance)})`;
+    walletSummary.style.display = 'none';
+    payWithWalletBtn.style.display = 'none';
+    razorpayBtn.style.display = 'block';
+    placeOrderBtn.style.display = 'block';
+    computedWalletToUse = 0;
+    walletAppliedSpan.textContent = `₹0`;
+    remainingAmountSpan.textContent = `₹${formatRupee(totalAmount)}`;
+    return;
   }
 
-  useWalletBtn.addEventListener('click', () => {
-    walletUsed = !walletUsed;
-    updateWalletUI();
+  computedWalletToUse = Math.min(walletBalance, totalAmount);
+  const remaining = +(totalAmount - computedWalletToUse);
+
+  walletAppliedSpan.textContent = `₹${formatRupee(computedWalletToUse)}`;
+  remainingAmountSpan.textContent = `₹${formatRupee(remaining)}`;
+  walletSummary.style.display = 'block';
+  useWalletBtn.classList.remove('btn-outline-dark');
+  useWalletBtn.classList.add('btn-success');
+  useWalletBtn.innerHTML = `<i class="bi bi-check-circle-fill me-2"></i> Wallet Applied`;
+
+  if (remaining === 0) {
+    payWithWalletBtn.style.display = 'block';
+    razorpayBtn.style.display = 'none';
+    placeOrderBtn.style.display = 'none'; // hide COD since fully paid
+  } else {
+    payWithWalletBtn.style.display = 'none';
+    razorpayBtn.style.display = 'block';
+    placeOrderBtn.style.display = 'block';
+  }
+}
+
+// Toggle wallet
+useWalletBtn.addEventListener('click', () => {
+  walletUsedToggle = !walletUsedToggle;
+  updateWalletUI();
+});
+
+// Helper: read selected address id
+function getSelectedAddressId() {
+  return document.querySelector('input[name="selectedAddress"]:checked')?.value;
+}
+
+// Helper: disable/enable buttons during network
+function setButtonsDisabled(state) {
+  [placeOrderBtn, razorpayBtn, payWithWalletBtn, useWalletBtn].forEach(b => {
+    if (b) b.disabled = state;
   });
+}
 
-  // Full Wallet Payment
-  payWithWalletBtn.addEventListener('click', async () => {
-    const selectedAddressId = document.querySelector('input[name="selectedAddress"]:checked')?.value;
-    if (!selectedAddressId) return Swal.fire('Error', 'Please select a delivery address.', 'error');
-
-    const res = await fetch('/checkout/pay-wallet', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ addressId: selectedAddressId })
-    });
-
-    const data = await res.json();
-    if (data.success) {
-      window.location.assign(data.redirect);
-    } else {
-      Swal.fire('Error', data.message || 'Wallet payment failed.', 'error');
+// COD: place order (or partial wallet+COD when implemented server side)
+placeOrderBtn.addEventListener('click', async () => {
+  try {
+    const selectedAddressId = getSelectedAddressId();
+    if (!selectedAddressId) {
+      return Swal.fire('Error', 'Please select an address.', 'error');
     }
-  });
 
-  placeOrderBtn.addEventListener('click', async () => {
-    const selectedAddressId = document.querySelector('input[name="selectedAddress"]:checked')?.value;
-    if (!selectedAddressId) return Swal.fire('Error', 'Please select an address.', 'error');
-
-    const walletToUse = walletUsed ? Math.min(walletBalance, totalAmount) : 0;
-    const remaining = totalAmount - walletToUse;
-
-    if (remaining === 0 && walletUsed) {
-      payWithWalletBtn.click();
-      return;
+    // If walletUsedToggle and wallet covers whole total, direct to full wallet flow
+    const walletToUse = walletUsedToggle ? Math.min(walletBalance, totalAmount) : 0;
+    if (walletToUse > 0 && (totalAmount - walletToUse) === 0) {
+      // fully covered by wallet -> trigger payWithWallet flow
+      return payWithWalletHandler(selectedAddressId);
     }
+
+    setButtonsDisabled(true);
 
     const res = await fetch('/checkout/place-order', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {'Content-Type':'application/json'},
       body: JSON.stringify({
         addressId: selectedAddressId,
-        useWallet: walletUsed,
-        paymentMethod: 'COD'
+        useWallet: walletUsedToggle
       })
     });
 
-    const data = await res.json();
+    const text = await res.text();
+    let data;
+    try { data = JSON.parse(text); } catch (e) {
+      console.error('Invalid JSON from place-order:', text);
+      throw new Error('Server returned invalid response');
+    }
+
     if (data.success) {
       window.location.href = data.redirect;
     } else {
       Swal.fire('Error', data.message || 'Order placement failed.', 'error');
     }
-  });
+  } catch (err) {
+    console.error('Place order failed:', err);
+    Swal.fire('Error', err.message || 'Failed to place order.', 'error');
+  } finally {
+    setButtonsDisabled(false);
+  }
+});
 
-  // Razorpay + Partial Wallet
-  razorpayBtn.addEventListener('click', async () => {
-    const selectedAddressId = document.querySelector('input[name="selectedAddress"]:checked')?.value;
+async function payWithWalletHandler(selectedAddressId) {
+  try {
     if (!selectedAddressId) return Swal.fire('Error', 'Please select an address.', 'error');
 
-    const walletToUse = walletUsed ? Math.min(walletBalance, totalAmount) : 0;
-    const razorpayAmount = totalAmount - walletToUse;
+    const confirm = await Swal.fire({
+      icon: 'question',
+      title: 'Confirm Wallet Payment?',
+text: `₹${Number(totalAmount).toFixed(0)} will be deducted from your wallet.`,
+      showCancelButton: true,
+      confirmButtonText: 'Pay Now',
+      confirmButtonColor: '#28a745'
+    });
 
-    if (razorpayAmount === 0) {
-      payWithWalletBtn.click();
-      return;
+    if (!confirm.isConfirmed) return;
+
+    setButtonsDisabled(true);
+
+    const res = await fetch('/checkout/pay-wallet', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ addressId: selectedAddressId })
+    });
+
+    const text = await res.text();
+    let data;
+    try { data = JSON.parse(text); } catch (e) {
+      console.error('Invalid JSON from pay-wallet:', text);
+      throw new Error('Server returned invalid response');
     }
 
-    const res = await fetch('/create-razorpay-order', {
+    if (data.success) {
+      window.location.href = data.redirect;
+    } else {
+      Swal.fire('Error', data.message || 'Wallet payment failed', 'error');
+    }
+  } catch (err) {
+    console.error('Wallet payment error:', err);
+    Swal.fire('Error', err.message || 'Wallet payment error', 'error');
+  } finally {
+    setButtonsDisabled(false);
+  }
+}
+
+payWithWalletBtn.addEventListener('click', async () => {
+  const selectedAddressId = getSelectedAddressId();
+  if (!selectedAddressId) return Swal.fire('Error', 'Please select an address.', 'error');
+  await payWithWalletHandler(selectedAddressId);
+});
+
+razorpayBtn.addEventListener('click', async () => {
+  try {
+    const selectedAddressId = getSelectedAddressId();
+    if (!selectedAddressId) {
+      return Swal.fire('Error', 'Please select an address.', 'error');
+    }
+
+    const walletToUse = walletUsedToggle ? Math.min(walletBalance, totalAmount) : 0;
+    const razorpayAmount = +(totalAmount - walletToUse).toFixed(2);
+
+    if (razorpayAmount <= 0) {
+      return Swal.fire('Info', 'No amount left to pay with Razorpay.', 'info');
+    }
+
+    setButtonsDisabled(true);
+
+    const createRes = await fetch('/create-razorpay-order', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {'Content-Type':'application/json'},
       body: JSON.stringify({ totalAmount: razorpayAmount })
     });
 
-    const data = await res.json();
-    if (!data.success) return Swal.fire('Error', data.message || 'Payment initiation failed.', 'error');
+    const createData = await createRes.json();
+    if (!createData.success) {
+      throw new Error(createData.message || 'Unable to create payment');
+    }
 
     const options = {
-      key: data.key,
-      amount: data.amount * 100,
+      key: createData.key,
+      amount: createData.amount * 100, 
       currency: 'INR',
       name: 'ZNEAKZ',
-      order_id: data.orderId,
-      handler: async function (response) {
-        const orderDetails = {
-          items: <%- JSON.stringify(cart.items.map(i => ({
-            productId: i.product._id,
-            quantity: i.quantity,
-            size: i.size,
-            price: i.product.discountPrice || i.product.price
-          }))) %>,
-          address: selectedAddressId,
-          totalAmount: <%= finalTotal %>,
-          walletUsed: walletToUse,
-          useWallet: walletUsed,
-          paymentMethod: 'Razorpay'
-        };
+      description: 'Secure Payment',
+      order_id: createData.orderId,
+      handler: async function(response) {
+        try {
+          const orderDetails = {
+            items: cartItems,
+            address: selectedAddressId,
+            totalAmount: totalAmount,            
+            walletUsed: walletToUse,
+            useWallet: walletUsedToggle,
+            paymentMethod: 'Razorpay'
+          };
 
-        const verifyRes = await fetch('/verify-payment', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            razorpay_order_id: response.razorpay_order_id,
-            razorpay_payment_id: response.razorpay_payment_id,
-            razorpay_signature: response.razorpay_signature,
-            orderDetails
-          })
-        });
+          const verifyRes = await fetch('/verify-payment', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+              orderDetails
+            })
+          });
 
-        const verifyData = await verifyRes.json();
-        window.location.href = verifyData.redirect;
+          const verifyData = await verifyRes.json();
+          if (verifyData && verifyData.redirect) {
+            window.location.href = verifyData.redirect;
+          } else {
+            console.error('Invalid verify response', verifyData);
+            Swal.fire('Error', 'Payment verification failed', 'error');
+          }
+        } catch (err) {
+          console.error('Verify handler error:', err);
+          Swal.fire('Error', 'Payment verification error', 'error');
+        }
+      },
+      modal: {
+        ondismiss: function() {
+          setButtonsDisabled(false);
+        }
       },
       theme: { color: '#000' }
     };
 
-    new Razorpay(options).open();
-  });
-
-  // Initialize UI
-  updateWalletUI();
-
-
-payWithWalletBtn.addEventListener("click", async () => {
-  const selectedAddressId = document.querySelector('input[name="selectedAddress"]:checked')?.value;
-  if (!selectedAddressId) return Swal.fire("Error", "Please select an address.", "error");
-
-  Swal.fire({
-    icon: "question",
-    title: "Confirm Wallet Payment?",
-    text: `₹${totalAmount} will be deducted.`,
-    showCancelButton: true,
-    confirmButtonText: "Pay Now",
-    confirmButtonColor: "#28a745"
-  }).then(async (result) => {
-    if (!result.isConfirmed) return;
-
-    const res = await fetch("/checkout/pay-wallet", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ addressId: selectedAddressId })
+    const rzp = new Razorpay(options);
+    rzp.on('payment.failed', function(response){
+      console.error('Razorpay payment failed:', response.error);
+      Swal.fire('Payment failed', response.error.description || 'Payment was not successful', 'error');
+      setButtonsDisabled(false);
     });
 
-    const data = await res.json();
+    rzp.open();
 
-    if (data.success) {
-      window.location.href = data.redirect;   
-    } else {
-      Swal.fire("Error", data.message, "error");
-    }
-  });
+  } catch (err) {
+    console.error('Razorpay initiation error:', err);
+    Swal.fire('Error', err.message || 'Unable to start payment', 'error');
+    setButtonsDisabled(false);
+  }
 });
 
 
-
-  placeOrderBtn.addEventListener('click', async () => {
-    const selectedAddressId = document.querySelector('input[name="selectedAddress"]:checked')?.value;
-    if (!selectedAddressId) return Swal.fire('Error', 'Select an address.', 'error');
-
-    const remaining = totalAmount - (walletUsed ? Math.min(walletBalance, totalAmount) : 0);
-
-    if (remaining === 0 && walletUsed) {
-      payWithWalletBtn.click();
-      return;
-    }
-
-    const res = await fetch("/checkout/place-order", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        addressId: selectedAddressId,
-        useWallet: walletUsed
-      })
-    });
-const text = await res.text();
-console.log("Wallet Response RAW:", text);
-
-let data;
-try {
-    data = JSON.parse(text);
-} catch (e) {
-    console.error("JSON Parse Error:", e);
-    return Swal.fire("Server Error", "Wallet payment returned invalid response", "error");
-}
-    if (data.success) window.location.href = data.redirect;
-    else Swal.fire('Error', data.message, 'error');
-  });
-
-  razorpayBtn.addEventListener('click', async () => {
-    const selectedAddressId = document.querySelector('input[name="selectedAddress"]:checked')?.value;
-    if (!selectedAddressId) return Swal.fire('Error', 'Select address.', 'error');
-
-    const walletToUse = walletUsed ? Math.min(walletBalance, totalAmount) : 0;
-    const razorpayAmount = totalAmount - walletToUse;
-
-    const res = await fetch("/create-razorpay-order", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ totalAmount: razorpayAmount })
-    });
-    const data = await res.json();
-    if (!data.success) return Swal.fire('Error', 'Payment failed.', 'error');
-
-    const options = {
-      key: data.key,
-      amount: data.amount * 100,
-      currency: "INR",
-      name: "ZNEAKZ",
-      order_id: data.orderId,
-      handler: async function (response) {
-        const orderDetails = {
-          items: <%- JSON.stringify(cart.items.map(i => ({
-            productId: i.product._id,
-            quantity: i.quantity,
-            size: i.size,
-            price: i.product.discountPrice || i.product.price
-          }))) %>,
-          address: selectedAddressId,
-          totalAmount: <%= finalTotal %>,
-          walletUsed: walletToUse
-        };
-
-        const verifyRes = await fetch("/verify-payment", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            razorpay_order_id: response.razorpay_order_id,
-            razorpay_payment_id: response.razorpay_payment_id,
-            razorpay_signature: response.razorpay_signature,
-            orderDetails,
-            useWallet: walletUsed
-          })
-        });
-
-        const verifyData = await verifyRes.json();
-        window.location.href = verifyData.redirect;
-      },
-      theme: { color: "#000" }
-    };
-
-    new Razorpay(options).open();
-  });
+updateWalletUI();
 </script>
 
 <%- include("../partials/user/footer") %>

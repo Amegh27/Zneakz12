@@ -284,25 +284,78 @@ const viewReturnDetails = async (req, res) => {
   }
 };
 
+async function calculateRefund(order, item) {
+  const toNum = v => {
+    const n = Number(v);
+    return Number.isFinite(n) ? n : 0;
+  };
+
+  const qty = toNum(item.quantity);
+  const itemPrice = toNum(item.price); 
+  const itemPriceTotal = itemPrice * qty;
+
+  if (item.finalPrice !== undefined && item.finalPrice !== null) {
+    const finalUnit = toNum(item.finalPrice);
+    return Number((finalUnit * qty).toFixed(2));
+  }
+
+  let totalBeforeDiscount = 0;
+  if (typeof order.totalBeforeDiscount === "number") {
+    totalBeforeDiscount = toNum(order.totalBeforeDiscount);
+  } else {
+    if (Array.isArray(order.items)) {
+      totalBeforeDiscount = order.items.reduce((s, it) => s + (toNum(it.price) * toNum(it.quantity)), 0);
+    } else {
+      totalBeforeDiscount = itemPriceTotal; 
+    }
+  }
+
+  const couponDiscount = toNum(order.coupon && order.coupon.discountAmount ? order.coupon.discountAmount : 0);
+
+  let itemPaid = itemPriceTotal;
+  if (couponDiscount > 0 && totalBeforeDiscount > 0) {
+    const prop = (itemPriceTotal) / totalBeforeDiscount;
+    const itemDiscount = +(couponDiscount * prop).toFixed(0);
+    itemPaid = +(itemPriceTotal - itemDiscount).toFixed(0);
+    if (itemPaid < 0) itemPaid = 0;
+  }
+
+  const orderTotalAmount = toNum(order.totalAmount); 
+  const walletUsed = toNum(order.walletUsed || (order.wallet && order.wallet.balanceUsed ? order.wallet.balanceUsed : 0));
+
+  if (orderTotalAmount <= 0) {
+    return 0;
+  }
+
+  const walletPart = walletUsed > 0 ? +((walletUsed * (itemPaid / orderTotalAmount))).toFixed(2) : 0;
+
+  const otherPart = +(itemPaid - walletPart).toFixed(0);
+
+  const totalRefund = +(walletPart + otherPart).toFixed(0);
+
+  if (!Number.isFinite(totalRefund) || Number.isNaN(totalRefund)) return 0;
+  return totalRefund;
+}
+
 
 const approveReturn = async (req, res) => {
   try {
     const { orderId, itemId } = req.params;
 
     const order = await Order.findById(orderId).populate("items.product user");
-    if (!order) return res.status(404).json({ success: false, message: "Order not found" });
+    if (!order) {
+      return res.status(404).json({ success: false, message: "Order not found" });
+    }
 
     const item = order.items.id(itemId);
-    if (!item) return res.status(404).json({ success: false, message: "Item not found" });
+    if (!item) {
+      return res.status(404).json({ success: false, message: "Item not found" });
+    }
 
     if (item.returnStatus === "Approved") {
       return res.json({ success: false, message: "Return already approved" });
     }
 
-    // ✅ Mark as approved
-    item.returnStatus = "Approved";
-
-    // 🟢 Existing restock logic — keep untouched
     const product = await Product.findById(item.product._id);
     if (product) {
       const sizeIndex = product.sizes.findIndex(s => s.size === item.size);
@@ -312,31 +365,64 @@ const approveReturn = async (req, res) => {
       }
     }
 
-    // ✅ Refund amount to user's wallet
+    const itemBaseTotal = item.price * item.quantity;
+
+    const subtotal = order.items
+      .filter(i => i.status !== "Cancelled")
+      .reduce((sum, i) => sum + i.price * i.quantity, 0);
+
+    const safeSubtotal = subtotal > 0 ? subtotal : 1;
+
+    const orderTax = +(safeSubtotal * 0.05).toFixed(0);
+
+    const itemTaxShare = +((itemBaseTotal / safeSubtotal) * orderTax).toFixed(2);
+
+    let couponRefund = 0;
+    if (order.coupon && order.coupon.discountAmount > 0) {
+      couponRefund = +((itemBaseTotal / safeSubtotal) * order.coupon.discountAmount).toFixed(2);
+    }
+
+    const refundAmount = +(itemBaseTotal + itemTaxShare - couponRefund).toFixed(2);
+
+    const finalRefund = refundAmount > 0 ? refundAmount : 0;
+
     const user = await User.findById(order.user);
     if (user) {
-      const refundAmount = item.price * item.quantity;
-      user.wallet = user.wallet || { balance: 0, transactions: [] };
+      if (!user.wallet) {
+        user.wallet = { balance: 0, transactions: [] };
+      }
 
-      user.wallet.balance += refundAmount;
+      user.wallet.balance = +(user.wallet.balance + finalRefund).toFixed(0);
+
       user.wallet.transactions.push({
         type: "credit",
-        amount: refundAmount,
-        description: `Refund for returned item (${item.product.productName}) in order #${order.orderID || order._id}`,
-        date: new Date()
+        amount: finalRefund,
+        date: new Date(),
+        description: `Refund for returned item (${item.product.productName})`
       });
+
+      user.markModified("wallet");
       await user.save();
     }
 
+    item.returnStatus = "Approved";
+    item.status = "Returned";
+
     await order.save();
 
-    res.json({ success: true, message: "Return approved, stock updated, and refund credited to wallet" });
+    return res.json({
+      success: true,
+      message: `Return approved. Your amount will be credited to your wallet soon!`
+    });
 
   } catch (error) {
     console.error("Error approving return:", error);
-    res.status(500).json({ success: false, message: "Error approving return" });
+    return res.status(500).json({ success: false, message: "Error approving return" });
   }
 };
+
+
+
 
 
 

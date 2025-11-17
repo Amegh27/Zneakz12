@@ -630,10 +630,9 @@
         <div class="balance-card">
           <div class="wallet-icon">💳</div>
           <div class="balance-label">Available Balance</div>
-          <h2 class="balance-amount">₹<%= balance.toFixed(2) %></h2>
+          <h2 class="balance-amount">₹<%= balance.toFixed(0) %></h2>
         </div>
 
-        <!-- Transaction Card -->
         <div class="transaction-card">
           <div class="transaction-header">
             <h5 class="transaction-title">📋 Transaction History</h5>
@@ -674,7 +673,7 @@
                   <td><%= tx.description || 'N/A' %></td>
 
                   <td class="<%= tx.type === 'credit' ? 'amount-credit' : 'amount-debit' %>">
-                    <%= tx.type === 'credit' ? '+' : '-' %>₹<%= tx.amount.toFixed(2) %>
+                    <%= tx.type === 'credit' ? '+' : '-' %>₹<%= tx.amount.toFixed(0) %>
                   </td>
                 </tr>
                 <% }) %>

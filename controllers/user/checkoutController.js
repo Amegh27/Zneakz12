@@ -29,9 +29,10 @@ const checkoutPage = async (req, res) => {
     const user = await User.findById(userId);
     if (!user) return res.redirect('/login');
 
-    const defaultAddress = user.address && user.address.length > 0 
-      ? user.address[0] 
-      : null;
+      const defaultAddress =
+      user.address && Array.isArray(user.address) && user.address.length > 0
+        ? user.address[0]
+        : null;
 
     const cart = await Cart.findOne({ user: userId }).populate('items.product');
     if (!cart || !cart.items || cart.items.length === 0) {
@@ -370,6 +371,7 @@ const cancelOrder = async (req, res) => {
     if (order.status === "Cancelled")
       return res.json({ success: false, message: "Order already cancelled" });
 
+  
     for (const item of order.items) {
       const product = await Product.findById(item.product._id);
       if (product) {
@@ -379,89 +381,128 @@ const cancelOrder = async (req, res) => {
       }
     }
 
-    if (order.paymentMethod === "Razorpay") {
-      const user = await User.findById(userId);
-      if (!user.wallet) {
-        user.wallet = { balance: 0, transactions: [] };
-      }
 
-      user.wallet.balance += order.totalAmount;
+    const user = await User.findById(order.user);
+
+    if (!user.wallet) {
+      user.wallet = { balance: 0, transactions: [] };
+    }
+
+    let refundAmount = 0;
+
+    // ⭐ Partial/Full WALLET refund
+    if (order.walletUsed && order.walletUsed > 0) {
+      refundAmount += order.walletUsed;
+    }
+
+    // ⭐ Refund Razorpay amount ALSO to wallet
+    // (Most ecommerce stores refund Razorpay payments back to wallet)
+    if (order.paymentMethod === "Razorpay") {
+      const razorpayRefund = order.totalAmount - order.walletUsed;
+      if (razorpayRefund > 0) {
+        refundAmount += razorpayRefund;
+      }
+    }
+
+    // ⭐ If any refund exists → credit to wallet
+    if (refundAmount > 0) {
+      user.wallet.balance += refundAmount;
 
       user.wallet.transactions.push({
         type: "credit",
-        amount: order.totalAmount,
+        amount: refundAmount,
         description: `Refund for cancelled order ${order._id}`,
         date: new Date(),
       });
 
+      user.markModified("wallet");
       await user.save();
     }
 
+    // -------------------------
+    // 3️⃣  MARK ORDER CANCELLED
+    // -------------------------
     order.status = "Cancelled";
-    order.items.forEach((i) => (i.status = "Cancelled"));
+    order.items.forEach(i => i.status = "Cancelled");
     await order.save();
 
     return res.json({
       success: true,
-      message:
-        order.paymentMethod === "Razorpay"
-          ? "Order cancelled and amount refunded to wallet."
-          : "Order cancelled successfully.",
+      message: `Order cancelled. ₹${refundAmount} refunded to wallet.`,
     });
+
   } catch (error) {
-    console.error("Error cancelling order:", error);
-    res.json({
+    console.error("❌ Cancel Order Error:", error);
+    return res.json({
       success: false,
-      message: "Internal server error while cancelling order.",
+      message: "Internal server error when cancelling order",
     });
   }
 };
 
 
 
+
 const cancelItem = async (req, res) => {
   try {
-    const userId = req.session.user;
     const { orderId, itemId } = req.params;
+    const userId = req.session.user;
 
     const order = await Order.findOne({ _id: orderId, user: userId })
       .populate("items.product")
       .populate("user");
 
-    if (!order)
-      return res
-        .status(404)
-        .json({ success: false, message: "Order not found" });
+    if (!order) {
+      return res.json({ success: false, message: "Order not found" });
+    }
 
     const item = order.items.id(itemId);
-    if (!item)
-      return res
-        .status(404)
-        .json({ success: false, message: "Item not found" });
+    if (!item) {
+      return res.json({ success: false, message: "Item not found" });
+    }
 
     if (item.status === "Cancelled") {
-      return res.json({
-        success: false,
-        message: "Item already cancelled",
-      });
+      return res.json({ success: false, message: "Item already cancelled" });
     }
 
+    // -------------------------
+    // 1️⃣ RESTORE STOCK
+    // -------------------------
     const product = await Product.findById(item.product._id);
     if (product) {
-      const sizeIndex = product.sizes.findIndex((s) => s.size === item.size);
-      if (sizeIndex !== -1) {
-        product.sizes[sizeIndex].stock += item.quantity;
-        await product.save();
-      }
+      const sizeObj = product.sizes.find((s) => s.size === item.size);
+      if (sizeObj) sizeObj.stock += item.quantity;
+      await product.save();
     }
 
-    if (order.paymentMethod === "Razorpay") {
-      const user = await User.findById(userId);
-      if (!user.wallet) {
-        user.wallet = { balance: 0, transactions: [] };
-      }
+    // -------------------------
+    // 2️⃣ CALCULATE REFUND
+    // -------------------------
+    const user = await User.findById(userId);
 
-      const refundAmount = item.price * item.quantity;
+    if (!user.wallet) {
+      user.wallet = { balance: 0, transactions: [] };
+    }
+
+    const itemRefundAmount = item.price * item.quantity;
+    let refundAmount = 0;
+
+    // Refund wallet portion
+    if (order.walletUsed > 0) {
+      const proportion = itemRefundAmount / order.totalAmount;
+      const walletPart = +(order.walletUsed * proportion).toFixed(2);
+
+      refundAmount += walletPart;
+    }
+
+    // Refund Razorpay portion ALSO to wallet
+    if (order.paymentMethod === "Razorpay") {
+      const razorpayPart = itemRefundAmount - refundAmount;
+      if (razorpayPart > 0) refundAmount += razorpayPart;
+    }
+
+    // Add refund to wallet
+    if (refundAmount > 0) {
       user.wallet.balance += refundAmount;
 
       user.wallet.transactions.push({
@@ -471,29 +512,32 @@ const cancelItem = async (req, res) => {
         date: new Date(),
       });
 
+      user.markModified("wallet");
       await user.save();
     }
 
+    // -------------------------
+    // 3️⃣ UPDATE ORDER ITEM
+    // -------------------------
     item.status = "Cancelled";
 
-    const allCancelled = order.items.every((i) => i.status === "Cancelled");
-    if (allCancelled) order.status = "Cancelled";
+    // If all items are cancelled → entire order becomes cancelled
+    const allCancelled = order.items.every(i => i.status === "Cancelled");
+    if (allCancelled) {
+      order.status = "Cancelled";
+    }
 
     await order.save();
 
-    res.json({
+    return res.json({
       success: true,
-      message:
-        order.paymentMethod === "Razorpay"
-          ? "Item cancelled and amount refunded to wallet."
-          : "Item cancelled successfully.",
-      allCancelled,
+      message: `Item cancelled. ₹${refundAmount} refunded to wallet.`,
+      allCancelled
     });
+
   } catch (error) {
-    console.error("Error cancelling item:", error);
-    res
-      .status(500)
-      .json({ success: false, message: "Error cancelling item." });
+    console.error("❌ Cancel Item Error:", error);
+    return res.json({ success: false, message: "Error cancelling item" });
   }
 };
 
@@ -744,7 +788,6 @@ const applyCoupon = async (req, res) => {
         message: `Minimum purchase of ₹${coupon.minPurchase} required.`,
       });
 
-    // Store coupon in session
     req.session.appliedCoupon = {
       code: coupon.code,
       discountType: coupon.discountType,
@@ -971,22 +1014,20 @@ const payWithWallet = async (req, res) => {
     }
 
     const selectedAddress = user.address.find(a => a._id.toString() === addressId);
-
     if (!selectedAddress) {
       return res.json({ success: false, message: "Address not found." });
     }
 
-
+    // CALCULATE TOTAL
     const subtotal = cart.items.reduce(
       (sum, i) => sum + (i.product.discountPrice || i.product.price) * i.quantity,
       0
     );
 
-    const tax = subtotal * 0.05;
-    const shipping = 50;
+    const tax = +(subtotal * 0.05).toFixed(2);  // ORDER TAX
+    const shipping = 50;                        // ORDER SHIPPING
 
     let couponDiscount = 0;
-
     if (req.session.appliedCoupon) {
       const c = req.session.appliedCoupon;
       couponDiscount =
@@ -1000,7 +1041,7 @@ const payWithWallet = async (req, res) => {
 
     const total = subtotal + tax + shipping - couponDiscount;
 
-
+    // CHECK WALLET
     if (user.wallet.balance < total) {
       return res.json({
         success: false,
@@ -1008,38 +1049,68 @@ const payWithWallet = async (req, res) => {
       });
     }
 
-
+    // UPDATE WALLET
     user.wallet.balance -= total;
-
     user.wallet.transactions.push({
       type: "debit",
       amount: total,
-      description: `Wallet payment for order`,
+      description: "Wallet payment for order",
       date: new Date()
     });
-
     user.markModified("wallet");
     await user.save();
 
+    // REDUCE STOCK
+    for (let item of cart.items) {
+      const product = await Product.findById(item.product._id);
+      if (product) {
+        const sizeObj = product.sizes.find(s => s.size === item.size);
+        if (sizeObj) {
+          if (sizeObj.stock < item.quantity) {
+            return res.json({
+              success: false,
+              message: `${product.productName} is out of stock`
+            });
+          }
+          sizeObj.stock -= item.quantity;
+          await product.save();
+        }
+      }
+    }
 
+    // CREATE ORDER
     const order = new Order({
       user: userId,
       orderID: `ZNK${Date.now()}${Math.floor(Math.random() * 100)}`,
+
       items: cart.items.map(i => ({
         product: i.product._id,
         quantity: i.quantity,
         size: i.size,
-        price: i.product.discountPrice || i.product.price
+        price: i.product.discountPrice || i.product.price,
+
+        tax: +(((i.product.discountPrice || i.product.price) * i.quantity) * 0.05).toFixed(2),
+
+        // optional: split shipping per item
+        shipping: +(shipping / cart.items.length).toFixed(2)
       })),
+
       address: {
         name: selectedAddress.name,
         city: selectedAddress.city,
         state: selectedAddress.state,
         pincode: selectedAddress.pincode
       },
+
       totalAmount: total,
       paymentMethod: "Wallet",
       status: "Placed",
+      walletUsed: total,
+
+      // 🔥🔥 SAVING ORDER LEVEL TAX & SHIPPING
+      tax: tax,
+      shipping: shipping,
+
       coupon: req.session.appliedCoupon
         ? {
             code: req.session.appliedCoupon.code,

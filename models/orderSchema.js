@@ -14,10 +14,21 @@ const orderItemSchema = new mongoose.Schema({
   size: {
     type: String,
   },
-  price: {
+ price: {
     type: Number,
     required: true,
   },
+
+  finalPrice: {
+    type: Number, 
+    default: null
+  },
+
+  tax: {
+    type: Number,
+    default: 0
+  },
+  shipping: { type: Number, default: 0 },
   status: { 
     type: String, 
     enum: ["Placed", "Shipped", "Out for Delivery", "Delivered", "Cancelled","Partially Cancelled","Returned"], 
@@ -68,7 +79,15 @@ const orderSchema = new mongoose.Schema(
     },
 
     walletUsed: { type: Number, default: 0 },
+    tax: { 
+      type: Number, 
+      default: 0 
+    },
 
+    shipping: { 
+      type: Number, 
+      default: 0 
+    },
 
 
     status: {
