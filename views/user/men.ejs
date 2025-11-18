@@ -188,8 +188,7 @@
      <a href="/men-details?id=68d2bdd634f9b3f5c30bc0ff" class="hero-btn" style="text-decoration: none;">SHOP NOW</a>
     </div>
 
-    <!-- Search + Sort -->
-    <form class="d-flex search-box mb-4" action="/men#productSection" method="GET">
+<form class="d-flex search-box mb-4" action="/men" method="GET">
       <input class="form-control me-2" type="search" name="q" placeholder="Search products..." value="<%= typeof query !== 'undefined' ? query : '' %>">
       <select class="form-select me-2" name="sort" onchange="this.form.submit()">
         <option value="">Sort by</option>
@@ -207,7 +206,6 @@
       <% } %>
     </form>
 
-    <!-- Product Grid -->
     <div id="productSection" class="product-grid">
   <% if(products && products.length > 0){ %>
     <% products.forEach(function(product){ %>
@@ -219,7 +217,6 @@
     <div style="width:150px; height:100px; background:#ddd; display:flex; align-items:center; justify-content:center; color:#888;">👟</div>
   <% } %>
 
-  <!-- Wishlist Icon -->
 <i class="bi wishlist-icon 
    <%= user && user.wishlist && user.wishlist.includes(product._id.toString()) 
        ? 'bi-heart-fill text-danger' 
@@ -254,24 +251,40 @@
 </div>
 
 
-    <!-- Pagination -->
-    <div class="pagination">
-      <% if(currentPage>1){ %>
-        <a href="?page=<%= currentPage-1 %>#productSection">‹</a>
-      <% } else { %>
-        <span>‹</span>
-      <% } %>
+   <!-- Pagination -->
+<div class="pagination">
 
-      <% for(let i=1; i<=totalPages; i++){ %>
-        <a href="?page=<%= i %>#productSection" class="<%= i===currentPage?'active':'' %>"><%= i %></a>
-      <% } %>
+  <% 
+    // helper to attach params
+    function buildUrl(page) {
+  %>
+      ?page=<%= page %>
+      <% if (typeof sort !== "undefined" && sort) { %>&sort=<%= sort %><% } %>
+      <% if (typeof query !== "undefined" && query) { %>&q=<%= query %><% } %>
+      <% if (typeof priceRange !== "undefined" && priceRange) { %>&priceRange=<%= priceRange %><% } %>
+      #productSection
+  <% } %>
 
-      <% if(currentPage<totalPages){ %>
-        <a href="?page=<%= currentPage+1 %>#productSection">›</a>
-      <% } else { %>
-        <span>›</span>
-      <% } %>
-    </div>
+  <% if (currentPage > 1) { %>
+    <a href="<%= buildUrl(currentPage - 1) %>">‹</a>
+  <% } else { %>
+    <span>‹</span>
+  <% } %>
+
+  <% for (let i = 1; i <= totalPages; i++) { %>
+    <a href="<%= buildUrl(i) %>" class="<%= i === currentPage ? 'active' : '' %>">
+      <%= i %>
+    </a>
+  <% } %>
+
+  <% if (currentPage < totalPages) { %>
+    <a href="<%= buildUrl(currentPage + 1) %>">›</a>
+  <% } else { %>
+    <span>›</span>
+  <% } %>
+
+</div>
+
   </div>
   <div class="position-fixed top-0 end-0 p-3" style="z-index: 9999;">
   <div id="toastMessage" class="toast align-items-center text-white border-0" role="alert" aria-live="assertive" aria-atomic="true">

@@ -24,17 +24,19 @@ const loadHomepage = async (req, res) => {
     res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, private");
 
     const user = req.session.user;
+
     const page = parseInt(req.query.page) || 1;
     const limit = 4;
-    const skip = (page - 1) * limit;
-    const query = req.query.q?.trim() || '';
-    const sort = req.query.sort || '';
+
+    const query = req.query.q?.trim() || "";
+    const sort = req.query.sort || ""; 
+    const priceRange = req.query.priceRange || "";
+
     const selectedCategory = Array.isArray(req.query.category)
       ? req.query.category
       : req.query.category
       ? [req.query.category]
       : [];
-    const selectedPriceRange = req.query.priceRange || '';
 
     let matchStage = {
       isBlocked: false,
@@ -42,32 +44,30 @@ const loadHomepage = async (req, res) => {
       $or: [{ quantity: { $gt: 0 } }, { "sizes.stock": { $gt: 0 } }]
     };
 
-    if (query) matchStage.productName = { $regex: query, $options: 'i' };
-
-    const excludeCategories = await Category.find({
-      name: { $in: ["Men", "Women", "Kids"] }
-    }).distinct("_id");
-    matchStage.category = { $nin: excludeCategories };
-
-    if (selectedCategory.length > 0) {
-      const categoryDocs = await Category.find({
-        name: { $in: selectedCategory }
-      }).distinct('_id');
-      matchStage.category = { $in: categoryDocs };
+    if (query) {
+      matchStage.productName = { $regex: query, $options: "i" };
     }
 
-    let pipeline = [
-      { $match: matchStage },
-      { $sort: sort === 'priceAsc' ? { price: 1 } :
-                sort === 'priceDesc' ? { price: -1 } :
-                sort === 'nameAsc' ? { productName: 1 } :
-                sort === 'nameDesc' ? { productName: -1 } :
-                { createdAt: -1 }},
-      { $skip: skip },
-      { $limit: limit }
-    ];
+    const excludeCats = await Category.find({
+      name: { $in: ["Men", "Women", "Kids"] }
+    }).distinct("_id");
 
-    let products = await Product.aggregate(pipeline);
+    matchStage.category = { $nin: excludeCats };
+
+    if (selectedCategory.length > 0) {
+      const selectedCatIds = await Category.find({
+        name: { $in: selectedCategory }
+      }).distinct("_id");
+
+      matchStage.category = { $in: selectedCatIds };
+    }
+
+    if (priceRange) {
+      const [min, max] = priceRange.split("-").map(Number);
+      matchStage.price = { $gte: min, $lte: max };
+    }
+
+    let products = await Product.find(matchStage).lean();
 
     const now = new Date();
     const activeOffers = await Offer.find({
@@ -75,72 +75,73 @@ const loadHomepage = async (req, res) => {
       endDate: { $gte: now }
     });
 
-    products = await Promise.all(products.map(async (product) => {
-      const productOffers = activeOffers.filter(o =>
-        o.offerType === 'product' && o.product?.toString() === product._id.toString()
-      );
+    products = await Promise.all(
+      products.map(async (product) => {
+        const productOffers = activeOffers.filter(
+          (o) =>
+            o.offerType === "product" &&
+            o.product?.toString() === product._id.toString()
+        );
 
-      const categoryOffers = activeOffers.filter(o =>
-        o.offerType === 'category' && o.category?.toString() === product.category?.toString()
-      );
+        const categoryOffers = activeOffers.filter(
+          (o) =>
+            o.offerType === "category" &&
+            o.category?.toString() === product.category?.toString()
+        );
 
-      let bestOffer = null;
-      let bestDiscountValue = 0;
+        let bestOffer = null;
+        let bestDiscount = 0;
 
-      const calcDiscount = (offer) => {
-        return offer.discountType === 'percentage'
-          ? (product.price * offer.discountValue) / 100
-          : offer.discountValue;
-      };
+        const calcDiscount = (offer) =>
+          offer.discountType === "percentage"
+            ? (product.price * offer.discountValue) / 100
+            : offer.discountValue;
 
-      for (const offer of [...productOffers, ...categoryOffers]) {
-        const discountVal = calcDiscount(offer);
-        if (discountVal > bestDiscountValue) {
-          bestDiscountValue = discountVal;
-          bestOffer = offer;
-        }
-      }
-
-      if (!bestOffer && product.discountPrice && product.discountPrice < product.price) {
-        const discountVal = product.price - product.discountPrice;
-        const discountPercent = Math.round((discountVal / product.price) * 100);
-
-        return {
-          ...product,
-          finalPrice: Number(product.discountPrice.toFixed(1)),
-          discountPercent,
-          appliedOffer: null
-        };
-      }
-
-      if (bestOffer) {
-        const discountPercent =
-          bestOffer.discountType === 'percentage'
-            ? bestOffer.discountValue
-            : Math.round((bestDiscountValue / product.price) * 100);
-
-        return {
-          ...product,
-          finalPrice: Number(Math.max(product.price - bestDiscountValue, 0).toFixed(1)),
-          discountPercent,
-          appliedOffer: {
-            title: bestOffer.title,
-            offerType: bestOffer.offerType,
-            discountType: bestOffer.discountType,
-            discountValue: bestOffer.discountValue,
-            startDate: bestOffer.startDate,
-            endDate: bestOffer.endDate
+        for (const offer of [...productOffers, ...categoryOffers]) {
+          const discountVal = calcDiscount(offer);
+          if (discountVal > bestDiscount) {
+            bestDiscount = discountVal;
+            bestOffer = offer;
           }
+        }
+
+        let finalPrice =
+          product.discountPrice && product.discountPrice < product.price
+            ? product.discountPrice
+            : product.price - bestDiscount;
+
+        finalPrice = Math.max(finalPrice, 0);
+
+        return {
+          ...product,
+          finalPrice,
+          discountPercent: Math.round(((product.price - finalPrice) / product.price) * 100),
+          appliedOffer: bestOffer
         };
-      }
+      })
+    );
 
-      // No offer or discount
-      return { ...product, finalPrice: product.price, discountPercent: 0, appliedOffer: null };
-    }));
+   
+if (!sort || sort === "") {
+  products.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+} 
+else if (sort === "priceAsc") {
+  products.sort((a, b) => a.finalPrice - b.finalPrice);
+} 
+else if (sort === "priceDesc") {
+  products.sort((a, b) => b.finalPrice - a.finalPrice);
+} 
+else if (sort === "nameAsc") {
+  products.sort((a, b) => a.productName.localeCompare(b.productName));
+} 
+else if (sort === "nameDesc") {
+  products.sort((a, b) => b.productName.localeCompare(a.productName));
+}
 
-    // Count for pagination
-    const countResult = await Product.countDocuments(matchStage);
-    const totalPages = Math.ceil(countResult / limit);
+
+    const totalProducts = products.length;
+    const totalPages = Math.ceil(totalProducts / limit);
+    const paginatedProducts = products.slice((page - 1) * limit, page * limit);
 
     const categories = await Category.find({
       isListed: true,
@@ -149,23 +150,24 @@ const loadHomepage = async (req, res) => {
 
     const userData = user ? await User.findById(user) : null;
 
-    res.render("home", {
+    return res.render("home", {
       user: userData,
-      products,
+      products: paginatedProducts,
       currentPage: page,
       totalPages,
       query,
       sort,
       categories,
-      selectedCategory: req.query.category || '',
-      priceRange: req.query.priceRange || ''
+      selectedCategory,
+      priceRange
     });
-
   } catch (err) {
-    console.error("Error loading homepage:", err);
-    res.status(500).send("Internal Server Error");
+    console.error("Homepage Error:", err);
+    return res.status(500).send("Internal Server Error");
   }
 };
+
+
 
 
 
@@ -266,23 +268,20 @@ const verifyOtp = async (req, res) => {
 
       const passwordHash = await securePassword(user.password);
 
-      // ✅ Create the new user object
       const saveUserData = new User({
         name: user.name,
         email: user.email,
         password: passwordHash,
       });
 
-      // ✅ Generate a unique referral code for every user
       saveUserData.referralCode = "ZNK" + Math.random().toString(36).substring(2, 8).toUpperCase();
 
-      // ✅ If referralCode exists in session, handle referral reward
       if (user.referralCode) {
         const referrer = await User.findOne({ referralCode: user.referralCode });
         if (referrer) {
           if (!referrer.wallet) referrer.wallet = { balance: 0, transactions: [] };
 
-          referrer.wallet.balance += 100; // Reward ₹100 to referrer
+          referrer.wallet.balance += 100; 
           referrer.wallet.transactions.push({
             type: "credit",
             amount: 100,
@@ -293,7 +292,7 @@ const verifyOtp = async (req, res) => {
           referrer.markModified("wallet");
           await referrer.save();
 
-          saveUserData.referredBy = user.referralCode; // store who referred them
+          saveUserData.referredBy = user.referralCode; 
         }
       }
 

@@ -254,18 +254,14 @@ const postEditProfile = async (req, res) => {
         });
       }
 
-      // OTP verified → apply email update
       user.email = email;
 
-      // Clear OTP session after successful update
       req.session.otpVerified = false;
       req.session.emailChangeOtp = null;
       req.session.newEmail = null;
     }
 
-    // -----------------------------------------
-    // 🔥 Handle Avatar Removal
-    // -----------------------------------------
+
     if (remove_avatar === '1') {
       if (user.avatar && user.avatar !== '/images/user-avatar.png') {
         const oldAvatarPath = path.join(__dirname, '../../public', user.avatar);
@@ -276,9 +272,7 @@ const postEditProfile = async (req, res) => {
       user.avatar = null;
     }
 
-    // -----------------------------------------
-    // 🔥 Handle Avatar Upload
-    // -----------------------------------------
+  
     if (req.file) {
       if (user.avatar && user.avatar !== '/images/user-avatar.png') {
         const oldAvatarPath = path.join(__dirname, '../../public', user.avatar);

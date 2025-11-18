@@ -173,7 +173,12 @@
           >0</span>
         </a>
         <div style="width: 50px;"></div>
-        <a href="/profile" title="Profile"><i class="bi bi-person-circle"></i></a>
+<a href="/profile" class="d-flex align-items-center gap-2 text-decoration-none" title="Profile">
+  <i class="bi bi-person-circle fs-5"></i>
+  <span class="fw-semibold" style="color:#333;">
+    <%= user ? user.name.split(" ")[0] : "Profile" %>
+  </span>
+</a>
       </div>
     </div>
   </header>

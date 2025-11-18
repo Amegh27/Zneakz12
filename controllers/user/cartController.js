@@ -203,7 +203,7 @@ const cartCount = async (req, res) => {
     let count = 0;
 
     if (cart && cart.items.length > 0) {
-      count = cart.items.reduce((acc, item) => acc + item.quantity, 0);
+      count = cart.items.length;
     }
 
     return res.json({ count });

@@ -67,7 +67,6 @@ const productDetails = async (req, res) => {
     const userdata = userId ? await User.findById(userId).lean() : null;
     const productId = req.query.id;
 
-    // fetch product with category
     const product = await Product.findById(productId).populate("category").lean();
     if (!product || product.isDeleted || !product.isListed || product.isBlocked) {
       return res.redirect("/");
@@ -75,7 +74,6 @@ const productDetails = async (req, res) => {
 
     const now = new Date();
 
-    // fetch active product offer
     const productOffer = await Offer.findOne({
       offerType: "Product",
       product: new mongoose.Types.ObjectId(product._id),
@@ -84,7 +82,6 @@ const productDetails = async (req, res) => {
       isActive: true
     }).lean();
 
-    // fetch active category offer
     const categoryOffer = await Offer.findOne({
       offerType: "Category",
       category: new mongoose.Types.ObjectId(product.category?._id),
@@ -93,7 +90,6 @@ const productDetails = async (req, res) => {
       isActive: true
     }).lean();
 
-    // choose the better offer (higher effective %)
     let appliedOffer = null;
     if (productOffer && categoryOffer) {
       const productDiscountPercent =
@@ -111,10 +107,8 @@ const productDetails = async (req, res) => {
       appliedOffer = productOffer || categoryOffer || null;
     }
 
-    // prepare appliedOffer fields to pass to view (safe primitives)
     let appliedOfferFields = null;
     if (appliedOffer) {
-      // compute discount price (floor to integer, not negative)
       let discountPrice = product.price;
       if (appliedOffer.discountType === "percentage") {
         discountPrice = product.price - (product.price * appliedOffer.discountValue) / 100;
@@ -123,27 +117,22 @@ const productDetails = async (req, res) => {
       }
       product.discountPrice = Math.max(0, Math.floor(discountPrice));
 
-      // prepare simple fields to render to client
       appliedOfferFields = {
         id: appliedOffer._id?.toString?.() || "",
         title: appliedOffer.title || "Special Offer",
         offerType: appliedOffer.offerType || "",
         discountType: appliedOffer.discountType || "",
         discountValue: appliedOffer.discountValue ?? 0,
-        // make discount string friendly
         discountString:
           appliedOffer.discountType === "percentage"
             ? `${Math.floor(appliedOffer.discountValue)}%`
             : `₹${Math.floor(appliedOffer.discountValue)}`,
-        // formatted start/end dates (use ISO or locale as you prefer)
         startDateISO: appliedOffer.startDate ? new Date(appliedOffer.startDate).toISOString() : "",
         endDateISO: appliedOffer.endDate ? new Date(appliedOffer.endDate).toISOString() : "",
-        // also human readable
         startDateStr: appliedOffer.startDate ? new Date(appliedOffer.startDate).toLocaleDateString("en-IN") : "—",
         endDateStr: appliedOffer.endDate ? new Date(appliedOffer.endDate).toLocaleDateString("en-IN") : "—"
       };
     } else {
-      // If admin provided a product-level discountPrice already (non-offer), use that (floor)
       if (product.discountPrice && product.discountPrice < product.price) {
         product.discountPrice = Math.max(0, Math.floor(product.discountPrice));
       } else {
@@ -151,7 +140,6 @@ const productDetails = async (req, res) => {
       }
     }
 
-    // related products
     let relatedProducts = [];
     if (product.category && product.category._id) {
       relatedProducts = await Product.find({
@@ -173,13 +161,11 @@ const productDetails = async (req, res) => {
         .limit(3);
     }
 
-    // floor discountPrice for related products as requested
     relatedProducts = relatedProducts.map((p) => {
       const dp = p.discountPrice && p.discountPrice < p.price ? Math.max(0, Math.floor(p.discountPrice)) : p.price;
       return { ...p, discountPrice: dp };
     });
 
-    // cart count
     let cartCount = 0;
     if (userId) {
       const cart = await Cart.findOne({ user: userId }).lean();
@@ -188,7 +174,6 @@ const productDetails = async (req, res) => {
       }
     }
 
-    // render with explicit appliedOffer fields (primitives)
     res.render("product-details", {
       user: userdata,
       product,
@@ -196,10 +181,10 @@ const productDetails = async (req, res) => {
       quantity: product.quantity,
       category: product.category,
       relatedProducts,
-      appliedOfferFields // pass this in
+      appliedOfferFields 
     });
   } catch (error) {
-    console.error("❌ Error fetching product details:", error);
+    console.error(" Error fetching product details:", error);
     res.redirect("/pageNotFound");
   }
 };
@@ -516,7 +501,7 @@ const menDetails = async (req, res) => {
       cartCount, 
     });
   } catch (error) {
-    console.error("🔥 menDetails ERROR:", error);
+    console.error(" menDetails ERROR:", error);
     res.redirect("/pageNotFound");
   }
 };
@@ -596,7 +581,6 @@ const kidsDetails = async (req, res) => {
       price: { $gte: minPrice, $lte: maxPrice }
     }).limit(4);
 
-    // ✅ Initialize cartCount
     let cartCount = 0;
     if (userId) {
       const cart = await Cart.findOne({ user: userId });

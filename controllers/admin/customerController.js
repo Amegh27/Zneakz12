@@ -23,7 +23,6 @@ const customerInfo = async (req, res) => {
         { email: { $regex: ".*" + search + ".*", $options: "i" } }
       ]
     })
-      // .sort({ createdAt: -1 })
       .limit(limit)
       .skip((page - 1) * limit)
       .exec()
@@ -68,7 +67,6 @@ const customerBlocked = async (req, res) => {
       console.log(`All sessions destroyed for blocked user: ${id}`);
     }
 
-    // 3️⃣ Redirect back to admin user list
     return res.redirect("/admin/users");
 
   } catch (error) {

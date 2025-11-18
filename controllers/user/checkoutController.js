@@ -289,7 +289,6 @@ const viewOrderDetails = async (req, res) => {
     const order = await Order.findOne({ _id: orderId, user: userId }).populate("items.product");
     if (!order) return res.redirect("/orders");
 
-    // subtotal (exclude cancelled items)
     let subtotal = 0;
     let cancelledCount = 0;
     order.items.forEach(item => {
@@ -297,10 +296,9 @@ const viewOrderDetails = async (req, res) => {
       else subtotal += (item.price || 0) * (item.quantity || 0);
     });
 
-    const tax = +(subtotal * 0.05); // numeric
+    const tax = +(subtotal * 0.05); 
     const shipping = (order.status === "Cancelled") ? 0 : 50;
 
-    // coupon - prefer stored discountAmount, but support other shapes
     let discount = 0;
     let couponCode = null;
     if (order.coupon) {
@@ -315,16 +313,13 @@ const viewOrderDetails = async (req, res) => {
       }
     }
 
-    // round values to 2 decimals where useful
     const subtotalRounded = Math.round(subtotal * 100) / 100;
     const taxRounded = Math.round(tax * 100) / 100;
     const shippingRounded = Math.round(shipping * 100) / 100;
     const discountRounded = Math.round(discount * 100) / 100;
 
-    // total after discount
     const total = Math.round((subtotalRounded + taxRounded + shippingRounded - discountRounded) * 100) / 100;
 
-    // status display logic
     let displayStatus = order.status;
     if (order.status === "Cancelled") displayStatus = "Cancelled";
     else if (cancelledCount > 0 && cancelledCount < order.items.length) displayStatus = "Partially Cancelled";
@@ -333,10 +328,8 @@ const viewOrderDetails = async (req, res) => {
       item.displayStatus = item.status === "Cancelled" ? "Cancelled" : displayStatus;
     });
 
-    // OPTIONAL: debug log to confirm coupon saved on order
     console.log("Order coupon saved:", order.coupon);
 
-    // Pass server-calculated numbers to template and avoid calculating totals in EJS
     res.render("order-details", {
       order,
       subtotal: subtotalRounded,
@@ -390,13 +383,11 @@ const cancelOrder = async (req, res) => {
 
     let refundAmount = 0;
 
-    // ⭐ Partial/Full WALLET refund
     if (order.walletUsed && order.walletUsed > 0) {
       refundAmount += order.walletUsed;
     }
 
-    // ⭐ Refund Razorpay amount ALSO to wallet
-    // (Most ecommerce stores refund Razorpay payments back to wallet)
+ 
     if (order.paymentMethod === "Razorpay") {
       const razorpayRefund = order.totalAmount - order.walletUsed;
       if (razorpayRefund > 0) {
@@ -404,7 +395,6 @@ const cancelOrder = async (req, res) => {
       }
     }
 
-    // ⭐ If any refund exists → credit to wallet
     if (refundAmount > 0) {
       user.wallet.balance += refundAmount;
 
@@ -419,9 +409,7 @@ const cancelOrder = async (req, res) => {
       await user.save();
     }
 
-    // -------------------------
-    // 3️⃣  MARK ORDER CANCELLED
-    // -------------------------
+ 
     order.status = "Cancelled";
     order.items.forEach(i => i.status = "Cancelled");
     await order.save();
@@ -432,7 +420,7 @@ const cancelOrder = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("❌ Cancel Order Error:", error);
+    console.error(" Cancel Order Error:", error);
     return res.json({
       success: false,
       message: "Internal server error when cancelling order",
@@ -465,9 +453,6 @@ const cancelItem = async (req, res) => {
       return res.json({ success: false, message: "Item already cancelled" });
     }
 
-    // -------------------------
-    // 1️⃣ RESTORE STOCK
-    // -------------------------
     const product = await Product.findById(item.product._id);
     if (product) {
       const sizeObj = product.sizes.find((s) => s.size === item.size);
@@ -475,9 +460,7 @@ const cancelItem = async (req, res) => {
       await product.save();
     }
 
-    // -------------------------
-    // 2️⃣ CALCULATE REFUND
-    // -------------------------
+
     const user = await User.findById(userId);
 
     if (!user.wallet) {
@@ -487,7 +470,6 @@ const cancelItem = async (req, res) => {
     const itemRefundAmount = item.price * item.quantity;
     let refundAmount = 0;
 
-    // Refund wallet portion
     if (order.walletUsed > 0) {
       const proportion = itemRefundAmount / order.totalAmount;
       const walletPart = +(order.walletUsed * proportion).toFixed(2);
@@ -495,13 +477,11 @@ const cancelItem = async (req, res) => {
       refundAmount += walletPart;
     }
 
-    // Refund Razorpay portion ALSO to wallet
     if (order.paymentMethod === "Razorpay") {
       const razorpayPart = itemRefundAmount - refundAmount;
       if (razorpayPart > 0) refundAmount += razorpayPart;
     }
 
-    // Add refund to wallet
     if (refundAmount > 0) {
       user.wallet.balance += refundAmount;
 
@@ -516,12 +496,9 @@ const cancelItem = async (req, res) => {
       await user.save();
     }
 
-    // -------------------------
-    // 3️⃣ UPDATE ORDER ITEM
-    // -------------------------
+   
     item.status = "Cancelled";
 
-    // If all items are cancelled → entire order becomes cancelled
     const allCancelled = order.items.every(i => i.status === "Cancelled");
     if (allCancelled) {
       order.status = "Cancelled";
@@ -536,7 +513,7 @@ const cancelItem = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("❌ Cancel Item Error:", error);
+    console.error("Cancel Item Error:", error);
     return res.json({ success: false, message: "Error cancelling item" });
   }
 };
@@ -1018,14 +995,13 @@ const payWithWallet = async (req, res) => {
       return res.json({ success: false, message: "Address not found." });
     }
 
-    // CALCULATE TOTAL
     const subtotal = cart.items.reduce(
       (sum, i) => sum + (i.product.discountPrice || i.product.price) * i.quantity,
       0
     );
 
-    const tax = +(subtotal * 0.05).toFixed(2);  // ORDER TAX
-    const shipping = 50;                        // ORDER SHIPPING
+    const tax = +(subtotal * 0.05).toFixed(2);  
+    const shipping = 50;                       
 
     let couponDiscount = 0;
     if (req.session.appliedCoupon) {
@@ -1041,7 +1017,6 @@ const payWithWallet = async (req, res) => {
 
     const total = subtotal + tax + shipping - couponDiscount;
 
-    // CHECK WALLET
     if (user.wallet.balance < total) {
       return res.json({
         success: false,
@@ -1049,7 +1024,6 @@ const payWithWallet = async (req, res) => {
       });
     }
 
-    // UPDATE WALLET
     user.wallet.balance -= total;
     user.wallet.transactions.push({
       type: "debit",
@@ -1060,7 +1034,6 @@ const payWithWallet = async (req, res) => {
     user.markModified("wallet");
     await user.save();
 
-    // REDUCE STOCK
     for (let item of cart.items) {
       const product = await Product.findById(item.product._id);
       if (product) {
@@ -1078,7 +1051,6 @@ const payWithWallet = async (req, res) => {
       }
     }
 
-    // CREATE ORDER
     const order = new Order({
       user: userId,
       orderID: `ZNK${Date.now()}${Math.floor(Math.random() * 100)}`,
@@ -1091,7 +1063,6 @@ const payWithWallet = async (req, res) => {
 
         tax: +(((i.product.discountPrice || i.product.price) * i.quantity) * 0.05).toFixed(2),
 
-        // optional: split shipping per item
         shipping: +(shipping / cart.items.length).toFixed(2)
       })),
 
@@ -1107,7 +1078,6 @@ const payWithWallet = async (req, res) => {
       status: "Placed",
       walletUsed: total,
 
-      // 🔥🔥 SAVING ORDER LEVEL TAX & SHIPPING
       tax: tax,
       shipping: shipping,
 

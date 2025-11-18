@@ -452,11 +452,11 @@
       <form id="addAddressForm" class="add-address-form row g-3" style="display: none;">
         <div class="col-md-6">
           <label class="form-label">Name</label>
-          <input type="text" class="form-control" value="<%= user.name || '' %>" readonly>
+          <input type="text" class="form-control" value="<%= user.name || '' %>" >
         </div>
         <div class="col-md-6">
           <label class="form-label">Phone</label>
-          <input type="text" class="form-control" value="<%= user.phone || '' %>" readonly>
+          <input type="text" class="form-control" value="<%= user.phone || '' %>" >
         </div>
         <div class="col-md-12">
           <label class="form-label">Address</label>
@@ -522,11 +522,11 @@
                 <input type="hidden" name="addressId" value="<%= addr._id %>">
                 <div class="col-md-6">
                   <label class="form-label">Name</label>
-                  <input type="text" class="form-control" value="<%= user.name || '' %>" readonly>
+                  <input type="text" class="form-control" value="<%= user.name || '' %>" >
                 </div>
                 <div class="col-md-6">
                   <label class="form-label">Phone</label>
-                  <input type="text" class="form-control" value="<%= user.phone || '' %>" readonly>
+                  <input type="text" class="form-control" value="<%= user.phone || '' %>" >
                 </div>
                 <div class="col-md-12">
                   <label class="form-label">Address</label>
@@ -659,7 +659,29 @@
         <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
 <button id="razorpayBtn" class="btn btn-dark mt-3">Pay with Razorpay</button>
-        <button id="placeOrderBtn" class="btn btn-primary w-100 mt-3">Place Order (COD)</button>
+<button 
+  id="placeOrderBtn" 
+  class="btn w-100 mt-3"
+  style="
+    background-color: <%= finalTotal > 1000 ? '#c9c9c9' : '#000' %>;
+    color: <%= finalTotal > 1000 ? '#777' : '#fff' %>;
+    border: none;
+    font-weight: 700;
+    border-radius: 8px;
+    padding: 0.8rem 1.5rem;
+    cursor: <%= finalTotal > 1000 ? 'not-allowed' : 'pointer' %>;
+    opacity: <%= finalTotal > 1000 ? '0.6' : '1' %>;
+  "
+  <%= finalTotal > 1000 ? "disabled" : "" %>
+>
+  Place Order (COD)
+</button>
+
+<% if (finalTotal > 1000) { %>
+  <p class="text-danger mt-2" style="font-size: 0.9rem;">COD is not available for orders above ₹1000.</p>
+<% } %>
+
+
 
       <% } else { %>
         <p class="text-center">Your cart is empty.</p>
@@ -879,6 +901,7 @@
       Swal.fire({ icon: 'error', title: 'Server Error', text: 'Unable to place order.' });
     }
   });
+  
 
    document.getElementById('viewCouponsBtn')?.addEventListener('click', async () => {
     try {
@@ -1042,11 +1065,9 @@ const placeOrderBtn = document.getElementById('placeOrderBtn');
 const razorpayBtn = document.getElementById('razorpayBtn');
 const payWithWalletBtn = document.getElementById('payWithWalletBtn');
 
-// UI state
-let walletUsedToggle = false; // user clicked "Use Wallet"
-let computedWalletToUse = 0;  // actual wallet amount applied (number)
+let walletUsedToggle = false; 
+let computedWalletToUse = 0;  
 
-// Utility: format rupee
 function formatRupee(n) {
   return Number(n).toFixed(2);
 }
@@ -1079,7 +1100,7 @@ function updateWalletUI() {
   if (remaining === 0) {
     payWithWalletBtn.style.display = 'block';
     razorpayBtn.style.display = 'none';
-    placeOrderBtn.style.display = 'none'; // hide COD since fully paid
+    placeOrderBtn.style.display = 'none'; 
   } else {
     payWithWalletBtn.style.display = 'none';
     razorpayBtn.style.display = 'block';
@@ -1087,25 +1108,21 @@ function updateWalletUI() {
   }
 }
 
-// Toggle wallet
 useWalletBtn.addEventListener('click', () => {
   walletUsedToggle = !walletUsedToggle;
   updateWalletUI();
 });
 
-// Helper: read selected address id
 function getSelectedAddressId() {
   return document.querySelector('input[name="selectedAddress"]:checked')?.value;
 }
 
-// Helper: disable/enable buttons during network
 function setButtonsDisabled(state) {
   [placeOrderBtn, razorpayBtn, payWithWalletBtn, useWalletBtn].forEach(b => {
     if (b) b.disabled = state;
   });
 }
 
-// COD: place order (or partial wallet+COD when implemented server side)
 placeOrderBtn.addEventListener('click', async () => {
   try {
     const selectedAddressId = getSelectedAddressId();
@@ -1113,10 +1130,8 @@ placeOrderBtn.addEventListener('click', async () => {
       return Swal.fire('Error', 'Please select an address.', 'error');
     }
 
-    // If walletUsedToggle and wallet covers whole total, direct to full wallet flow
     const walletToUse = walletUsedToggle ? Math.min(walletBalance, totalAmount) : 0;
     if (walletToUse > 0 && (totalAmount - walletToUse) === 0) {
-      // fully covered by wallet -> trigger payWithWallet flow
       return payWithWalletHandler(selectedAddressId);
     }
 

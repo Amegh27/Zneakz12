@@ -179,7 +179,7 @@ const viewOrderDetails = async (req, res) => {
 
 const updateOrderStatus = async (req, res) => {
   try {
-    console.log("🔄 Received update request:", req.params.id, req.body.status);
+    console.log(" Received update request:", req.params.id, req.body.status);
 
     const id = req.params.id;
     const { status } = req.body;
