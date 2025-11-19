@@ -254,17 +254,21 @@ a.btn:hover {
          value="<%= typeof query !== 'undefined' ? query : '' %>"
          style="font-size: 0.95rem; flex: 1; background: transparent;">
   
-  <!-- Sort dropdown -->
   <select class="form-select border-0 bg-transparent me-2 text-muted"
-          name="sort"
-          onchange="this.form.submit()"
-          style="font-size: 0.9rem; width: 150px;">
+        name="sort"
+        onchange="
+          const params = new URLSearchParams(window.location.search);
+          params.set('sort', this.value);
+          window.location.search = params.toString() + '#productSection';
+        "
+        style="font-size: 0.9rem; width: 150px;">
     <option value="">Sort</option>
-    <option value="priceAsc" <%=sort==='priceAsc' ? 'selected' : '' %>>Price: Low → High</option>
-    <option value="priceDesc" <%=sort==='priceDesc' ? 'selected' : '' %>>Price: High → Low</option>
-    <option value="nameAsc" <%=sort==='nameAsc' ? 'selected' : '' %>>Name: A–Z</option>
-    <option value="nameDesc" <%=sort==='nameDesc' ? 'selected' : '' %>>Name: Z–A</option>
-  </select>
+    <option value="priceAsc" <%= sort==='priceAsc' ? 'selected' : '' %>>Price: Low → High</option>
+    <option value="priceDesc" <%= sort==='priceDesc' ? 'selected' : '' %>>Price: High → Low</option>
+    <option value="nameAsc" <%= sort==='nameAsc' ? 'selected' : '' %>>Name: A–Z</option>
+    <option value="nameDesc" <%= sort==='nameDesc' ? 'selected' : '' %>>Name: Z–A</option>
+</select>
+
   
   <!-- Search button -->
   <button class="btn btn-dark rounded-circle d-flex align-items-center justify-content-center"

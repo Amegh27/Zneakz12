@@ -54,6 +54,16 @@ const loadHomepage = async (req, res) => {
 
     matchStage.category = { $nin: excludeCats };
 
+    if (priceRange && priceRange.includes("-")) {
+      const parts = priceRange.split("-");
+      const min = Number(parts[0]);
+      const max = Number(parts[1]);
+
+      if (Number.isFinite(min) && Number.isFinite(max)) {
+        matchStage.price = { $gte: min, $lte: max };
+      }
+    }
+
     if (selectedCategory.length > 0) {
       const selectedCatIds = await Category.find({
         name: { $in: selectedCategory }
@@ -62,10 +72,6 @@ const loadHomepage = async (req, res) => {
       matchStage.category = { $in: selectedCatIds };
     }
 
-    if (priceRange) {
-      const [min, max] = priceRange.split("-").map(Number);
-      matchStage.price = { $gte: min, $lte: max };
-    }
 
     let products = await Product.find(matchStage).lean();
 
@@ -78,13 +84,13 @@ const loadHomepage = async (req, res) => {
     products = await Promise.all(
       products.map(async (product) => {
         const productOffers = activeOffers.filter(
-          (o) =>
+          o =>
             o.offerType === "product" &&
             o.product?.toString() === product._id.toString()
         );
 
         const categoryOffers = activeOffers.filter(
-          (o) =>
+          o =>
             o.offerType === "category" &&
             o.category?.toString() === product.category?.toString()
         );
@@ -121,23 +127,17 @@ const loadHomepage = async (req, res) => {
       })
     );
 
-   
-if (!sort || sort === "") {
-  products.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-} 
-else if (sort === "priceAsc") {
-  products.sort((a, b) => a.finalPrice - b.finalPrice);
-} 
-else if (sort === "priceDesc") {
-  products.sort((a, b) => b.finalPrice - a.finalPrice);
-} 
-else if (sort === "nameAsc") {
-  products.sort((a, b) => a.productName.localeCompare(b.productName));
-} 
-else if (sort === "nameDesc") {
-  products.sort((a, b) => b.productName.localeCompare(a.productName));
-}
-
+    if (!sort || sort === "") {
+      products.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    } else if (sort === "priceAsc") {
+      products.sort((a, b) => a.finalPrice - b.finalPrice);
+    } else if (sort === "priceDesc") {
+      products.sort((a, b) => b.finalPrice - a.finalPrice);
+    } else if (sort === "nameAsc") {
+      products.sort((a, b) => a.productName.localeCompare(b.productName));
+    } else if (sort === "nameDesc") {
+      products.sort((a, b) => b.productName.localeCompare(a.productName));
+    }
 
     const totalProducts = products.length;
     const totalPages = Math.ceil(totalProducts / limit);
@@ -166,6 +166,7 @@ else if (sort === "nameDesc") {
     return res.status(500).send("Internal Server Error");
   }
 };
+
 
 
 
@@ -222,6 +223,7 @@ async function sendVerificationEmail(email,otp){
 const signup = async (req, res) => {
   try {
     const { name, email, password, cPassword, referralCode } = req.body;
+    req.session.otpExpiry = Date.now() + 60 * 1000;
 
     if (password !== cPassword) {
       return res.render('signup', { message: "Passwords do not match" });
@@ -259,56 +261,68 @@ const verifyOtp = async (req, res) => {
   try {
     const { otp } = req.body;
 
-    if (otp === req.session.userOtp) {
-      const user = req.session.UserData;
-
-      if (!user || !user.password) {
-        return res.status(400).json({ success: false, message: "User data is missing or invalid" });
-      }
-
-      const passwordHash = await securePassword(user.password);
-
-      const saveUserData = new User({
-        name: user.name,
-        email: user.email,
-        password: passwordHash,
+    if (!req.session.otpExpiry || Date.now() > req.session.otpExpiry) {
+      return res.status(400).json({
+        success: false,
+        message: "OTP has expired. Please request a new one.",
       });
-
-      saveUserData.referralCode = "ZNK" + Math.random().toString(36).substring(2, 8).toUpperCase();
-
-      if (user.referralCode) {
-        const referrer = await User.findOne({ referralCode: user.referralCode });
-        if (referrer) {
-          if (!referrer.wallet) referrer.wallet = { balance: 0, transactions: [] };
-
-          referrer.wallet.balance += 100; 
-          referrer.wallet.transactions.push({
-            type: "credit",
-            amount: 100,
-            description: `Referral bonus for inviting ${user.email}`,
-            date: new Date(),
-          });
-
-          referrer.markModified("wallet");
-          await referrer.save();
-
-          saveUserData.referredBy = user.referralCode; 
-        }
-      }
-
-      await saveUserData.save();
-
-      req.session.user = saveUserData._id;
-      res.json({ success: true, redirectUrl: "/" });
-
-    } else {
-      res.status(400).json({ success: false, message: "Invalid OTP, please try again" });
     }
+
+    if (otp !== req.session.userOtp) {
+      return res.status(400).json({
+        success: false,
+        message: "OTP Expired"
+      });
+    }
+
+    const user = req.session.UserData;
+
+    const passwordHash = await securePassword(user.password);
+
+    const saveUserData = new User({
+      name: user.name,
+      email: user.email,
+      password: passwordHash,
+    });
+
+    saveUserData.referralCode =
+      "ZNK" + Math.random().toString(36).substring(2, 8).toUpperCase();
+
+    if (user.referralCode) {
+      const referrer = await User.findOne({ referralCode: user.referralCode });
+      if (referrer) {
+        if (!referrer.wallet) referrer.wallet = { balance: 0, transactions: [] };
+
+        referrer.wallet.balance += 100;
+
+        referrer.wallet.transactions.push({
+          type: "credit",
+          amount: 100,
+          description: `Referral bonus for inviting ${user.email}`,
+          date: new Date(),
+        });
+
+        referrer.markModified("wallet");
+        await referrer.save();
+
+        saveUserData.referredBy = user.referralCode;
+      }
+    }
+
+    await saveUserData.save();
+    req.session.user = saveUserData._id;
+
+    return res.json({ success: true, redirectUrl: "/" });
+
   } catch (error) {
     console.error("Error verifying OTP", error);
-    res.status(400).json({ success: false, message: "An error occurred" });
+    return res.status(400).json({
+      success: false,
+      message: "An error occurred"
+    });
   }
 };
+
 
 
 const resendOtp = async(req,res)=>{
@@ -319,6 +333,7 @@ const resendOtp = async(req,res)=>{
         }
         const otp = generateOtp()
         req.session.userOtp=otp
+        req.session.otpExpiry = Date.now() + 60 * 1000; 
         const emailSend = await sendVerificationEmail(email,otp)
             if(emailSend){
                 

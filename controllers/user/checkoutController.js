@@ -7,6 +7,7 @@ const Order = require("../../models/orderSchema");
 const Product = require('../../models/productSchema')
 const Coupon = require('../../models/couponSchema')
 const crypto = require("crypto");
+const validateCoupon = require("../../helpers/validateCoupon");
 
 
 
@@ -20,40 +21,38 @@ const razorpay = new Razorpay({
 
 const checkoutPage = async (req, res) => {
   try {
-    const userId = typeof req.session.user === "object" 
-      ? req.session.user._id 
+    const userId = typeof req.session.user === "object"
+      ? req.session.user._id
       : req.session.user;
 
-    if (!userId) return res.redirect('/login');
+    if (!userId) return res.redirect("/login");
 
     const user = await User.findById(userId);
-    if (!user) return res.redirect('/login');
+    if (!user) return res.redirect("/login");
 
-      const defaultAddress =
-      user.address && Array.isArray(user.address) && user.address.length > 0
-        ? user.address[0]
-        : null;
+    const cart = await Cart.findOne({ user: userId }).populate("items.product");
+    if (!cart || cart.items.length === 0) return res.redirect("/cart");
 
-    const cart = await Cart.findOne({ user: userId }).populate('items.product');
-    if (!cart || !cart.items || cart.items.length === 0) {
-      return res.redirect('/cart');
-    }
-
-    let subtotal = 0;
-    cart.items.forEach(item => {
+    let subtotal = cart.items.reduce((acc, item) => {
       const price = item.product.discountPrice || item.product.price;
-      subtotal += price * item.quantity;
-    });
+      return acc + price * item.quantity;
+    }, 0);
 
-    const taxRate = 0.05;
-    const tax = subtotal * taxRate;
+    const tax = subtotal * 0.05;
     const shipping = 50;
 
     let discountAmount = 0;
     let appliedCoupon = null;
+    let couponError = null;
 
-    if (req.session.appliedCoupon) {
-      appliedCoupon = req.session.appliedCoupon;
+    // 🔥 Validate coupon with helper
+    const validation = await validateCoupon(req.session.appliedCoupon, subtotal);
+
+    if (!validation.valid) {
+      req.session.appliedCoupon = null; // remove coupon
+      couponError = validation.message;
+    } else if (validation.coupon) {
+      appliedCoupon = validation.coupon;
 
       if (appliedCoupon.discountType === "percentage") {
         discountAmount = (subtotal * appliedCoupon.discountValue) / 100;
@@ -65,25 +64,28 @@ const checkoutPage = async (req, res) => {
     }
 
     const finalTotal = subtotal + tax + shipping - discountAmount;
+    req.session.cartSubtotal = subtotal; // used by other routes
 
-    res.render('checkout', {
+    return res.render("checkout", {
       user,
-      addresses: user.address || [],
-      defaultAddress,
+      addresses: user.address,
+      defaultAddress: user.address?.[0] || null,
       cart,
       subtotal,
       tax,
       shipping,
       finalTotal,
       appliedCoupon,
-      discountAmount
+      discountAmount,
+      couponError
     });
-
   } catch (err) {
     console.error("Checkout Page Error:", err);
-    res.redirect('/');
+    return res.redirect("/");
   }
 };
+
+
 
 
 
@@ -91,7 +93,8 @@ const checkoutPage = async (req, res) => {
 const placeOrder = async (req, res) => {
   try {
     const userId = req.session.user;
-    if (!userId) return res.json({ success: false, message: "Login required" });
+    if (!userId)
+      return res.json({ success: false, message: "Login required" });
 
     const { addressId, useWallet } = req.body;
 
@@ -100,22 +103,36 @@ const placeOrder = async (req, res) => {
       return res.json({ success: false, message: "No address found" });
     }
 
-    const addr = user.address.find(a => a._id.toString() === addressId);
+    const addr = user.address.find(
+      (a) => a._id.toString() === addressId
+    );
     if (!addr) {
-      return res.json({ success: false, message: "Selected address not found" });
+      return res.json({
+        success: false,
+        message: "Selected address not found",
+      });
     }
 
     const selectedAddress = {
-      name: addr.name || "N/A",
-      city: addr.city || "N/A",
-      state: addr.state || "N/A",
-      pincode: addr.pincode || "N/A"
+      name: addr.name,
+      city: addr.city,
+      state: addr.state,
+      pincode: addr.pincode,
     };
 
-    const cart = await Cart.findOne({ user: userId }).populate("items.product");
-    if (!cart || !cart.items.length)
-      return res.json({ success: false, message: "Cart is empty" });
+    const cart = await Cart.findOne({ user: userId }).populate(
+      "items.product"
+    );
 
+    if (!cart || !cart.items.length)
+      return res.json({
+        success: false,
+        message: "Cart is empty",
+      });
+
+    // -----------------------
+    // 🔥 FIRST: CALCULATE SUBTOTAL
+    // -----------------------
     const orderItems = cart.items.map((item) => ({
       product: item.product._id,
       quantity: item.quantity,
@@ -123,16 +140,36 @@ const placeOrder = async (req, res) => {
       price: item.product.discountPrice || item.product.price,
     }));
 
-      const subtotal = orderItems.reduce(
+    const subtotal = orderItems.reduce(
       (sum, item) => sum + item.price * item.quantity,
       0
     );
 
+    // -----------------------
+    // 🔥 SECOND: VALIDATE COUPON
+    // -----------------------
+    const validation = await validateCoupon(
+      req.session.appliedCoupon,
+      subtotal
+    );
+
+    if (!validation.valid) {
+      req.session.appliedCoupon = null;
+
+      return res.json({
+        success: false,
+        message: validation.message,
+      });
+    }
+
+    // -----------------------
+    // 🔥 APPLY COUPON
+    // -----------------------
     let discountAmount = 0;
     let couponData = null;
 
-    if (req.session.appliedCoupon) {
-      const c = req.session.appliedCoupon;
+    if (validation.coupon) {
+      const c = validation.coupon;
 
       discountAmount =
         c.discountType === "percentage"
@@ -150,72 +187,100 @@ const placeOrder = async (req, res) => {
       };
     }
 
+    // -----------------------
+    // 🔥 FINAL AMOUNT
+    // -----------------------
     const tax = subtotal * 0.05;
     const shipping = 50;
+
     let totalAmount = subtotal + tax + shipping - discountAmount;
 
+    // COD validation
     if (!useWallet && totalAmount > 1000) {
       return res.json({
         success: false,
-        message: "Cash on Delivery is not available for orders above ₹1000.",
+        message:
+          "Cash on Delivery is not available for orders above ₹1000.",
       });
     }
 
+    // -----------------------
+    // 🔥 WALLET
+    // -----------------------
     let walletUsed = 0;
-    if (useWallet && user.wallet && user.wallet.balance > 0) {
+
+    if (useWallet && user.wallet?.balance > 0) {
       walletUsed = Math.min(user.wallet.balance, totalAmount);
       totalAmount -= walletUsed;
 
       user.wallet.balance -= walletUsed;
+
       user.wallet.transactions.push({
         type: "debit",
         amount: walletUsed,
-        description: `Used ₹${walletUsed} for COD order payment`,
+        description: `Used ₹${walletUsed} for COD payment`,
         date: new Date(),
       });
 
       await user.save();
     }
 
+    // -----------------------
+    // 🔥 STOCK REDUCTION
+    // -----------------------
     for (let item of cart.items) {
       const product = await Product.findById(item.product._id);
-      if (product) {
-        const sizeIndex = product.sizes.findIndex(s => s.size === item.size);
-        if (sizeIndex !== -1) {
-          if (product.sizes[sizeIndex].stock < item.quantity) {
-            return res.json({
-              success: false,
-              message: `${product.productName} is out of stock`,
-            });
-          }
-          product.sizes[sizeIndex].stock -= item.quantity;
-          await product.save();
-        }
+      if (!product) continue;
+
+      const sizeIndex = product.sizes.findIndex(
+        (s) => s.size === item.size
+      );
+
+      if (sizeIndex === -1) continue;
+
+      if (product.sizes[sizeIndex].stock < item.quantity) {
+        return res.json({
+          success: false,
+          message: `${product.productName} is out of stock`,
+        });
       }
+
+      product.sizes[sizeIndex].stock -= item.quantity;
+      await product.save();
     }
 
+    // -----------------------
+    // 🔥 CREATE ORDER
+    // -----------------------
     const newOrder = new Order({
       user: user._id,
       items: orderItems,
       address: selectedAddress,
-      paymentMethod: useWallet && totalAmount === 0 ? "Wallet" : "Cash on Delivery",
+      paymentMethod:
+        walletUsed > 0 && totalAmount === 0
+          ? "Wallet"
+          : "Cash on Delivery",
       totalAmount,
       status: "Placed",
       coupon: couponData || undefined,
-
     });
 
     await newOrder.save();
 
+    // Clear cart
     cart.items = [];
     cart.total = 0;
     await cart.save();
+
     delete req.session.appliedCoupon;
 
-    res.json({ success: true, redirect: `/order-success?id=${newOrder._id}` });
+    return res.json({
+      success: true,
+      redirect: `/order-success?id=${newOrder._id}`,
+    });
   } catch (error) {
     console.error("Error placing order:", error);
-    res.json({
+    return res.json({
       success: false,
       message: "Unable to place order. Please try again",
     });
@@ -226,15 +291,24 @@ const placeOrder = async (req, res) => {
 
 
 
+
+
 const orderSuccessPage = async (req, res) => {
   try {
     const orderId = req.query.id;
     if (!orderId) return res.redirect('/');
 
+    const userId = req.session.user;  
+
+    const user = await User.findById(userId); 
     const order = await Order.findById(orderId).populate('items.product');
     if (!order) return res.redirect('/');
 
-    res.render('order-success', { order });
+    res.render('order-success', { 
+      user,      
+      order 
+    });
+
   } catch (err) {
     console.error(err);
     res.redirect('/');
@@ -244,10 +318,12 @@ const orderSuccessPage = async (req, res) => {
 
 
 
+
 const getUserOrders = async (req, res) => {
   try {
     const userId = req.session.user;
     if (!userId) return res.redirect("/login");
+    const user = await User.findById(userId); 
 
     const page = parseInt(req.query.page) || 1;
     const limit = 6; 
@@ -266,6 +342,7 @@ const getUserOrders = async (req, res) => {
 
     res.render("orders", { 
       orders, 
+      user,
       currentPage: page,
       totalPages,
       hasPrev: page > 1,
@@ -286,31 +363,40 @@ const viewOrderDetails = async (req, res) => {
     const orderId = req.params.id;
     if (!orderId) return res.redirect("/orders");
 
-    const order = await Order.findOne({ _id: orderId, user: userId }).populate("items.product");
+    const user = await User.findById(userId);
+
+    const order = await Order.findOne({ _id: orderId, user: userId })
+      .populate("items.product");
     if (!order) return res.redirect("/orders");
 
     let subtotal = 0;
     let cancelledCount = 0;
+
     order.items.forEach(item => {
       if (item.status === "Cancelled") cancelledCount++;
       else subtotal += (item.price || 0) * (item.quantity || 0);
     });
 
-    const tax = +(subtotal * 0.05); 
-    const shipping = (order.status === "Cancelled") ? 0 : 50;
+    const tax = subtotal * 0.05;
+    const shipping = order.status === "Cancelled" ? 0 : 50;
 
     let discount = 0;
     let couponCode = null;
+
     if (order.coupon) {
       couponCode = order.coupon.code || null;
-      if (typeof order.coupon.discountAmount === "number" && order.coupon.discountAmount > 0) {
-        discount = Number(order.coupon.discountAmount);
-      } else if (typeof order.coupon.discountValue === "number" && order.coupon.discountType === "percentage") {
+
+      if (order.coupon.discountAmount)
+        discount = order.coupon.discountAmount;
+
+      else if (order.coupon.discountValue && order.coupon.discountType === "percentage") {
         discount = subtotal * (order.coupon.discountValue / 100);
-        if (order.coupon.maxDiscount && discount > order.coupon.maxDiscount) discount = order.coupon.maxDiscount;
-      } else if (typeof order.coupon.discountValue === "number" && order.coupon.discountType !== "percentage") {
-        discount = Number(order.coupon.discountValue);
+        if (order.coupon.maxDiscount && discount > order.coupon.maxDiscount)
+          discount = order.coupon.maxDiscount;
       }
+
+      else if (order.coupon.discountValue)
+        discount = order.coupon.discountValue;
     }
 
     const subtotalRounded = Math.round(subtotal * 100) / 100;
@@ -318,34 +404,39 @@ const viewOrderDetails = async (req, res) => {
     const shippingRounded = Math.round(shipping * 100) / 100;
     const discountRounded = Math.round(discount * 100) / 100;
 
-    const total = Math.round((subtotalRounded + taxRounded + shippingRounded - discountRounded) * 100) / 100;
+    const total = Math.round(
+      (subtotalRounded + taxRounded + shippingRounded - discountRounded) * 100
+    ) / 100;
 
     let displayStatus = order.status;
     if (order.status === "Cancelled") displayStatus = "Cancelled";
-    else if (cancelledCount > 0 && cancelledCount < order.items.length) displayStatus = "Partially Cancelled";
+    else if (cancelledCount > 0 && cancelledCount < order.items.length)
+      displayStatus = "Partially Cancelled";
 
     order.items.forEach(item => {
-      item.displayStatus = item.status === "Cancelled" ? "Cancelled" : displayStatus;
+      item.displayStatus = item.status === "Cancelled"
+        ? "Cancelled"
+        : displayStatus;
     });
-
-    console.log("Order coupon saved:", order.coupon);
 
     res.render("order-details", {
       order,
+      user, 
       subtotal: subtotalRounded,
       tax: taxRounded,
       shipping: shippingRounded,
       discount: discountRounded,
       couponCode,
       total,
-      displayStatus,
-      user: req.session.user
+      displayStatus
     });
+
   } catch (err) {
     console.error("Error fetching order details:", err);
     res.redirect("/orders");
   }
 };
+
 
 
 
@@ -653,8 +744,12 @@ ${address.city || ""}, ${address.state || ""} - ${address.pincode || ""}`;
 const returnItemPage = async (req, res) => {
   const { orderId, itemId } = req.params;
   try {
+        const userId = req.session.user;
+
     const order = await Order.findById(orderId).populate('items.product');
     const item = order.items.id(itemId);
+        const user = await User.findById(userId);
+
     if (!item) return res.status(404).send('Item not found');
 
     const reasons = [
@@ -665,7 +760,7 @@ const returnItemPage = async (req, res) => {
       "Other"
     ];
 
-    res.render('returnItem', { order, item, reasons });
+    res.render('returnItem', { order,user, item, reasons });
   } catch (err) {
     console.error(err);
     res.status(500).send('Server Error');

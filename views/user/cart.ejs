@@ -99,7 +99,9 @@
   <% if(item.product.stock === 0){ %>
     <span class="badge bg-danger">Out of Stock</span>
   <% } else { %>
-    <div class="quantity-input" data-id="<%= item.product._id %>">
+<div class="quantity-input" 
+     data-id="<%= item.product._id %>" 
+     data-size="<%= item.size %>">
       <button class="decrease-btn">-</button>
       <input type="text" value="<%= item.quantity %>" readonly>
       <button class="increase-btn">+</button>

@@ -130,41 +130,73 @@ const loadCart = async (req, res) => {
 
 const updateCart = async (req, res) => {
   try {
-    const { productId, action } = req.body;
+    const { productId, size, action } = req.body;
     const userId = req.session.user;
 
-    const cart = await Cart.findOne({ user: userId }).populate('items.product');
-    if (!cart) return res.status(400).json({ success: false, message: "Cart not found" });
+    const cart = await Cart.findOne({ user: userId }).populate("items.product");
+    if (!cart) {
+      return res.status(400).json({ success: false, message: "Cart not found" });
+    }
 
-    const itemIndex = cart.items.findIndex(item => item.product._id.equals(productId));
-    if (itemIndex === -1) return res.status(400).json({ success: false, message: "Item not in cart" });
+    const itemIndex = cart.items.findIndex(
+      (item) => item.product._id.equals(productId) && item.size === size
+    );
 
-    const totalItemsInCart = cart.items.reduce((sum, item) => sum + item.quantity, 0);
+    if (itemIndex === -1) {
+      return res.status(400).json({ success: false, message: "Item not in cart" });
+    }
 
+    const cartItem = cart.items[itemIndex];
+
+    let availableStock = cartItem.product.quantity;
+
+    if (cartItem.product.sizes && cartItem.product.sizes.length > 0) {
+      const sizeData = cartItem.product.sizes.find((s) => s.size === size);
+      if (sizeData) availableStock = sizeData.stock;
+    }
+
+ 
     if (action === "increase") {
+
+      const totalItemsInCart = cart.items.reduce((sum, item) => sum + item.quantity, 0);
       if (totalItemsInCart >= 10) {
         return res.json({ success: false, message: "Cart limit reached (10 items max)" });
       }
-      cart.items[itemIndex].quantity++;
-    } else if (action === "decrease") {
-      cart.items[itemIndex].quantity--;
-      if (cart.items[itemIndex].quantity <= 0) {
+
+      if (cartItem.quantity >= availableStock) {
+        return res.json({
+          success: false,
+          message: `Only ${availableStock} stock available`
+        });
+      }
+
+      cartItem.quantity++;
+    }
+
+ 
+    else if (action === "decrease") {
+      cartItem.quantity--;
+      if (cartItem.quantity <= 0) {
         cart.items.splice(itemIndex, 1);
       }
     }
 
+    
     cart.total = cart.items.reduce((sum, item) => {
       const price = item.product.discountPrice || item.product.price;
       return sum + item.quantity * price;
     }, 0);
 
     await cart.save();
-    res.json({ success: true, total: cart.total });
+
+    return res.json({ success: true, total: cart.total });
+
   } catch (err) {
     console.error(err);
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
+
 
 
 const removeFromCart = async (req, res) => {

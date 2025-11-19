@@ -942,4 +942,49 @@
       if (result.isConfirmed) window.location.href = "/logout";
     });
   });
+
+  document.addEventListener("DOMContentLoaded", () => {
+  const phoneInput = document.querySelector("input[name='phone']");
+  const phoneError = document.getElementById("phoneError");
+
+  document.querySelector(".edit-icon").addEventListener("click", () => {
+    phoneInput.removeAttribute("readonly");
+    phoneInput.focus();
+  });
+
+  phoneInput.addEventListener("input", () => {
+    let val = phoneInput.value;
+
+    val = val.replace(/\D/g, "");
+
+    if (val.startsWith("0")) {
+      phoneError.textContent = "Phone number cannot start with 0.";
+      val = val.substring(1);
+    } else {
+      phoneError.textContent = "";
+    }
+
+    if (val.length > 10) {
+      val = val.substring(0, 10);
+    }
+
+    phoneInput.value = val;
+
+    if (val.length > 0 && val.length < 10) {
+      phoneError.textContent = "Phone number must be 10 digits.";
+    } else if (val.length === 10) {
+      phoneError.textContent = "";
+    }
+  });
+
+  document.querySelector("form").addEventListener("submit", (e) => {
+    const phone = phoneInput.value;
+
+    if (!/^[1-9]\d{9}$/.test(phone)) {
+      e.preventDefault();
+      phoneError.textContent = "Please enter a valid 10-digit phone number.";
+      phoneInput.focus();
+    }
+  });
+});
 </script>

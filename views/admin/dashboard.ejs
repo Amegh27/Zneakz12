@@ -1,87 +1,6 @@
 <%- include("../partials/admin/header") %>
 
-<div class="dashboard-wrapper">
-  <!-- Header Section -->
-  <div class="dashboard-header">
-    <div>
-      <h1 class="dashboard-title">📈Dashboard</h1>
-      <p class="dashboard-subtitle">Real-time analytics and performance metrics</p>
-    </div>
-    <select id="filterSelect" class="filter-select">
-      <option value="yearly">Yearly</option>
-      <option value="monthly" selected>Monthly</option>
-      <option value="weekly">Weekly</option>
-      <option value="daily">Daily</option>
-    </select>
-  </div>
 
-  
-  <div class="charts-container">
-    <div class="chart-card">
-      <div class="chart-header">
-        <h2 class="chart-title">Sales Performance</h2>
-        <span class="filter-badge" id="currentFilter">Monthly</span>
-      </div>
-      <div class="chart-wrapper">
-        <canvas id="salesChart" height="80"></canvas>
-      </div>
-    </div>
-  </div>
-
-  <div class="metrics-grid">
-    <div class="metric-card">
-      <div class="metric-icon">📈</div>
-      <div class="metric-content">
-        <p class="metric-label">Total Sales</p>
-        <p class="metric-value">₹0</p>
-        <p class="metric-change positive">↑ Loading...</p>
-      </div>
-    </div>
-    <div class="metric-card">
-      <div class="metric-icon">🛍️</div>
-      <div class="metric-content">
-        <p class="metric-label">Top Product</p>
-        <p class="metric-value">--</p>
-        <p class="metric-change">Top performer</p>
-      </div>
-    </div>
-    <div class="metric-card">
-      <div class="metric-icon">📦</div>
-      <div class="metric-content">
-        <p class="metric-label">Total Orders</p>
-        <p class="metric-value">0</p>
-        <p class="metric-change">This period</p>
-      </div>
-    </div>
-    <div class="metric-card">
-      <div class="metric-icon">🏆</div>
-      <div class="metric-content">
-        <p class="metric-label">Best Category</p>
-        <p class="metric-value">--</p>
-        <p class="metric-change">Top performer</p>
-      </div>
-    </div>
-  </div>
-
-
-  <div class="lists-container">
-    <div class="list-card">
-      <div class="list-header">
-        <h3 class="list-title">Top Products</h3>
-        <span class="list-count" id="productCount">0</span>
-      </div>
-      <ul id="topProducts" class="custom-list"></ul>
-    </div>
-
-    <div class="list-card">
-      <div class="list-header">
-        <h3 class="list-title">Top Categories</h3>
-        <span class="list-count" id="categoryCount">0</span>
-      </div>
-      <ul id="topCategories" class="custom-list"></ul>
-    </div>
-  </div>
-</div>
 
 <style>
   * {
@@ -447,6 +366,89 @@
     }
   }
 </style>
+
+<div class="dashboard-wrapper">
+  <!-- Header Section -->
+  <div class="dashboard-header">
+    <div>
+      <h1 class="dashboard-title">📈Dashboard</h1>
+      <p class="dashboard-subtitle">Real-time analytics and performance metrics</p>
+    </div>
+    <select id="filterSelect" class="filter-select">
+      <option value="yearly">Yearly</option>
+      <option value="monthly" selected>Monthly</option>
+      <option value="weekly">Weekly</option>
+      <option value="daily">Daily</option>
+    </select>
+  </div>
+
+  
+  <div class="charts-container">
+    <div class="chart-card">
+      <div class="chart-header">
+        <h2 class="chart-title">Sales Performance</h2>
+        <span class="filter-badge" id="currentFilter">Monthly</span>
+      </div>
+      <div class="chart-wrapper">
+        <canvas id="salesChart" height="80"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="metrics-grid">
+    <div class="metric-card">
+      <div class="metric-icon">📈</div>
+      <div class="metric-content">
+        <p class="metric-label">Total Sales</p>
+        <p class="metric-value">₹0</p>
+        <p class="metric-change positive">↑ Loading...</p>
+      </div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-icon">🛍️</div>
+      <div class="metric-content">
+        <p class="metric-label">Top Product</p>
+        <p class="metric-value">--</p>
+        <p class="metric-change">Top performer</p>
+      </div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-icon">📦</div>
+      <div class="metric-content">
+        <p class="metric-label">Total Orders</p>
+        <p class="metric-value">0</p>
+        <p class="metric-change">This period</p>
+      </div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-icon">🏆</div>
+      <div class="metric-content">
+        <p class="metric-label">Best Category</p>
+        <p class="metric-value">--</p>
+        <p class="metric-change">Top performer</p>
+      </div>
+    </div>
+  </div>
+
+
+  <div class="lists-container">
+    <div class="list-card">
+      <div class="list-header">
+        <h3 class="list-title">Top Products</h3>
+        <span class="list-count" id="productCount">0</span>
+      </div>
+      <ul id="topProducts" class="custom-list"></ul>
+    </div>
+
+    <div class="list-card">
+      <div class="list-header">
+        <h3 class="list-title">Top Categories</h3>
+        <span class="list-count" id="categoryCount">0</span>
+      </div>
+      <ul id="topCategories" class="custom-list"></ul>
+    </div>
+  </div>
+</div>
 <%- include("../partials/admin/footer") %>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -473,6 +475,13 @@ async function loadSalesChart(filter = 'monthly') {
     const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
     labels = labels.map(d => days[d - 1] || d);
   }
+  else if (filter === 'yearly') {   
+    const months = [
+      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+  ]
+    labels = labels.map(m => months[m - 1] || m);
+}
 
   const values = data.map(i => i.totalSales);
   const totalOrders = data.reduce((a, b) => a + b.totalOrders, 0);
