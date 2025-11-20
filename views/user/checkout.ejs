@@ -987,6 +987,22 @@
 
  document.getElementById("razorpayBtn").addEventListener("click", async () => {
   try {
+
+    // Get selected address
+    const selectedAddressId = document.querySelector('input[name="selectedAddress"]:checked')?.value;
+    if (!selectedAddressId) {
+      return Swal.fire('Error', 'Please select an address.', 'error');
+    }
+
+    // Get full address list from server
+    const allAddresses = <%- JSON.stringify(addresses) %>;
+    const selectedAddress = allAddresses.find(a => a._id === selectedAddressId);
+
+    if (!selectedAddress) {
+      return Swal.fire('Error', 'Address not found.', 'error');
+    }
+
+    // Create Razorpay order
     const res = await fetch("/create-razorpay-order", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -1005,6 +1021,7 @@
       order_id: data.orderId,
 
       handler: async function (response) {
+
         const orderDetails = {
           items: <%- JSON.stringify(cart.items.map(i => ({
             productId: i.product._id,
@@ -1012,7 +1029,16 @@
             size: i.size,
             price: i.product.discountPrice || i.product.price
           }))) %>,
-          address: <%- JSON.stringify(defaultAddress) %>,
+      address: {
+  name: "<%= user.name %>",
+  phone: "<%= user.phone %>",
+  address: selectedAddress.name,
+  city: selectedAddress.city,
+  state: selectedAddress.state,
+  pincode: selectedAddress.pincode
+},
+
+
           totalAmount: <%= finalTotal %>
         };
 
@@ -1035,12 +1061,14 @@
     };
 
     const rzp = new Razorpay(options);
+
     rzp.on("payment.failed", function (response) {
       console.error("Payment failed:", response.error);
       window.location.href = "/order-failure";
     });
 
     rzp.open();
+
   } catch (err) {
     console.error("Razorpay initiation error:", err);
     alert("Unable to start Razorpay payment. Please try again.");
