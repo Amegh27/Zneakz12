@@ -8,78 +8,141 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <style>
         :root {
-            --primary-dark: #1a1a1a;
-            --primary-accent: #ff6b35;
-            --secondary-accent: #004e89;
-            --success-color: #06a77d;
-            --danger-color: #d62828;
-            --light-bg: #f8f9fa;
-            --card-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            --hover-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            --primary: #000;
+            --primary-hover: #1a1a1a;
+            --success: #10b981;
+            --success-hover: #059669;
+            --success-light: #d1fae5;
+            --warning: #f59e0b;
+            --warning-hover: #d97706;
+            --warning-light: #fef3c7;
+            --danger: #ef4444;
+            --danger-hover: #dc2626;
+            --danger-light: #fee2e2;
+            --info: #3b82f6;
+            --info-hover: #2563eb;
+            --light: #f8f9fa;
+            --border: #e9ecef;
+            --text: #212529;
+            --text-muted: #6c757d;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+            --shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+        }
+
+        * {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         body {
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            min-height: 100vh;
         }
 
         .container {
             background: white;
-            border-radius: 12px;
-            box-shadow: var(--card-shadow);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
             padding: 2.5rem;
             margin-top: 2rem;
             margin-bottom: 2rem;
+            border: 1px solid var(--border);
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary) 0%, #4a4a4a 100%);
+            border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+        }
+
+        /* Header Section */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            gap: 1rem;
         }
 
         h2 {
-            color: var(--primary-dark);
-            font-weight: 700;
+            color: var(--primary);
+            font-weight: 800;
             font-size: 2rem;
             letter-spacing: -0.5px;
+            margin: 0;
         }
 
-        /* Search Bar Styling */
-        .d-flex {
+        /* Search Form */
+        .search-form {
+            display: flex;
             gap: 0.5rem;
+            max-width: 450px;
+            width: 100%;
         }
 
         .form-control {
-            border: 2px solid #e0e0e0;
+            border: 2px solid var(--border);
             padding: 0.75rem 1.25rem;
             font-size: 0.95rem;
-            transition: all 0.3s ease;
+            font-weight: 500;
+            border-radius: var(--radius-sm);
+            background: #fafbfc;
         }
 
         .form-control:focus {
-            border-color: var(--primary-accent);
-            box-shadow: 0 0 0 0.2rem rgba(255, 107, 53, 0.15);
-            background-color: #fff;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.08);
+            background-color: white;
+            outline: none;
         }
 
         .form-control::placeholder {
-            color: #999;
+            color: var(--text-muted);
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, var(--primary-accent) 0%, #ff5722 100%);
+            background: var(--primary);
             border: none;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+            font-weight: 700;
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--radius-sm);
+            box-shadow: var(--shadow-sm);
         }
 
         .btn-primary:hover {
+            background: var(--primary-hover);
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(255, 107, 53, 0.4);
-            background: linear-gradient(135deg, #ff5722 0%, var(--primary-accent) 100%);
+            box-shadow: var(--shadow-md);
         }
 
         /* Table Styling */
         .table-responsive {
-            border-radius: 8px;
+            border-radius: var(--radius-md);
             overflow: hidden;
             margin-top: 2rem;
+            box-shadow: var(--shadow-sm);
         }
 
         .table {
@@ -89,134 +152,314 @@
         }
 
         .table thead {
-            background: linear-gradient(135deg, var(--primary-dark) 0%, #2d2d2d 100%);
+            background: linear-gradient(135deg, var(--primary) 0%, #2d2d2d 100%);
             color: white;
-            font-weight: 600;
-            text-transform: uppercase;
-            font-size: 0.85rem;
-            letter-spacing: 0.5px;
         }
 
         .table thead th {
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.875rem;
+            letter-spacing: 0.5px;
             border: none;
-            padding: 1.25rem 0.75rem;
+            padding: 1.25rem 1rem;
             vertical-align: middle;
         }
 
         .table tbody tr {
-            border-bottom: 1px solid #e9ecef;
-            transition: all 0.3s ease;
+            border-bottom: 1px solid var(--border);
+            transition: all 0.2s ease;
         }
 
         .table tbody tr:hover {
-            background-color: #f8f9fa;
-            box-shadow: inset 0 0 10px rgba(255, 107, 53, 0.05);
+            background: linear-gradient(135deg, #fafbfc 0%, #f8f9fa 100%);
             transform: scale(1.01);
         }
 
         .table tbody td {
-            padding: 1.25rem 0.75rem;
+            padding: 1.25rem 1rem;
             vertical-align: middle;
-            color: #333;
+            color: var(--text);
             font-size: 0.95rem;
         }
 
-        /* Badge Styling */
-        .badge {
-            padding: 0.5rem 0.75rem;
-            font-size: 0.8rem;
-            font-weight: 600;
-            border-radius: 6px;
-            background: linear-gradient(135deg, var(--secondary-accent) 0%, #0066cc 100%);
-            margin: 0.25rem;
-            display: inline-block;
+        /* Product Name Cell */
+        .product-name {
+            font-weight: 700;
+            color: var(--primary);
         }
 
-        /* Button Styling */
-        .btn-sm {
-            padding: 0.5rem 0.875rem;
-            font-size: 0.85rem;
+        /* Category Cell */
+        .category-name {
             font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        /* Price Display */
+        .price-cell {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .original-price {
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .discount-price {
+            font-weight: 700;
+            color: var(--success);
+            font-size: 1.1rem;
+        }
+
+        .price-strike {
+            text-decoration: line-through;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        /* Stock Display */
+        .stock-total {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--primary);
+        }
+
+        /* Size Stock List */
+        .size-stock-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 0.375rem;
+        }
+
+        .size-stock-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.375rem 0.625rem;
+            background: linear-gradient(135deg, #fafbfc 0%, #f8f9fa 100%);
             border-radius: 6px;
-            transition: all 0.3s ease;
+            border: 1px solid var(--border);
+            font-size: 0.875rem;
+        }
+
+        .size-label {
+            font-weight: 700;
+            color: var(--primary);
+            min-width: 30px;
+        }
+
+        .stock-value {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .stock-value.in-stock {
+            color: var(--success);
+        }
+
+        .stock-value.low-stock {
+            color: var(--warning);
+        }
+
+        .stock-value.out-of-stock {
+            color: var(--danger);
+        }
+
+        /* Buttons */
+        .btn-sm {
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+            font-weight: 700;
+            border-radius: var(--radius-sm);
             border: none;
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
+            text-decoration: none;
         }
 
         .btn-danger {
-            background: linear-gradient(135deg, var(--danger-color) 0%, #c41e3a 100%);
+            background: var(--danger);
             color: white;
-            box-shadow: 0 4px 10px rgba(214, 40, 40, 0.3);
+            box-shadow: var(--shadow-sm);
         }
 
         .btn-danger:hover {
+            background: var(--danger-hover);
             transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(214, 40, 40, 0.4);
-            background: linear-gradient(135deg, #c41e3a 0%, var(--danger-color) 100%);
+            box-shadow: var(--shadow-md);
             color: white;
         }
 
         .btn-success {
-            background: linear-gradient(135deg, var(--success-color) 0%, #059669 100%);
+            background: var(--success);
             color: white;
-            box-shadow: 0 4px 10px rgba(6, 168, 125, 0.3);
+            box-shadow: var(--shadow-sm);
         }
 
         .btn-success:hover {
+            background: var(--success-hover);
             transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(6, 168, 125, 0.4);
-            background: linear-gradient(135deg, #059669 0%, var(--success-color) 100%);
+            box-shadow: var(--shadow-md);
             color: white;
         }
 
         .btn-info {
-            background: linear-gradient(135deg, var(--secondary-accent) 0%, #0066cc 100%);
+            background: var(--info);
             color: white;
-            box-shadow: 0 4px 10px rgba(0, 78, 137, 0.3);
+            box-shadow: var(--shadow-sm);
         }
 
         .btn-info:hover {
+            background: var(--info-hover);
             transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(0, 78, 137, 0.4);
-            background: linear-gradient(135deg, #0066cc 0%, var(--secondary-accent) 100%);
+            box-shadow: var(--shadow-md);
             color: white;
         }
 
-        /* Pagination Styling */
-        .pagination {
+        .btn-warning {
+            background: var(--warning);
+            color: white;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn-warning:hover {
+            background: var(--warning-hover);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+            color: white;
+        }
+
+        /* Offer Badge */
+        .offer-badge {
+            padding: 0.375rem 0.75rem;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 0.8rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+            background: var(--success-light);
+            color: #065f46;
+            margin-bottom: 0.5rem;
+        }
+
+        .offer-badge::before {
+            content: '🎉';
+            font-size: 0.9rem;
+        }
+
+        /* Action Column */
+        .action-cell {
+            display: flex;
+            flex-direction: column;
             gap: 0.5rem;
-            margin-top: 2rem;
+            align-items: stretch;
+        }
+
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 2.5rem;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .page-item {
+            list-style: none;
         }
 
         .page-link {
-            border: 2px solid #e0e0e0;
-            color: var(--primary-dark);
-            font-weight: 600;
-            border-radius: 6px;
-            transition: all 0.3s ease;
-            padding: 0.5rem 0.875rem;
+            border: 2px solid var(--border);
+            color: var(--primary);
+            font-weight: 700;
+            border-radius: var(--radius-sm);
+            padding: 0.625rem 1rem;
+            box-shadow: var(--shadow-sm);
+            text-decoration: none;
+            min-width: 45px;
+            text-align: center;
         }
 
         .page-link:hover {
-            background: linear-gradient(135deg, var(--primary-accent) 0%, #ff5722 100%);
-            border-color: var(--primary-accent);
+            background: var(--primary);
+            border-color: var(--primary);
             color: white;
             transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
         }
 
         .page-item.active .page-link {
-            background: linear-gradient(135deg, var(--primary-accent) 0%, #ff5722 100%);
-            border-color: var(--primary-accent);
+            background: var(--primary);
+            border-color: var(--primary);
             color: white;
-            box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+            box-shadow: var(--shadow-md);
+        }
+
+        .page-item.disabled .page-link {
+            background: var(--light);
+            color: var(--text-muted);
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .page-item.disabled .page-link:hover {
+            background: var(--light);
+            color: var(--text-muted);
+            border-color: var(--border);
+            transform: none;
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* Modal Styling */
+        .modal-content {
+            border-radius: var(--radius-lg);
+            border: none;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, var(--primary) 0%, #2d2d2d 100%);
+            color: white;
+            border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+            padding: 1.5rem;
+        }
+
+        .modal-title {
+            font-weight: 800;
+            font-size: 1.25rem;
+        }
+
+        .modal-body {
+            padding: 2rem;
+        }
+
+        .form-label {
+            font-weight: 700;
+            color: var(--primary);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.5rem;
         }
 
         /* Empty State */
-        .text-center {
-            color: #666;
-            font-weight: 500;
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-muted);
+        }
+
+        .empty-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
         }
 
         /* Responsive */
@@ -226,154 +469,211 @@
             }
 
             h2 {
-                font-size: 1.5rem;
-                margin-bottom: 1.5rem;
+                font-size: 1.75rem;
             }
 
-            .d-flex {
+            .page-header {
                 flex-direction: column;
+                align-items: stretch;
             }
 
-            .form-control,
-            .btn-primary {
-                width: 100%;
+            .search-form {
+                max-width: 100%;
             }
 
             .table-responsive {
                 font-size: 0.85rem;
             }
 
+            .table thead th,
+            .table tbody td {
+                padding: 0.875rem 0.5rem;
+            }
+
             .btn-sm {
-                padding: 0.4rem 0.6rem;
-                font-size: 0.75rem;
+                padding: 0.375rem 0.75rem;
+                font-size: 0.8rem;
+            }
+
+            .action-cell {
+                min-width: 120px;
             }
         }
     </style>
 </head>
 
-<body class="bg-light">
+<body>
 
 <div class="container py-5">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="mb-0">Products</h2>
-        <form action="" method="get" class="d-flex" style="max-width: 500px; width: 100%;">
-            <input type="text" class="form-control rounded-start-pill" placeholder="Search products"
-                name="search" value="<%= searchQuery || '' %>">
-            <button class="btn btn-primary rounded-end-pill px-4">Search</button>
-        </form>
+    <div class="page-header">
+        <h2> Products Management</h2>
+       <form action="" method="get" class="search-form">
+    <input 
+        type="text" 
+        class="form-control" 
+        placeholder="Search products..."
+        name="search" 
+        value="<%= searchQuery || '' %>"
+    >
+
+    <button class="btn btn-primary">
+        <i class="bi bi-search"></i> Search
+    </button>
+
+    <% if (searchQuery) { %>
+        <a href="/admin/products" class="btn btn-secondary">
+            <i class="bi bi-x-circle"></i> Clear
+        </a>
+    <% } %>
+</form>
+
     </div>
 
     <div class="table-responsive">
-        <table class="table table-striped table-bordered align-middle">
+        <table class="table align-middle">
             <thead class="text-center">
-    <tr>
-        <th>Product Name</th>
-        <th>Category</th>
-        <th>Price</th>
-        <th>Total Stock</th>
-        <th>Sizes & Stock</th>
-        <th>Action</th>
-        <th>Edit</th>
-    </tr>
-</thead>
-<tbody>
-    <% if (data && data.length > 0) { %>
-        <% for (let i = data.length - 1; i >= 0; i--) { %>
-            <tr class="text-center">
-                <td><%= data[i].productName %></td>
-                <td><%= data[i].category ? data[i].category.name : 'No Category' %></td>
-                <td>
-  ₹<%= Math.floor(data[i].price) %>
-  <% if (data[i].discountPrice && data[i].discountPrice < data[i].price) { %>
-    <span class="text-success fw-semibold ms-1">
-      ₹<%= Math.floor(data[i].discountPrice) %>
-    </span>
-  <% } %>
-</td>
-            <td>
-    <% 
-        let totalStock = 0;
-        const sizesList = ["6","7","8","9","10"];
-        sizesList.forEach(sz => {
-            const sizeObj = data[i].sizes.find(s => s.size === sz);
-            const stock = sizeObj ? sizeObj.stock : 0;
-            totalStock += stock;
-        });
-    %>
-    <%= totalStock %>
-</td>
-<td>
-    <% sizesList.forEach(sz => { 
-        const sizeObj = data[i].sizes.find(s => s.size === sz);
-    %>
-        <span class="badge">
-            <%= sz %>: <%= sizeObj ? sizeObj.stock : 0 %>
-        </span>
-    <% }); %>
-</td>
+                <tr>
+                    <th>Product</th>
+                    <th>Category</th>
+                    <th>Price</th>
+                    <th>Total Stock</th>
+                    <th>Sizes & Stock</th>
+                    <th>Status</th>
+                    <th>Edit</th>
+                    <th>Offer</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% if (data && data.length > 0) { %>
+                    <% for (let i = data.length - 1; i >= 0; i--) { %>
+                        <tr class="text-center">
+                            <!-- Product Name -->
+                            <td>
+                                <div class="product-name"><%= data[i].productName %></div>
+                            </td>
 
-                <td>
-                    <% if (!data[i].isBlocked) { %>
-                        <button class="btn btn-sm btn-danger" 
-                            onclick="handleBlockUnblock('/admin/blockProduct?id=<%= data[i]._id %>', 'Block')">
-                            <i class="bi bi-lock-fill"></i> Block
-                        </button>
-                    <% } else { %>
-                        <button class="btn btn-sm btn-success" 
-                            onclick="handleBlockUnblock('/admin/unblockProduct?id=<%= data[i]._id %>', 'Unblock')">
-                            <i class="bi bi-unlock-fill"></i> Unblock
-                        </button>
+                            <!-- Category -->
+                            <td>
+                                <div class="category-name">
+                                    <%= data[i].category ? data[i].category.name : 'No Category' %>
+                                </div>
+                            </td>
+
+                            <!-- Price -->
+                            <td>
+                                <div class="price-cell">
+                                    <% if (data[i].discountPrice && data[i].discountPrice < data[i].price) { %>
+                                        <span class="price-strike">₹<%= Math.floor(data[i].price) %></span>
+                                        <span class="discount-price">₹<%= Math.floor(data[i].discountPrice) %></span>
+                                    <% } else { %>
+                                        <span class="original-price">₹<%= Math.floor(data[i].price) %></span>
+                                    <% } %>
+                                </div>
+                            </td>
+
+                            <!-- Total Stock -->
+                            <td>
+                                <% 
+                                    let totalStock = 0;
+                                    const sizesList = ["6","7","8","9","10"];
+                                    sizesList.forEach(sz => {
+                                        const sizeObj = data[i].sizes.find(s => s.size === sz);
+                                        const stock = sizeObj ? sizeObj.stock : 0;
+                                        totalStock += stock;
+                                    });
+                                %>
+                                <div class="stock-total"><%= totalStock %></div>
+                            </td>
+
+                            <!-- Sizes & Stock List -->
+                            <td>
+                                <ul class="size-stock-list">
+                                    <% sizesList.forEach(sz => { 
+                                        const sizeObj = data[i].sizes.find(s => s.size === sz);
+                                        const stock = sizeObj ? sizeObj.stock : 0;
+                                        let stockClass = 'out-of-stock';
+                                        if (stock > 10) stockClass = 'in-stock';
+                                        else if (stock > 0) stockClass = 'low-stock';
+                                    %>
+                                        <li class="size-stock-item">
+                                            <span class="size-label">Size <%= sz %></span>
+                                            <span class="stock-value <%= stockClass %>">
+                                                <%= stock %> units
+                                            </span>
+                                        </li>
+                                    <% }); %>
+                                </ul>
+                            </td>
+
+                            <!-- Action (Block/Unblock) -->
+                            <td>
+                                <% if (!data[i].isBlocked) { %>
+                                    <button class="btn btn-sm btn-danger" 
+                                        onclick="handleBlockUnblock('/admin/blockProduct?id=<%= data[i]._id %>', 'Block')">
+                                        <i class="bi bi-lock-fill"></i> Block
+                                    </button>
+                                <% } else { %>
+                                    <button class="btn btn-sm btn-success" 
+                                        onclick="handleBlockUnblock('/admin/unblockProduct?id=<%= data[i]._id %>', 'Unblock')">
+                                        <i class="bi bi-unlock-fill"></i> Unblock
+                                    </button>
+                                <% } %>
+                            </td>
+
+                            <!-- Edit -->
+                            <td>
+                                <a href="/admin/editProduct?id=<%= data[i]._id %>"
+                                   class="btn btn-sm btn-info">
+                                   <i class="bi bi-pencil-square"></i> Edit
+                                </a>
+                            </td>
+
+                            <!-- Offer -->
+                            <td>
+                                <div class="action-cell">
+                                    <% if (data[i].offerApplied === 'product' && data[i].discountPrice && data[i].discountPrice < data[i].price) { %>
+                                        <span class="offer-badge">
+                                            ₹<%= Math.floor(data[i].discountPrice) %>
+                                        </span>
+                                        <button 
+                                            class="btn btn-sm btn-danger"
+                                            onclick="removeProductOffer('<%= data[i]._id %>')">
+                                            <i class="bi bi-x-circle"></i> Remove
+                                        </button>
+                                    <% } else { %>
+                                        <button 
+                                            class="btn btn-sm btn-warning"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#createProductOfferModal"
+                                            data-product-id="<%= data[i]._id %>"
+                                            data-product-name="<%= data[i].productName %>">
+                                            <i class="bi bi-tag-fill"></i> Add Offer
+                                        </button>
+                                    <% } %>
+                                </div>
+                            </td>
+                        </tr>
                     <% } %>
-                </td>
-                <td>
-                    <a href="/admin/editProduct?id=<%= data[i]._id %>"
-                       class="btn btn-sm btn-info text-white">
-                       <i class="bi bi-pencil-square"></i> Edit
-                    </a>
-                </td>
-<td>
-  <% if (data[i].offerApplied === 'product' && data[i].discountPrice && data[i].discountPrice < data[i].price) { %>
-    <span class="badge bg-success mb-2">
-      Active Offer: ₹<%= Math.floor(data[i].discountPrice) %>
-    </span><br>
-    <button 
-      class="btn btn-sm btn-danger"
-      onclick="removeProductOffer('<%= data[i]._id %>')">
-      <i class="bi bi-x-circle"></i> Remove Offer
-    </button>
-  <% } else { %>
-    <button 
-      class="btn btn-sm btn-warning text-white"
-      data-bs-toggle="modal"
-      data-bs-target="#createProductOfferModal"
-      data-product-id="<%= data[i]._id %>"
-      data-product-name="<%= data[i].productName %>">
-      <i class="bi bi-tag-fill"></i> Add Offer
-    </button>
-  <% } %>
-</td>
-
-
-
-
-            </tr>
-        <% } %>
-    <% } else { %>
-        <tr>
-            <td colspan="7" class="text-center">No products found.</td>
-        </tr>
-    <% } %>
-</tbody>
-
+                <% } else { %>
+                    <tr>
+                        <td colspan="8" class="empty-state">
+                            <div class="empty-icon">📦</div>
+                            <div><strong>No products found</strong></div>
+                            <div style="font-size: 0.9rem; margin-top: 0.5rem;">Try adjusting your search criteria</div>
+                        </td>
+                    </tr>
+                <% } %>
+            </tbody>
         </table>
     </div>
 
+    <!-- Pagination -->
     <% if (totalPages && totalPages > 1) { %>
         <nav aria-label="Page navigation">
-            <ul class="pagination justify-content-center mt-4">
+            <ul class="pagination">
                 <% for (let i = 1; i <= totalPages; i++) { %>
                     <li class="page-item <%= (i === currentPage) ? 'active' : '' %>">
-                        <a class="page-link" href="?page=<%= i %>"><%= i %></a>
+                        <a class="page-link" href="?page=<%= i %>&search=<%= searchQuery || '' %>"><%= i %></a>
                     </li>
                 <% } %>
             </ul>
@@ -384,51 +684,48 @@
 <!-- Add Product Offer Modal -->
 <div class="modal fade" id="createProductOfferModal" tabindex="-1" aria-labelledby="createProductOfferLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content shadow-lg border-0 rounded-4">
-      <div class="modal-header bg-dark text-white">
+    <div class="modal-content">
+      <div class="modal-header">
         <h5 class="modal-title" id="createProductOfferLabel">Add Product Offer</h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
 
-      <form id="productOfferForm" class="p-3">
-        <input type="hidden" id="offerProductId" name="productId">
+      <div class="modal-body">
+        <form id="productOfferForm">
+          <input type="hidden" id="offerProductId" name="productId">
 
-        <div class="mb-3">
-          <label class="form-label fw-semibold">Offer Title</label>
-          <input type="text" name="title" class="form-control" placeholder="Enter offer title" required>
-        </div>
+          <div class="mb-3">
+            <label class="form-label">Offer Title</label>
+            <input type="text" name="title" class="form-control" placeholder="Enter offer title" required>
+          </div>
 
-        <div class="mb-3">
-          <label class="form-label fw-semibold">Discount Percentage (%)</label>
-          <input type="number" name="discountValue" class="form-control" min="1" max="90" required>
-          <input type="hidden" name="discountType" value="percentage">
-        </div>
+          <div class="mb-3">
+            <label class="form-label">Discount Percentage (%)</label>
+            <input type="number" name="discountValue" class="form-control" min="1" max="90" placeholder="Enter discount percentage" required>
+            <input type="hidden" name="discountType" value="percentage">
+          </div>
 
+          <div class="mb-3">
+            <label class="form-label">End Date</label>
+            <input 
+              type="date" 
+              name="endDate" 
+              class="form-control" 
+              id="offerEndDate"
+              min="<%= new Date().toISOString().split('T')[0] %>"
+              required
+            >
+          </div>
 
-        <div class="mb-3">
-          <label class="form-label fw-semibold">End Date</label>
-<input 
-  type="date" 
-  name="endDate" 
-  class="form-control" 
-  id="offerEndDate"
-  min="<%= new Date().toISOString().split('T')[0] %>"
-  
->
-        </div>
-
-        <div class="modal-footer border-0">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-          <button type="submit" class="btn btn-primary">Save Offer</button>
-        </div>
-      </form>
+          <div class="d-flex gap-2 mt-4">
+            <button type="button" class="btn btn-secondary flex-fill" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary flex-fill">Save Offer</button>
+          </div>
+        </form>
+      </div>
     </div>
   </div>
 </div>
-
-
-
-
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -437,27 +734,33 @@
   function handleBlockUnblock(url, action) {
     Swal.fire({
         title: `${action} this product?`,
+        text: action === 'Block' ? 'This product will be hidden from customers.' : 'This product will be visible to customers.',
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonText: 'Yes',
-        cancelButtonText: 'No',
+        confirmButtonText: `Yes, ${action}`,
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: action === 'Block' ? '#ef4444' : '#10b981',
+        cancelButtonColor: '#6c757d',
+        reverseButtons: true
     }).then((result) => {
         if (result.isConfirmed) {
             window.location.href = url;
         }
     });
 }
-   const createProductOfferModal = document.getElementById('createProductOfferModal');
-  if (createProductOfferModal) {
-    createProductOfferModal.addEventListener('show.bs.modal', (event) => {
-      const button = event.relatedTarget;
-      const productId = button.getAttribute('data-product-id');
-      const productName = button.getAttribute('data-product-name');
-      document.getElementById('offerProductId').value = productId;
-      document.getElementById('createProductOfferLabel').textContent = `Add Offer for ${productName}`;
-    });
-  }
- document.getElementById('productOfferForm').addEventListener('submit', async (e) => {
+
+const createProductOfferModal = document.getElementById('createProductOfferModal');
+if (createProductOfferModal) {
+  createProductOfferModal.addEventListener('show.bs.modal', (event) => {
+    const button = event.relatedTarget;
+    const productId = button.getAttribute('data-product-id');
+    const productName = button.getAttribute('data-product-name');
+    document.getElementById('offerProductId').value = productId;
+    document.getElementById('createProductOfferLabel').textContent = `Add Offer for ${productName}`;
+  });
+}
+
+document.getElementById('productOfferForm').addEventListener('submit', async (e) => {
   e.preventDefault();
 
   const formData = Object.fromEntries(new FormData(e.target).entries());
@@ -465,7 +768,6 @@
   const discountValue = parseFloat(formData.discountValue);
   const endDate = formData.endDate;
 
-  // 🚨 Frontend Validation
   if (!discountValue || discountValue <= 0) {
     return Swal.fire({
       icon: "warning",
@@ -517,6 +819,35 @@
     Swal.fire('Error', 'Server error adding offer', 'error');
   }
 });
+
+async function removeProductOffer(productId) {
+  const confirmDelete = await Swal.fire({
+    title: "Remove Offer?",
+    text: "The product will return to its original price.",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonText: "Yes, Remove",
+    cancelButtonText: "Cancel",
+    confirmButtonColor: '#ef4444',
+    cancelButtonColor: '#6c757d',
+    reverseButtons: true
+  });
+
+  if (!confirmDelete.isConfirmed) return;
+
+  const res = await fetch(`/admin/remove-product-offer/${productId}`, {
+    method: "DELETE",
+  });
+
+  const result = await res.json();
+
+  if (result.success) {
+    Swal.fire("Removed!", result.message, "success")
+      .then(() => location.reload());
+  } else {
+    Swal.fire("Error", result.message, "error");
+  }
+}
 </script>
 
 <%- include("../partials/admin/footer") %>

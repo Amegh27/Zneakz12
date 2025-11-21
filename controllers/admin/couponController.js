@@ -12,7 +12,7 @@ const getAllCoupons = async (req, res) => {
 
 const createCoupon = async (req, res) => {
   try {
-    const { name, code, discountValue, minPurchase, expiryDate } = req.body;
+    const { name, code, discountValue, minPurchase, expiryDate,maxAmount  } = req.body;
 
     if (!name || !code || !discountValue || !minPurchase || !expiryDate) {
       return res.json({ success: false, message: 'All fields are required' });
@@ -24,6 +24,9 @@ const createCoupon = async (req, res) => {
         message: 'Discount must be between 1% and 80%',
       });
     }
+    if (!maxAmount || maxAmount < 1) {
+  return res.json({ success: false, message: 'Max amount is required' });
+}
 
     const existingCoupon = await Coupon.findOne({
       $or: [{ name: name.trim() }, { code: code.trim().toUpperCase() }]
@@ -46,6 +49,7 @@ const createCoupon = async (req, res) => {
       discountType: 'percentage',
       discountValue,
       minPurchase,
+      maxAmount,
       expiryDate
     });
 
@@ -60,7 +64,7 @@ const createCoupon = async (req, res) => {
 const editCoupon = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, code, discountValue, minPurchase, expiryDate } = req.body;
+    const { name, code, discountValue, minPurchase, expiryDate,maxAmount  } = req.body;
 
     if (discountValue < 1 || discountValue > 80) {
   return res.json({
@@ -91,6 +95,7 @@ const editCoupon = async (req, res) => {
         code: code.trim().toUpperCase(),
         discountValue,
         minPurchase,
+        maxAmount,
         expiryDate
       },
       { new: true }
@@ -117,16 +122,20 @@ const deleteCoupon = async (req, res) => {
 
 const toggleCouponStatus = async (req, res) => {
   try {
-   const coupon = await Coupon.findById(req.params.id);
-if (!coupon) return res.status(404).send('Coupon not found');
-coupon.isActive = !coupon.isActive;
-await coupon.save();
+    const coupon = await Coupon.findById(req.params.id);
+    if (!coupon) return res.status(404).send('Coupon not found');
+
+    coupon.isActive = !coupon.isActive;
+
+    await coupon.save({ validateBeforeSave: false }); 
+
     res.redirect('/admin/coupons');
   } catch (error) {
     console.error(error);
     res.status(500).send('Error updating coupon status');
   }
 };
+
 
 module.exports = {
   getAllCoupons,

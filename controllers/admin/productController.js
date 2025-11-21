@@ -24,7 +24,7 @@ const addProducts = async (req, res) => {
   try {
     const products = req.body;
     const isPublished = req.body.isPublished === 'on';
-    const categoryId = await Category.findOne({ name: products.category });
+    const categoryId = await Category.findById(products.category);
 
     if (!categoryId) {
       return res.status(400).json({ error: 'Invalid category name' });
@@ -230,7 +230,7 @@ if (data.size && data.stock) {
     };
 
     if (data.category) {
-      const categoryDoc = await Category.findOne({ name: data.category });
+      const categoryDoc = await Category.findById(data.category);
       if (!categoryDoc) {
         return res.status(400).json({ error: 'Invalid category selected' });
       }

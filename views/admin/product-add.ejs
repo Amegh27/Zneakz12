@@ -10,106 +10,382 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet" />
 
     <style>
-      /* Prevent layout shift when modal toggles scrollbar */
+      :root {
+        --primary: #000;
+        --primary-hover: #1a1a1a;
+        --success: #10b981;
+        --danger: #ef4444;
+        --light: #f8f9fa;
+        --border: #e9ecef;
+        --text: #212529;
+        --text-muted: #6c757d;
+        --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
+        --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+        --shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
+        --radius-sm: 8px;
+        --radius-md: 12px;
+        --radius-lg: 16px;
+      }
+
+      * {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
       html { overflow-y: scroll; }
 
-      body { background-color: #f8f9fa; }
-      .navbar-brand { font-weight: bold; }
-      .footer {
-        background-color: #343a40;
-        color: white;
-        padding: 20px 0;
-        text-align: center;
-        margin-top: 40px;
+      body {
+        background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+        min-height: 100vh;
       }
-      .error-message { color: red; }
 
-      .thumbnails-container {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        overflow-x: auto;
-        padding: 6px 0;
+      .navbar {
+        background: linear-gradient(135deg, var(--primary) 0%, #2d2d2d 100%);
+        box-shadow: var(--shadow-md);
       }
+
+      .navbar-brand {
+        font-weight: 800;
+        letter-spacing: -0.5px;
+      }
+
+      .content-main {
+        padding: 2.5rem;
+        max-width: 1400px;
+        margin: 0 auto;
+      }
+
+      .content-header {
+        margin-bottom: 2.5rem;
+        animation: fadeIn 0.4s ease-out;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(-10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .content-title {
+        color: var(--primary);
+        font-weight: 800;
+        font-size: 2.5rem;
+        letter-spacing: -1px;
+        margin: 0;
+        position: relative;
+        display: inline-block;
+      }
+
+      .content-title::after {
+        content: '';
+        position: absolute;
+        bottom: -8px;
+        left: 0;
+        width: 60px;
+        height: 4px;
+        background: var(--primary);
+        border-radius: 2px;
+      }
+
+      .card {
+        background: white;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-lg);
+        margin-bottom: 2rem;
+        overflow: hidden;
+        animation: slideUp 0.5s ease-out;
+      }
+
+      @keyframes slideUp {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, var(--primary) 0%, #4a4a4a 100%);
+      }
+
+      .card-header {
+        background: linear-gradient(135deg, #fafbfc 0%, #f8f9fa 100%);
+        padding: 1.5rem;
+        border-bottom: 2px solid var(--border);
+      }
+
+      .card-header h4 {
+        margin: 0;
+        color: var(--primary);
+        font-weight: 800;
+        font-size: 1.25rem;
+        letter-spacing: -0.5px;
+      }
+
+      .card-body {
+        padding: 2.5rem;
+      }
+
+      .form-label {
+        font-weight: 700;
+        color: var(--primary);
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.75rem;
+        display: block;
+      }
+
+      .form-control,
+      .form-select {
+        border: 2px solid var(--border);
+        border-radius: var(--radius-sm);
+        padding: 0.875rem 1.25rem;
+        font-size: 0.95rem;
+        background: #fafbfc;
+        color: var(--text);
+        font-weight: 500;
+      }
+
+      .form-control:focus,
+      .form-select:focus {
+        border-color: var(--primary);
+        background: white;
+        box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.08);
+        outline: none;
+      }
+
+      textarea.form-control {
+        resize: vertical;
+        min-height: 120px;
+      }
+
+      .mb-4 {
+        margin-bottom: 2rem !important;
+      }
+
+      /* Size & Stock Grid */
+      .size-stock-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+        gap: 1rem;
+      }
+
+      .size-stock-item {
+        background: linear-gradient(135deg, #fafbfc 0%, #f8f9fa 100%);
+        border: 2px solid var(--border);
+        border-radius: var(--radius-md);
+        padding: 1rem;
+        text-align: center;
+      }
+
+      .size-stock-item label {
+        display: block;
+        font-weight: 700;
+        color: var(--primary);
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+      }
+
+      .size-stock-item input[type="number"] {
+        text-align: center;
+        font-weight: 700;
+        font-size: 1.1rem;
+      }
+
+      /* Thumbnails */
+      .thumbnails-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 1rem;
+        padding: 1rem 0;
+      }
+
       .thumb {
         position: relative;
-        width: 80px;
-        height: 80px;
-        border-radius: 6px;
+        border-radius: var(--radius-md);
         overflow: hidden;
-        border: 1px solid #dee2e6;
-        background: #fff;
-        flex-shrink: 0;
-        cursor: pointer;
-        transition: transform 0.2s;
+        box-shadow: var(--shadow-sm);
+        transition: all 0.2s ease;
+        aspect-ratio: 1;
       }
+
       .thumb:hover {
         transform: scale(1.05);
+        box-shadow: var(--shadow-md);
       }
+
       .thumb img {
         width: 100%;
         height: 100%;
         object-fit: cover;
-        display: block;
+        border: 2px solid var(--border);
+        border-radius: var(--radius-sm);
       }
+
       .thumb-actions {
         position: absolute;
-        inset: auto 4px 4px 4px;
+        bottom: 0.5rem;
+        right: 0.5rem;
         display: flex;
-        justify-content: flex-end;
-        gap: 4px;
+        gap: 0.375rem;
       }
+
       .thumb-btn {
         border: none;
-        border-radius: 4px;
-        padding: 2px 6px;
-        font-size: 12px;
-        line-height: 1;
+        border-radius: 6px;
+        padding: 0.375rem 0.75rem;
+        font-size: 0.75rem;
+        font-weight: 700;
         cursor: pointer;
-        background: rgba(0, 0, 0, 0.7);
-        color: #fff;
-        transition: background 0.2s;
+        color: white;
+        box-shadow: var(--shadow-sm);
       }
-      .thumb-btn:hover { background: rgba(0, 0, 0, 0.85); }
 
-      /* Modern crop modal styling - full screen for larger image preview */
+      .thumb-btn:hover {
+        transform: scale(1.05);
+        box-shadow: var(--shadow-md);
+      }
+
+      .thumb-btn[data-action="crop"] {
+        background: var(--primary);
+      }
+
+      .thumb-btn[data-action="remove"] {
+        background: var(--danger);
+      }
+
+      /* File Input */
+      input[type="file"] {
+        border: 2px dashed var(--border);
+        background: #fafbfc;
+        padding: 1.5rem;
+        border-radius: var(--radius-md);
+        cursor: pointer;
+        width: 100%;
+      }
+
+      input[type="file"]:hover {
+        border-color: var(--primary);
+        background: white;
+      }
+
+      /* Buttons */
+      .btn {
+        border-radius: var(--radius-sm);
+        padding: 0.875rem 2rem;
+        font-weight: 700;
+        border: none;
+        cursor: pointer;
+        font-size: 1rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+      }
+
+      .btn-primary {
+        background: var(--primary);
+        color: white;
+        box-shadow: var(--shadow-md);
+      }
+
+      .btn-primary:hover {
+        background: var(--primary-hover);
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg);
+      }
+
+      .btn-secondary {
+        background: #6c757d;
+        color: white;
+      }
+
+      .btn-secondary:hover {
+        background: #5a6268;
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+      }
+
+      /* Checkbox */
+      .form-check {
+        padding: 1rem;
+        background: linear-gradient(135deg, #fafbfc 0%, #f8f9fa 100%);
+        border: 2px solid var(--border);
+        border-radius: var(--radius-sm);
+      }
+
+      .form-check-input:checked {
+        background-color: var(--primary);
+        border-color: var(--primary);
+      }
+
+      .form-check-label {
+        font-weight: 600;
+        color: var(--text);
+      }
+
+      /* Error Messages */
+      .error-message {
+        color: var(--danger);
+        font-size: 0.875rem;
+        margin-top: 0.5rem;
+        font-weight: 600;
+      }
+
+      /* Modal Styling */
       #cropModal .modal-dialog {
         margin: 0;
       }
-      #cropModal .modal-dialog .modal-fullscreen {
+
+      #cropModal .modal-fullscreen {
         width: 100vw;
         height: 100vh;
       }
+
       #cropModal .modal-content {
         border: none;
         border-radius: 0;
-        box-shadow: none;
         height: 100vh;
         display: flex;
         flex-direction: column;
       }
+
       #cropModal .modal-header {
-        background: linear-gradient(135deg, #343a40 0%, #2c3034 100%);
+        background: linear-gradient(135deg, var(--primary) 0%, #2d2d2d 100%);
         color: white;
         border: none;
-        padding: 15px 20px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        padding: 1.5rem 2rem;
+        box-shadow: var(--shadow-md);
       }
+
       #cropModal .modal-header .btn-close {
         filter: brightness(0) invert(1);
-        opacity: 0.7;
-        transition: opacity 0.2s;
       }
-      #cropModal .modal-header .btn-close:hover {
-        opacity: 1;
-      }
+
       #cropModal .modal-title {
-        font-weight: 700;
+        font-weight: 800;
         font-size: 1.5rem;
-        letter-spacing: 0.5px;
+        letter-spacing: -0.5px;
       }
+
       #cropModal .modal-body {
-        background-color: #f8f9fa;
+        background: #f8f9fa;
         padding: 10px;
         flex: 1;
         overflow: hidden;
@@ -117,97 +393,96 @@
         flex-direction: column;
       }
 
-      /* Full-size crop container for bigger image */
       .crop-container {
         flex: 1;
         width: 100%;
         height: 100%;
         overflow: hidden;
-        background: #ffffff;
-        border-radius: 0;
-        border: none;
-        box-shadow: none;
+        background: white;
         display: flex;
         align-items: center;
         justify-content: center;
       }
+
       .crop-container img {
         max-width: 100%;
         max-height: 100%;
         display: block;
       }
 
-      /* Modern crop controls styling - adjusted for full screen */
       .crop-controls {
         display: flex;
-        gap: 12px;
+        gap: 1rem;
         justify-content: flex-end;
-        flex-wrap: wrap;
-        padding: 10px;
+        padding: 1rem;
         background: #f8f9fa;
-        border-top: 1px solid #dee2e6;
-      }
-      .crop-controls button {
-        min-width: 140px;
-        font-weight: 600;
-        border-radius: 6px;
-        padding: 10px 20px;
-        font-size: 14px;
-        transition: all 0.3s ease;
-        border: none;
-      }
-      .crop-controls .btn-secondary {
-        background-color: #6c757d;
-        color: white;
-      }
-      .crop-controls .btn-secondary:hover {
-        background-color: #5a6268;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-      }
-      .crop-controls .btn-primary {
-        background-color: #0d6efd;
-        color: white;
-      }
-      .crop-controls .btn-primary:hover {
-        background-color: #0b5ed7;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(13, 110, 253, 0.3);
+        border-top: 2px solid var(--border);
       }
 
-      /* Cropper.js styling */
-      #cropModal .cropper-container {
-        background: #ffffff;
+      .crop-controls button {
+        min-width: 140px;
+        font-weight: 700;
+        border-radius: var(--radius-sm);
+        padding: 0.875rem 1.5rem;
       }
-      #cropModal .cropper-modal {
-        background: rgba(0, 0, 0, 0.4);
+
+      /* Footer */
+      .footer {
+        background: linear-gradient(135deg, var(--primary) 0%, #2d2d2d 100%);
+        color: white;
+        padding: 2rem 0;
+        text-align: center;
+        margin-top: 3rem;
+        box-shadow: var(--shadow-lg);
       }
-      #cropModal .cropper-guides {
-        opacity: 0.6;
+
+      /* Responsive */
+      @media (max-width: 991px) {
+        .content-main {
+          padding: 1.5rem;
+        }
+
+        .content-title {
+          font-size: 2rem;
+        }
+
+        .card-body {
+          padding: 1.5rem;
+        }
+
+        .size-stock-grid {
+          grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+        }
       }
-      #cropModal .cropper-center {
-        background-color: rgba(13, 110, 253, 0.3);
-      }
-      #cropModal .cropper-face {
-        background-color: rgba(13, 110, 253, 0.15);
-        border: 2px solid #0d6efd;
-      }
-      #cropModal .cropper-line {
-        background-color: #0d6efd;
-      }
-      #cropModal .cropper-box {
-        border: 2px solid #0d6efd;
-      }
-      #cropModal .cropper-point {
-        background-color: #0d6efd;
+
+      @media (max-width: 576px) {
+        .content-main {
+          padding: 1rem;
+        }
+
+        .content-title {
+          font-size: 1.75rem;
+        }
+
+        .card-body {
+          padding: 1rem;
+        }
+
+        .thumbnails-container {
+          grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        }
+
+        .btn {
+          width: 100%;
+        }
       }
     </style>
   </head>
 
   <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <nav class="navbar navbar-expand-lg navbar-dark">
       <div class="container-fluid px-4">
-        <a class="navbar-brand" href="/admin">Add products</a>
+        <a class="navbar-brand" href="/admin"> Add Products</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#adminNavbar">
           <span class="navbar-toggler-icon"></span>
         </button>
@@ -216,78 +491,78 @@
 
     <section class="content-main">
       <div class="row">
-        <div class="col-12 col-lg-9">
+        <div class="col-12">
           <div class="content-header">
             <h2 class="content-title">Add New Product</h2>
           </div>
         </div>
 
-        <div class="col-lg-6">
+        <div class="col-lg-8 mx-auto">
           <div class="card mb-4">
             <div class="card-body">
               <form id="productForm" method="post" action="/admin/product-add" enctype="multipart/form-data">
+                
+                <!-- Product Name -->
                 <div class="mb-4">
                   <label for="product_name" class="form-label">Product Name</label>
-                  <input type="text" placeholder="Type here" name="productName" class="form-control border" id="product_name"  />
+                  <input type="text" placeholder="Enter product name" name="productName" class="form-control border" id="product_name" />
                   <div id="productName-error" class="error-message"></div>
                 </div>
 
+                <!-- Description -->
                 <div class="mb-4">
-                  <label class="form-label">Full description</label>
-                  <textarea placeholder="Type here" id="descriptionid" name="description" class="form-control border" rows="4" ></textarea>
+                  <label class="form-label">Full Description</label>
+                  <textarea placeholder="Enter detailed product description" id="descriptionid" name="description" class="form-control border" rows="4"></textarea>
                   <div id="description-error" class="error-message"></div>
                 </div>
 
+                <!-- Pricing -->
                 <div class="row">
-                  <div class="col-lg-4">
-                    <div class="mb-4">
-                      <label class="form-label">Price (₹)</label>
-                      <input id="regularPrice" name="price" type="number" min="0" step="0.01" class="form-control border"  />
-                    </div>
+                  <div class="col-md-6 mb-4">
+                    <label class="form-label">Regular Price (₹)</label>
+                    <input id="regularPrice" name="price" type="number" min="0" step="0.01" class="form-control border" placeholder="0.00" />
                   </div>
 
-                  <div class="col-lg-4">
-                    <div class="mb-4">
-                      <label class="form-label">Discount Price (₹)</label>
-                      <input id="salesPrice" name="discountPrice" type="number" min="0" step="0.01" class="form-control border" />
-                      <div id="salesPrice-error" class="error-message"></div>
-                    </div>
+                  <div class="col-md-6 mb-4">
+                    <label class="form-label">Discount Price (₹)</label>
+                    <input id="salesPrice" name="discountPrice" type="number" min="0" step="0.01" class="form-control border" placeholder="0.00" />
+                    <div id="salesPrice-error" class="error-message"></div>
                   </div>
-
-                 <div class="card mb-4">
-  <div class="card-header"><h4>Size & Stock</h4></div>
-  <div class="card-body row">
-    <% const availableSizes = ["6","7","8","9","10"]; %>
-    <% availableSizes.forEach((size, index) => { %>
-      <div class="col-lg-2 mb-3">
-        <label class="form-label">Size <%= size %></label>
-        <input type="number" class="form-control border" name="sizes[<%= index %>][stock]" min="0" value="0" />
-        <input type="hidden" name="sizes[<%= index %>][size]" value="<%= size %>" />
-      </div>
-    <% }); %>
-  </div>
-</div>
-
                 </div>
 
+                <!-- Size & Stock -->
+                <div class="card mb-4">
+                  <div class="card-header"><h4> Size & Stock Availability</h4></div>
+                  <div class="card-body">
+                    <div class="size-stock-grid">
+                      <% const availableSizes = ["6","7","8","9","10"]; %>
+                      <% availableSizes.forEach((size, index) => { %>
+                        <div class="size-stock-item">
+                          <label class="form-label">Size <%= size %></label>
+                          <input type="number" class="form-control border" name="sizes[<%= index %>][stock]" min="0" value="0" placeholder="0" />
+                          <input type="hidden" name="sizes[<%= index %>][size]" value="<%= size %>" />
+                        </div>
+                      <% }); %>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Category -->
                 <div class="card mb-4">
                   <div class="card-body">
-                    <div class="row gx-2">
-                      <div class="col-sm-6 mb-3">
-                        <label class="form-label">Category</label>
-                        <select class="form-select border" style="width: 200px" name="category" >
-                          <% for (let i=0; i < cat.length; i++) { %>
-                            <option value="<%= cat[i].name %>"><%= cat[i].name %></option>
-                          <% } %>
-                        </select>
-                        <div id="category-error" class="error-message"></div>
-                      </div>
-                    </div>
+                    <label class="form-label">Category</label>
+                    <select class="form-select border" name="category">
+                      <% for (let i=0; i < cat.length; i++) { %>
+                       <option value="<%= cat[i]._id %>"><%= cat[i].name %></option>
+                      <% } %>
+                    </select>
+                    <div id="category-error" class="error-message"></div>
                   </div>
                 </div>
 
+                <!-- Images -->
                 <div class="card mb-4">
-                  <div class="card-header"><h4>Choose Images</h4></div>
+                  <div class="card-header"><h4>Product Images</h4></div>
                   <div class="card-body">
                     <input class="form-control mb-3" type="file" name="images" id="imageInput" multiple accept="image/png, image/jpeg, image/jpg" />
                     <div id="images-error" class="error-message"></div>
@@ -295,13 +570,16 @@
                   </div>
                 </div>
 
-                <div class="form-check mb-3">
+                <div class="form-check mb-4">
                   <input class="form-check-input" type="checkbox" name="isPublished" id="isPublished" checked />
-                  <label class="form-check-label" for="isPublished">Publish Product</label>
+                  <label class="form-check-label" for="isPublished">✓ Publish Product Immediately</label>
                 </div>
 
-                <div>
-                  <button class="btn btn-md btn-primary rounded font-sm" type="submit">Publish</button>
+                <!-- Submit -->
+                <div class="d-grid">
+                  <button class="btn btn-primary" type="submit">
+                    ✓ Publish Product
+                  </button>
                 </div>
               </form>
             </div>
@@ -310,12 +588,12 @@
       </div>
     </section>
 
-    <!-- Modern crop modal with full screen for larger image preview -->
+    <!-- Crop Modal -->
     <div class="modal fade" id="cropModal" tabindex="-1" aria-hidden="true">
       <div class="modal-dialog modal-fullscreen">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title">Crop Image</h5>
+            <h5 class="modal-title">✂️ Crop Image</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
@@ -323,26 +601,9 @@
               <img id="cropImage" src="/placeholder.svg" alt="crop" />
             </div>
             <div class="crop-controls">
-              <button type="button" class="btn btn-secondary" id="resetCropBtn">Reset</button>
-              <button type="button" class="btn btn-primary" id="applyCropBtn">Apply Crop</button>
+              <button type="button" class="btn btn-secondary" id="resetCropBtn">↺ Reset</button>
+              <button type="button" class="btn btn-primary" id="applyCropBtn">✓ Apply Crop</button>
             </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="modal fade" id="productSuccessModal" tabindex="-1" aria-hidden="true">
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Success</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body">
-            <p><%= typeof successMessage !== 'undefined' ? successMessage : '' %></p>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
           </div>
         </div>
       </div>
@@ -366,7 +627,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const productNameInput = document.getElementById('product_name');
   const descriptionInput = document.getElementById('descriptionid');
-  const quantityInput = document.getElementById('quantity');
   const categorySelect = document.querySelector("select[name='category']");
   const regularPriceInput = document.getElementById('regularPrice');
   const salesPriceInput = document.getElementById('salesPrice');
@@ -400,17 +660,17 @@ document.addEventListener('DOMContentLoaded', () => {
       const actions = document.createElement('div');
       actions.className = 'thumb-actions';
 
+      const cropBtn = document.createElement('button');
+      cropBtn.type = 'button';
+      cropBtn.className = 'thumb-btn';
+      cropBtn.textContent = 'Crop';
+      cropBtn.dataset.action = 'crop';
+
       const removeBtn = document.createElement('button');
       removeBtn.type = 'button';
       removeBtn.className = 'thumb-btn';
       removeBtn.textContent = '×';
       removeBtn.dataset.action = 'remove';
-
-      const cropBtn = document.createElement('button');
-      cropBtn.type = 'button';
-      cropBtn.className = 'thumb-btn';
-      cropBtn.textContent = 'crop';
-      cropBtn.dataset.action = 'crop';
 
       actions.appendChild(cropBtn);
       actions.appendChild(removeBtn);
@@ -486,7 +746,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     for (const file of files) {
       if (!allowedTypes.includes(file.type)) {
-        Swal.fire({ icon: 'error', title: 'Invalid file type', text: 'Only JPG, JPEG, or PNG images are allowed.', confirmButtonColor: '#d33' });
+        Swal.fire({ icon: 'error', title: 'Invalid file type', text: 'Only JPG, JPEG, or PNG images are allowed.', confirmButtonColor: '#ef4444' });
       } else {
         valid.push(file);
       }
@@ -500,7 +760,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (valid.length > 4) {
-      Swal.fire({ icon: 'error', title: 'Too Many Images', text: 'You can upload a maximum of 4 images.', confirmButtonColor: '#d33' });
+      Swal.fire({ icon: 'error', title: 'Too Many Images', text: 'You can upload a maximum of 4 images.', confirmButtonColor: '#ef4444' });
       valid.length = 4;
     }
 
@@ -541,43 +801,41 @@ document.addEventListener('DOMContentLoaded', () => {
     const salesPrice = parseFloat(salesPriceInput.value);
     const files = Array.from(imageInput.files);
 
-// Check total stock from size inputs
-const sizeInputs = form.querySelectorAll("input[name^='sizes'][name$='[stock]']");
-let totalStock = 0;
-sizeInputs.forEach(input => {
-  const val = parseInt(input.value, 10) || 0;
-  totalStock += val;
-});
+    const sizeInputs = form.querySelectorAll("input[name^='sizes'][name$='[stock]']");
+    let totalStock = 0;
+    sizeInputs.forEach(input => {
+      const val = parseInt(input.value, 10) || 0;
+      totalStock += val;
+    });
 
-if (!productName || !description || !category || Number.isNaN(regularPrice)) {
-  return Swal.fire({
-    icon: 'error',
-    title: 'Missing Fields',
-    text: 'Please fill in all required fields.',
-    confirmButtonColor: '#d33'
-  });
-}
+    if (!productName || !description || !category || Number.isNaN(regularPrice)) {
+      return Swal.fire({
+        icon: 'error',
+        title: 'Missing Fields',
+        text: 'Please fill in all required fields.',
+        confirmButtonColor: '#ef4444'
+      });
+    }
 
-if (totalStock <= 0) {
-  return Swal.fire({
-    icon: 'error',
-    title: 'Invalid Stock',
-    text: 'Please add stock for at least one size.',
-    confirmButtonColor: '#d33'
-  });
-}
-
+    if (totalStock <= 0) {
+      return Swal.fire({
+        icon: 'error',
+        title: 'Invalid Stock',
+        text: 'Please add stock for at least one size.',
+        confirmButtonColor: '#ef4444'
+      });
+    }
 
     if (!Number.isNaN(regularPrice) && !Number.isNaN(salesPrice) && salesPrice > regularPrice) {
-      return Swal.fire({ icon: 'error', title: 'Invalid Price', text: 'Discount price cannot exceed regular price.', confirmButtonColor: '#d33' });
+      return Swal.fire({ icon: 'error', title: 'Invalid Price', text: 'Discount price cannot exceed regular price.', confirmButtonColor: '#ef4444' });
     }
 
     if (files.length === 0) {
-      return Swal.fire({ icon: 'error', title: 'No Images Uploaded', text: 'Please upload at least one product image.', confirmButtonColor: '#d33' });
+      return Swal.fire({ icon: 'error', title: 'No Images Uploaded', text: 'Please upload at least one product image.', confirmButtonColor: '#ef4444' });
     }
 
     if (files.length > 4) {
-      return Swal.fire({ icon: 'error', title: 'Too Many Images', text: 'You can upload a maximum of 4 images.', confirmButtonColor: '#d33' });
+      return Swal.fire({ icon: 'error', title: 'Too Many Images', text: 'You can upload a maximum of 4 images.', confirmButtonColor: '#ef4444' });
     }
 
     const formData = new FormData(form);
@@ -594,6 +852,7 @@ if (totalStock <= 0) {
           icon: 'success',
           title: 'Success!',
           text: data.message,
+          confirmButtonColor: '#10b981',
           showConfirmButton: false,
           timer: 1500
         }).then(() => {
@@ -604,7 +863,7 @@ if (totalStock <= 0) {
           icon: 'error',
           title: 'Duplicate Product!',
           text: data.error || 'Product already exists. Try a different name.',
-          confirmButtonColor: '#d33'
+          confirmButtonColor: '#ef4444'
         });
       }
     } catch (error) {
@@ -612,7 +871,7 @@ if (totalStock <= 0) {
         icon: 'error',
         title: 'Server Error',
         text: 'Something went wrong while adding the product.',
-        confirmButtonColor: '#d33'
+        confirmButtonColor: '#ef4444'
       });
     }
   });

@@ -270,33 +270,42 @@ const removeProductOffer = async (req, res) => {
   try {
     const { productId } = req.params;
 
+    // Load product
     const product = await Product.findById(productId);
     if (!product) {
       return res.status(404).json({ success: false, message: "Product not found." });
     }
 
-    const offer = await Offer.findOne({ offerType: "product", product: productId });
+    // Find any offer attached to this product
+    const offer = await Offer.findOne({ 
+      offerType: "product",
+      product: productId
+    });
+
+    // Delete product offer if exists
     if (offer) {
       await offer.deleteOne();
     }
 
-    if (product.previousDiscountPrice && product.previousDiscountPrice > 0) {
+    // Reset product discount
+    if (product.previousDiscountPrice) {
       product.discountPrice = product.previousDiscountPrice;
-    } else if (product.discountPrice && product.discountPrice > 0) {
-      product.discountPrice = product.discountPrice;
     } else {
-      product.discountPrice = product.price;
+      product.discountPrice = product.price;  // back to original price
     }
 
+    // Clean product offer fields
     product.offerApplied = null;
     product.offer = null;
     product.previousDiscountPrice = undefined;
+
     await product.save();
 
     return res.status(200).json({
       success: true,
       message: "Product offer removed successfully.",
     });
+
   } catch (error) {
     console.error("Error removing product offer:", error);
     return res.status(500).json({
@@ -305,6 +314,7 @@ const removeProductOffer = async (req, res) => {
     });
   }
 };
+
 
 
 
