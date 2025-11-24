@@ -470,6 +470,20 @@ const checkReferralCode = async (req, res) => {
   }
 };
 
+const getAboutPage = (req, res) => {
+  try {
+    const user = req.session.user || null;
+
+    res.render("about", {
+      user
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Server Error");
+  }
+};
+
+
 
 
 
@@ -484,6 +498,7 @@ module.exports ={
     login,
     logout,
     getReferPage,
-    checkReferralCode
+    checkReferralCode,
+    getAboutPage
    
 }

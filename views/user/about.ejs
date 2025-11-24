@@ -1,0 +1,360 @@
+<%- include("../partials/user/header2") %>
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About ZNEAKZ</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #000;
+            color: #fff;
+            overflow-x: hidden;
+        }
+
+        .hero {
+            position: relative;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #000 0%, #1a1a1a 100%);
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(255,100,50,0.15) 0%, transparent 70%);
+            border-radius: 50%;
+            top: -200px;
+            right: -200px;
+            animation: pulse 4s ease-in-out infinite;
+        }
+
+        .hero::after {
+            content: '';
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(50,150,255,0.12) 0%, transparent 70%);
+            border-radius: 50%;
+            bottom: -150px;
+            left: -150px;
+            animation: pulse 5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+
+        .hero-content {
+            text-align: center;
+            z-index: 1;
+            padding: 20px;
+        }
+
+        .hero h1 {
+            font-size: clamp(3rem, 8vw, 7rem);
+            font-weight: 900;
+            letter-spacing: -0.03em;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #fff 0%, #888 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: fadeInUp 1s ease-out;
+        }
+
+        .hero p {
+            font-size: clamp(1.1rem, 2vw, 1.5rem);
+            color: #aaa;
+            max-width: 700px;
+            margin: 0 auto;
+            line-height: 1.6;
+            animation: fadeInUp 1s ease-out 0.2s both;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .section {
+            padding: 100px 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            font-weight: 800;
+            margin-bottom: 60px;
+            text-align: center;
+            letter-spacing: -0.02em;
+        }
+
+        .mission-box {
+            background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
+            padding: 60px;
+            border-radius: 20px;
+            border: 1px solid #222;
+            margin-bottom: 80px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .mission-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #ff6432, #3296ff, #ff6432);
+            background-size: 200% 100%;
+            animation: shimmer 3s linear infinite;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+
+        .mission-box h3 {
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            color: #ff6432;
+        }
+
+        .mission-box p {
+            font-size: 1.2rem;
+            line-height: 1.8;
+            color: #ccc;
+        }
+
+        .values-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin-bottom: 100px;
+        }
+
+        .value-card {
+            background: #0a0a0a;
+            padding: 40px 30px;
+            border-radius: 15px;
+            border: 1px solid #222;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+        }
+
+        .value-card:hover {
+            transform: translateY(-10px);
+            border-color: #ff6432;
+            box-shadow: 0 20px 40px rgba(255, 100, 50, 0.2);
+        }
+
+        .value-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #ff6432, #ff8c66);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            margin-bottom: 20px;
+        }
+
+        .value-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        .value-card p {
+            color: #aaa;
+            line-height: 1.6;
+            font-size: 1rem;
+        }
+
+        .cta-section {
+            text-align: center;
+            padding: 100px 20px;
+            background: linear-gradient(135deg, #ff6432 0%, #ff8c66 100%);
+            margin: 0 20px;
+            border-radius: 20px;
+        }
+
+        .cta-section h2 {
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            margin-bottom: 20px;
+            color: #000;
+            font-weight: 900;
+        }
+
+        .cta-section p {
+            font-size: 1.3rem;
+            margin-bottom: 40px;
+            color: #1a1a1a;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .cta-button {
+            display: inline-block;
+            padding: 18px 50px;
+            background: #000;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            border: 2px solid #000;
+        }
+
+        .cta-button:hover {
+            background: transparent;
+            color: #000;
+            transform: scale(1.05);
+        }
+
+        .story-section {
+            background: #0a0a0a;
+            padding: 100px 20px;
+        }
+
+        .story-content {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .story-content p {
+            font-size: 1.2rem;
+            line-height: 2;
+            color: #ccc;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .mission-box {
+                padding: 40px 30px;
+            }
+
+            .section {
+                padding: 60px 20px;
+            }
+
+            .cta-section {
+                margin: 0 10px;
+                padding: 60px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="hero">
+        <div class="hero-content">
+            <h1>ZNEAKZ</h1>
+            <p>Where culture meets comfort. Where style speaks louder than words.</p>
+        </div>
+    </div>
+
+    <div class="section story-section">
+        <div class="story-content">
+            <h2 class="section-title">Our Story</h2>
+            <p>Born from a passion for sneaker culture and a vision to make premium footwear accessible, ZNEAKZ isn't just a store — it's a movement.</p>
+            <p>We believe every step tells a story. Every pair carries a purpose. Whether you're crushing your goals, exploring the streets, or building your collection, ZNEAKZ is here to fuel your journey.</p>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="mission-box">
+            <h3>Our Mission</h3>
+            <p>To empower everyone to step into their best self. We curate premium sneakers that blend cutting-edge design with timeless comfort — without the premium price tag. Every pair is handpicked, every detail matters, because your steps should never compromise.</p>
+        </div>
+
+        <h2 class="section-title">Why ZNEAKZ?</h2>
+        <div class="values-grid">
+            <div class="value-card">
+                <div class="value-icon">✨</div>
+                <h3>Authentic Always</h3>
+                <p>100% genuine products. No fakes, no compromises. Every sneaker verified for quality and authenticity.</p>
+            </div>
+
+            <div class="value-card">
+                <div class="value-icon">🔥</div>
+                <h3>Curated Collection</h3>
+                <p>Hand-selected styles that blend street culture with modern trends. From classics to hype releases.</p>
+            </div>
+
+            <div class="value-card">
+                <div class="value-icon">⚡</div>
+                <h3>Fast & Reliable</h3>
+                <p>Quick shipping, easy returns, and support that actually cares. Your satisfaction is our priority.</p>
+            </div>
+
+            <div class="value-card">
+                <div class="value-icon">💎</div>
+                <h3>Premium Quality</h3>
+                <p>Built to last. Crafted with superior materials and attention to detail that you can feel with every step.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="cta-section">
+        <h2>Join the Movement</h2>
+        <p>We don't just sell sneakers. We celebrate the culture, the community, and the individuals who dare to stand out.</p>
+        <a href="/" class="cta-button">Explore Collection</a>
+    </div>
+
+    <script>
+        document.querySelector('.cta-button').addEventListener('click', (e) => {
+            e.preventDefault();
+            console.log('Explore Collection clicked');
+        });
+
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -100px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.value-card, .mission-box').forEach(el => {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(30px)';
+            el.style.transition = 'all 0.8s ease-out';
+            observer.observe(el);
+        });
+    </script>
+<%- include("../partials/user/footer") %>

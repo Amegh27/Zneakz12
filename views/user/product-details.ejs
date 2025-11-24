@@ -258,7 +258,7 @@
         <span>₹<%= product.discountPrice %></span>
         <span style="text-decoration:line-through; color:#999;">₹<%= product.price %></span>
         <span class="discount-badge">
-          <%= Math.floor(((product.price - product.discountPrice) / product.price) * 100) %>% OFF
+<%= Math.floor(((product.price - product.discountPrice) / product.price) * 100) %> % OFF
         </span>
       <% } else { %>
         <span>₹<%= product.price %></span>
@@ -332,9 +332,8 @@
         <span style="color:red;">No size data available</span>
       <% } %>
     </div>
-
-    <!-- Buttons -->
-   <div class="btn-group">
+  <!-- Buttons -->
+    <div class="btn-group">
       <button class="btn btn-cart" onclick="addToCart('<%= product._id %>')">Add to Cart</button>
 
       <button 
@@ -346,26 +345,20 @@
           : 'bi-heart' %>"></i>
       </button>
 
-      <% if (product.discountPrice && product.discountPrice < product.price) { %>
-       <button 
-  class="btn btn-primary btn-sm mt-2 w-100"
-  style="background-color:#070505; border:none;"
-  data-bs-toggle="modal"
-  data-bs-target="#offerModal"
-  data-title="<%= product.appliedOffer?.title || 'Special Discount' %>"
-  data-type="<%= product.appliedOffer?.offerType === 'product' ? 'Product' : 'Category' %>"
-  data-discount="<%= 
-    product.appliedOffer 
-      ? (product.appliedOffer.discountType === 'percentage' 
-          ? product.appliedOffer.discountValue + '%' 
-          : '₹' + product.appliedOffer.discountValue)
-      : Math.floor(((product.price - product.discountPrice) / product.price) * 100) + '%'
-  %>"
-  data-start="<%= product.appliedOffer?.startDate ? new Date(product.appliedOffer.startDate).toLocaleDateString() : 'Ongoing' %>"
-  data-end="<%= product.appliedOffer?.endDate ? new Date(product.appliedOffer.endDate).toLocaleDateString() : 'Limited Time' %>">
-  View Offer
-</button>
-
+      <% if (appliedOfferFields) { %>
+      <button 
+        class="btn btn-primary btn-sm mt-2 w-100"
+        style="background-color:#070505; border:none;"
+        data-bs-toggle="modal"
+        data-bs-target="#offerModal"
+        data-title="<%= appliedOfferFields.title %>"
+        data-type="<%= appliedOfferFields.offerType %>"
+        data-discount="<%= appliedOfferFields.discountString %>"
+        data-start="<%= appliedOfferFields.startDateStr %>"
+        data-end="<%= appliedOfferFields.endDateStr %>"
+      >
+        View Offer
+      </button>
       <% } %>
     </div>
   </div>
@@ -414,25 +407,13 @@
   </div>
 </div>
 
-<div 
-  class="toast align-items-center text-white bg-success border-0 position-fixed top-0 end-0 m-3"
-  id="toastMessage"
-  role="alert"
-  aria-live="assertive"
-  aria-atomic="true"
->
-  <div class="d-flex">
-    <div class="toast-body">Message here</div>
-    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-  </div>
-</div>
-
+<!-- Offer Modal -->
 <div class="modal fade" id="offerModal" tabindex="-1" aria-labelledby="offerModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content rounded-3 shadow">
       <div class="modal-header bg-dark text-white">
         <h5 class="modal-title" id="offerModalLabel">Offer Details</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
         <p><strong>Title:</strong> <span id="offerTitle"></span></p>
@@ -441,14 +422,12 @@
         <p><strong>Start Date:</strong> <span id="offerStart"></span></p>
         <p><strong>End Date:</strong> <span id="offerEnd"></span></p>
       </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-      </div>
     </div>
   </div>
 </div>
 
 <%- include("../partials/user/footer") %>
+
 
 <!-- SweetAlert2 -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>

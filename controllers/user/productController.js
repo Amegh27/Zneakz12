@@ -74,21 +74,22 @@ const productDetails = async (req, res) => {
 
     const now = new Date();
 
-    const productOffer = await Offer.findOne({
-      offerType: "Product",
-      product: new mongoose.Types.ObjectId(product._id),
-      startDate: { $lte: now },
-      endDate: { $gte: now },
-      isActive: true
-    }).lean();
+ const productOffer = await Offer.findOne({
+  offerType: "product",
+  product: product._id,
+  startDate: { $lte: now },
+  endDate: { $gte: now },
+  isActive: true
+}).lean();
 
-    const categoryOffer = await Offer.findOne({
-      offerType: "Category",
-      category: new mongoose.Types.ObjectId(product.category?._id),
-      startDate: { $lte: now },
-      endDate: { $gte: now },
-      isActive: true
-    }).lean();
+const categoryOffer = await Offer.findOne({
+  offerType: "category",
+  category: product.category?._id,
+  startDate: { $lte: now },
+  endDate: { $gte: now },
+  isActive: true
+}).lean();
+
 
     let appliedOffer = null;
     if (productOffer && categoryOffer) {
