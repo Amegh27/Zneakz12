@@ -512,36 +512,73 @@
 
         <% if (addresses && addresses.length) { %>
           <ul class="p-0" style="list-style:none;">
-            <% addresses.forEach((addr, idx) => { %>
-              <li class="address-item <%= idx === 0 ? 'default-address' : '' %>">
-                <input class="form-check-input address-radio" type="radio" name="selectedAddress" value="<%= addr._id %>" <%= idx === 0 ? 'checked' : '' %> />
-                <div>
-                  <strong><i class="bi bi-check-circle-fill me-2" style="color:#0ea5e9;display:<%= idx === 0 ? 'inline' : 'none' %>;"></i><%= addr.name %></strong>
-                  <div class="small"><%= addr.address %></div>
-                  <div class="small"><%= addr.city %>, <%= addr.state %> - <%= addr.pincode %></div>
-                </div>
-                <div class="address-actions">
-                  <button class="btn btn-sm btn-edit" data-id="<%= addr._id %>"><i class="bi bi-pencil me-1"></i>Edit</button>
-                  <button class="btn btn-sm btn-delete" data-id="<%= addr._id %>"><i class="bi bi-trash me-1"></i>Delete</button>
-                </div>
-                <form class="address-edit-form mt-3" style="display:none;">
-                  <input type="hidden" name="addressId" value="<%= addr._id %>">
-                  <div class="row g-2">
-                    <div class="col-6"><input class="form-control" name="name" value="<%= addr.name %>" required></div>
-                    <div class="col-6"><input class="form-control" name="phone" value="<%= user.phone || '' %>" maxlength="10" required></div>
-                    <div class="col-12"><input class="form-control" name="address" value="<%= addr.address %>" maxlength="100" required></div>
-                    <div class="col-6"><input class="form-control" name="city" value="<%= addr.city %>" maxlength="40" required></div>
-                    <div class="col-6"><input class="form-control" name="state" value="<%= addr.state %>" maxlength="40" required></div>
-                    <div class="col-6"><input class="form-control" name="pincode" value="<%= addr.pincode %>" maxlength="6" required></div>
-                    <div class="col-12 text-end">
-                      <button type="button" class="btn btn-secondary btn-sm cancel-edit-btn">Cancel</button>
-                      <button type="submit" class="btn btn-dark btn-sm save-edit-btn">Save Changes</button>
-                    </div>
-                  </div>
-                </form>
-              </li>
-            <% }) %>
-          </ul>
+  <% addresses.forEach((addr, idx) => { %>
+    <li class="address-item <%= idx === 0 ? 'default-address' : '' %>">
+      <input class="form-check-input address-radio" type="radio" 
+             name="selectedAddress" value="<%= addr._id %>"
+             <%= idx === 0 ? 'checked' : '' %> />
+
+      <div>
+        <strong>
+          <i class="bi bi-check-circle-fill me-2"
+             style="color:#0ea5e9;display:<%= idx === 0 ? 'inline' : 'none' %>;"></i>
+          <%= addr.name %>
+        </strong>
+
+        <div class="small"><%= addr.address %></div>
+        <div class="small"><%= addr.city %>, <%= addr.state %> - <%= addr.pincode %></div>
+      </div>
+
+      <div class="address-actions">
+        <button class="btn btn-sm btn-edit" data-id="<%= addr._id %>">
+          <i class="bi bi-pencil me-1"></i>Edit
+        </button>
+        <button class="btn btn-sm btn-delete" data-id="<%= addr._id %>">
+          <i class="bi bi-trash me-1"></i>Delete
+        </button>
+      </div>
+
+      <!-- EDIT FORM (Corrected values — NO MORE FALLBACK TO USER NAME) -->
+      <form class="address-edit-form mt-3" style="display:none;">
+        <input type="hidden" name="addressId" value="<%= addr._id %>">
+
+        <div class="row g-2">
+          <div class="col-6">
+  <input class="form-control" name="name" value="<%= addr.name %>" required>
+</div>
+
+<div class="col-6">
+  <input class="form-control" name="phone" value="<%= addr.phone %>" maxlength="10" required>
+</div>
+
+<div class="col-12">
+  <input class="form-control" name="address" value="<%= addr.address %>" maxlength="100" required>
+</div>
+
+<div class="col-6">
+  <input class="form-control" name="city" value="<%= addr.city %>" maxlength="40" required>
+</div>
+
+<div class="col-6">
+  <input class="form-control" name="state" value="<%= addr.state %>" maxlength="40" required>
+</div>
+
+<div class="col-6">
+  <input class="form-control" name="pincode" value="<%= addr.pincode %>" maxlength="6" required>
+</div>
+
+
+          <div class="col-12 text-end">
+            <button type="button" class="btn btn-secondary btn-sm cancel-edit-btn">Cancel</button>
+            <button type="submit" class="btn btn-dark btn-sm save-edit-btn">Save Changes</button>
+          </div>
+        </div>
+      </form>
+
+    </li>
+  <% }) %>
+</ul>
+
         <% } else { %>
           <div class="text-center py-4" style="color:#94a3b8;">
             <i class="bi bi-geo-alt" style="font-size:2.5rem;color:#cbd5e1;"></i>
@@ -672,7 +709,14 @@
   <script>
     const serverData = {
       addresses: <%- JSON.stringify(addresses || []) %>,
-      cartItems: <%- JSON.stringify(cart && cart.items ? cart.items.map(i => ({ productId: i.product._id, quantity: i.quantity, price: i.product.discountPrice || i.product.price })) : []) %>,
+cartItems: <%- JSON.stringify(
+  cart.items ? cart.items.map(i => ({
+    productId: i.product._id,
+    quantity: i.quantity,
+    size: i.size,
+    price: i.product.discountPrice || i.product.price
+  })) : []
+) %>,
       totalAmount: Number(<%= finalTotal %> || 0),
       walletBalance: Number(<%= (user.wallet && user.wallet.balance) ? user.wallet.balance : 0 %>)
     };

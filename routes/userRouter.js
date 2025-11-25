@@ -131,6 +131,7 @@ router.get('/wishlist', wishlistController.getWishlistPage);
 router.post("/wishlist/add/:productId", wishlistController.addToWishlist);
 router.delete("/wishlist/remove/:productId", wishlistController.removeFromWishlist);
 router.post("/wishlist/move-to-cart/:productId", wishlistController.moveToCart);
+router.get('/wishlist/count', wishlistController.wishlistCount);
 
 
 // coupon management

@@ -520,7 +520,7 @@ const postAddAddress = async (req, res) => {
       return res.status(400).json({ success: false, message: 'This address already exists!' });
     }
 
-    user.address.push({ name: address, city, state, pincode });
+    user.address.push({ name: address, city, state,phone, pincode });
 
     await user.save();
 

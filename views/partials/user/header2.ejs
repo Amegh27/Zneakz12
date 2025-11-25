@@ -164,7 +164,11 @@
       </div>
 
       <div class="nav-right">
-        <a href="/wishlist" title="Wishlist"><i class="bi bi-heart"></i></a>
+<a href="/wishlist" title="Wishlist" class="position-relative">
+  <i class="bi bi-heart fs-5"></i>
+  <span id="wishlistCount" class="position-absolute badge rounded-pill bg-danger" 
+        style="top:-5px; right:-10px; display:none;">0</span>
+</a>
         <a href="/cart" title="Cart" class="position-relative">
           <i class="bi bi-cart fs-5"></i>
           <span
@@ -269,6 +273,57 @@
         });
       }
     }
+
+    async function updateWishlistCount() {
+  try {
+    const res = await fetch("/wishlist/count");
+    const data = await res.json();
+
+    const wishlistCountEl = document.getElementById("wishlistCount");
+    const count = data.count || 0;
+
+    if (wishlistCountEl) {
+      wishlistCountEl.textContent = count;
+      wishlistCountEl.style.display = count > 0 ? "inline-block" : "none";
+    }
+  } catch (err) {
+    console.error("Error updating wishlist count:", err);
+  }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  updateCartCount();
+  updateWishlistCount();
+});
+async function addToWishlist(productId) {
+  try {
+    const res = await fetch("/wishlist/add", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ productId })
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+      const el = document.getElementById("wishlistCount");
+      el.textContent = data.wishlistCount;
+      el.style.display = data.wishlistCount > 0 ? "inline-block" : "none";
+
+      Swal.fire({
+        toast: true,
+        icon: "success",
+        title: "Added to Wishlist",
+        position: "top-end",
+        timer: 1200,
+        showConfirmButton: false,
+      });
+    }
+  } catch (err) {
+    console.error(err);
+  }
+}
+
   </script>
 </body>
 </html>

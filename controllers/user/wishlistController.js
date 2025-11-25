@@ -68,12 +68,21 @@ const getWishlistPage = async (req, res) => {
     if (!user) return res.redirect('/login');
 
     const products = user.wishlist || [];
-    return res.render('wishlist', { user, products });
+
+    const wishlistCount = products.length;
+
+    return res.render('wishlist', { 
+      user, 
+      products,
+      wishlistCount  
+    });
+
   } catch (error) {
     console.error('Error loading wishlist page:', error);
     return res.status(500).send('Server Error');
   }
 };
+
 
 const moveToCart = async (req, res) => {
   try {
@@ -149,10 +158,34 @@ const moveToCart = async (req, res) => {
   }
 };
 
+const wishlistCount = async (req, res) => {
+  try {
+    const userId = req.session.user;
+    if (!userId) {
+      return res.json({ count: 0 });
+    }
+
+    // If wishlist stored inside USER document:
+    const user = await User.findById(userId).select("wishlist");
+
+    let count = 0;
+
+    if (user && user.wishlist && user.wishlist.length > 0) {
+      count = user.wishlist.length;
+    }
+
+    return res.json({ count });
+  } catch (err) {
+    console.error("Error in wishlistCount:", err);
+    res.status(500).json({ count: 0 });
+  }
+};
+
 
 module.exports = {
   addToWishlist,
   removeFromWishlist,
   getWishlistPage,
   moveToCart,
+  wishlistCount
 };
