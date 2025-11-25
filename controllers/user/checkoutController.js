@@ -454,19 +454,21 @@ const cancelOrder = async (req, res) => {
       user.wallet = { balance: 0, transactions: [] };
     }
 
-    let refundAmount = 0;
+let subtotal = 0;
+order.items.forEach(i => {
+  subtotal += i.price * i.quantity;
+});
 
-    if (order.walletUsed && order.walletUsed > 0) {
-      refundAmount += order.walletUsed;
-    }
+const tax = subtotal * 0.05;
+const shipping = 50; 
 
- 
-    if (order.paymentMethod === "Razorpay") {
-      const razorpayRefund = order.totalAmount - order.walletUsed;
-      if (razorpayRefund > 0) {
-        refundAmount += razorpayRefund;
-      }
-    }
+let discount = 0;
+if (order.coupon?.discountAmount) {
+  discount = order.coupon.discountAmount;
+}
+
+const refundAmount = subtotal + tax + shipping - discount;
+
 
     if (refundAmount > 0) {
       user.wallet.balance += refundAmount;
@@ -526,38 +528,48 @@ const cancelItem = async (req, res) => {
       return res.json({ success: false, message: "Item already cancelled" });
     }
 
+    
     const product = await Product.findById(item.product._id);
     if (product) {
-      const sizeObj = product.sizes.find((s) => s.size === item.size);
+      const sizeObj = product.sizes.find(s => s.size === item.size);
       if (sizeObj) sizeObj.stock += item.quantity;
       await product.save();
     }
 
-
     const user = await User.findById(userId);
-
     if (!user.wallet) {
       user.wallet = { balance: 0, transactions: [] };
     }
 
-    const itemRefundAmount = item.price * item.quantity;
-    let refundAmount = 0;
 
-    if (order.walletUsed > 0) {
-      const proportion = itemRefundAmount / order.totalAmount;
-      const walletPart = +(order.walletUsed * proportion).toFixed(2);
 
-      refundAmount += walletPart;
+    const subtotalAll = order.items.reduce((sum, i) => sum + (i.price * i.quantity), 0);
+
+    const taxAll = subtotalAll * 0.05;
+    const shippingAll = 50; 
+
+    const itemSubtotal = item.price * item.quantity;
+
+    const itemTax = itemSubtotal * 0.05;
+
+    const totalQty = order.items.reduce((sum, i) => sum + i.quantity, 0);
+    const itemShippingShare = shippingAll / totalQty * item.quantity;
+
+    let itemCouponShare = 0;
+
+    if (order.coupon?.discountAmount > 0) {
+      const couponTotal = order.coupon.discountAmount;
+      const proportion = itemSubtotal / subtotalAll;
+      itemCouponShare = couponTotal * proportion;
     }
 
-    if (order.paymentMethod === "Razorpay") {
-      const razorpayPart = itemRefundAmount - refundAmount;
-      if (razorpayPart > 0) refundAmount += razorpayPart;
-    }
+    const refundAmount = Math.round(
+      itemSubtotal + itemTax + itemShippingShare - itemCouponShare
+    );
 
+  
     if (refundAmount > 0) {
       user.wallet.balance += refundAmount;
-
       user.wallet.transactions.push({
         type: "credit",
         amount: refundAmount,
@@ -569,19 +581,17 @@ const cancelItem = async (req, res) => {
       await user.save();
     }
 
-   
+
     item.status = "Cancelled";
 
     const allCancelled = order.items.every(i => i.status === "Cancelled");
-    if (allCancelled) {
-      order.status = "Cancelled";
-    }
+    if (allCancelled) order.status = "Cancelled";
 
     await order.save();
 
     return res.json({
       success: true,
-      message: `Item cancelled. ₹${parseInt(refundAmount.toFixed(0))} refunded to wallet.`,
+      message: `Item cancelled. ₹${refundAmount} refunded to wallet.`,
       allCancelled
     });
 
@@ -590,6 +600,7 @@ const cancelItem = async (req, res) => {
     return res.json({ success: false, message: "Error cancelling item" });
   }
 };
+
 
 
 
@@ -630,9 +641,7 @@ const downloadInvoice = async (req, res) => {
     doc.line(margin, y, pageWidth - margin, y);
     y += 10;
 
-    // --------------------------------
-    // ORDER INFO
-    // --------------------------------
+  
     doc.setFont(mainFont, "normal");
     doc.setFontSize(11);
     doc.text(`Order ID: ${order.orderID}`, margin, y);
@@ -642,9 +651,7 @@ const downloadInvoice = async (req, res) => {
     doc.text(`Payment Method: ${order.paymentMethod}`, margin, y);
     y += 10;
 
-    // --------------------------------
-    // SHIPPING ADDRESS
-    // --------------------------------
+
     doc.setFont(mainFont, "bold");
     doc.text("Shipping Address:", margin, y);
     y += 6;
@@ -658,17 +665,12 @@ const downloadInvoice = async (req, res) => {
     doc.text(addressText, margin, y);
     y += 14;
 
-    // --------------------------------
-    // TABLE COLUMN POSITIONS
-    // --------------------------------
+
     const colProduct = margin + 2;
     const colQty = colProduct + 70;
     const colPrice = colQty + 20;
     const colTotal = colPrice + 30;
 
-    // --------------------------------
-    // TABLE HEADER
-    // --------------------------------
     doc.setFillColor(230, 230, 230);
     doc.rect(margin, y, contentWidth, 10, "F");
 
@@ -681,9 +683,7 @@ const downloadInvoice = async (req, res) => {
     y += 14;
     doc.setFont(mainFont, "normal");
 
-    // --------------------------------
-    // TABLE ROWS
-    // --------------------------------
+
     let subtotal = 0;
 
     for (const item of order.items) {
@@ -697,7 +697,6 @@ const downloadInvoice = async (req, res) => {
 
       if (item.status !== "Cancelled") subtotal += total;
 
-      // Wrap product name
       const wrapped = doc.splitTextToSize(displayName, 65);
       const rowHeight = wrapped.length * 6;
 
@@ -712,16 +711,13 @@ const downloadInvoice = async (req, res) => {
 
       y += rowHeight + 6;
 
-      // Page break if overflowing
       if (y > pageHeight - margin - 40) {
         doc.addPage();
         y = margin;
       }
     }
 
-    // --------------------------------
-    // ORDER SUMMARY
-    // --------------------------------
+
     const tax = subtotal * 0.05;
     const shipping = order.status === "Cancelled" ? 0 : 50;
     const discount = order.coupon?.discountAmount || 0;
@@ -751,9 +747,7 @@ const downloadInvoice = async (req, res) => {
     doc.setFont(mainFont, "bold");
     doc.text(`Grand Total: Rs ${grandTotal.toFixed(2)}`, margin, y);
 
-    // --------------------------------
-    // FOOTER
-    // --------------------------------
+ 
     y += 18;
     doc.setFont(mainFont, "italic");
     doc.setFontSize(10);
@@ -761,9 +755,6 @@ const downloadInvoice = async (req, res) => {
       align: "center"
     });
 
-    // --------------------------------
-    // SAVE + DOWNLOAD
-    // --------------------------------
     const filename = `invoice-${order.orderID}.pdf`;
     const filePath = path.join(__dirname, "../../public/invoices", filename);
 
