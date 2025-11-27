@@ -487,8 +487,8 @@ const postAddAddress = async (req, res) => {
     const userId = req.session.user;
     if (!userId) return res.status(401).json({ success: false, message: 'Unauthorized access.' });
 
-    const { name: address, city, state, pincode } = req.body;
-    if (!address || !city || !state || !pincode)
+    const { name: address, city, state, pincode, phone } = req.body;
+    if (!address || !city || !state || !pincode || !phone)
       return res.status(400).json({ success: false, message: 'Please fill all required fields.' });
 
     if (address.length > 40) {
@@ -539,7 +539,7 @@ const postEditAddress = async (req, res) => {
     const userId = req.session.user;
     if (!userId) return res.status(401).json({ success: false, message: 'Unauthorized' });
 
-    const { name, city, state, pincode } = req.body;
+    const { name, city, state, pincode,phone } = req.body;
 
     const user = await User.findById(userId);
     if (!user) return res.status(404).json({ success: false, message: 'User not found' });

@@ -142,13 +142,20 @@
                     <div class="product-info">
                         <h3><%= product.productName %></h3>
                         <div class="product-price">
-                            <% if(product.discountPrice && product.discountPrice < product.price){ %>
-                                <span class="current-price">₹<%= product.discountPrice %></span>
-                                <span class="original-price">₹<%= product.price %></span>
-                            <% } else { %>
-                                <span class="current-price">₹<%= product.price %></span>
-                            <% } %>
-                        </div>
+                          
+    <% 
+        const finalPrice = Math.floor(product.discountPrice || product.price);
+        const originalPrice = Math.floor(product.price);
+    %>
+
+    <% if(product.discountPrice && product.discountPrice < product.price){ %>
+        <span class="current-price">₹<%= finalPrice %></span>
+        <span class="original-price">₹<%= originalPrice %></span>
+    <% } else { %>
+        <span class="current-price">₹<%= originalPrice %></span>
+    <% } %>
+</div>
+
                     </div>
                 </a>
                 <% }); %>

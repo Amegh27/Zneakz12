@@ -583,13 +583,20 @@
 
             <% if (item.status !== "Cancelled") { %>
               <form method="POST" action="/admin/orders/<%= order._id %>/items/<%= item._id %>/status" class="status-update-form">
-                <select name="status" class="form-select">
-                  <% ['Placed','Shipped','Out for Delivery','Delivered'].forEach(s => { %>
-                    <option value="<%= s %>" <%= s === item.status ? 'selected' : '' %>>
-                      <%= s %>
-                    </option>
-                  <% }) %>
-                </select>
+               <% 
+  const statusFlow = ["Placed", "Shipped", "Out for Delivery", "Delivered"];
+  const currentIndex = statusFlow.indexOf(item.status);
+%>
+
+<select name="status" class="form-select">
+  <% statusFlow.forEach((s, i) => { 
+       if (i >= currentIndex) { %> 
+        <option value="<%= s %>" <%= s === item.status ? 'selected' : '' %>>
+          <%= s %>
+        </option>
+  <% } }); %>
+</select>
+
                 <button type="submit" class="btn btn-dark btn-sm">
                   ✓ Update Status
                 </button>

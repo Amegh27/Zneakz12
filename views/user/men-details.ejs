@@ -258,7 +258,7 @@
         <span>₹<%= product.discountPrice %></span>
         <span style="text-decoration:line-through; color:#999;">₹<%= product.price %></span>
         <span class="discount-badge">
-          <%= Math.floor(((product.price - product.discountPrice) / product.price) * 100) %>% OFF
+<%= Math.floor(((product.price - product.discountPrice) / product.price) * 100) %> % OFF
         </span>
       <% } else { %>
         <span>₹<%= product.price %></span>
@@ -332,40 +332,42 @@
         <span style="color:red;">No size data available</span>
       <% } %>
     </div>
-
-    <!-- Buttons -->
-   <div class="btn-group">
+  <!-- Buttons -->
+    <div class="btn-group">
       <button class="btn btn-cart" onclick="addToCart('<%= product._id %>')">Add to Cart</button>
 
-      <button 
-        class="btn btn-outline wishlist-btn" 
-        data-id="<%= product._id %>" 
-        type="button">
-        <i class="bi <%= user && user.wishlist && user.wishlist.includes(product._id.toString()) 
-          ? 'bi-heart-fill text-danger' 
-          : 'bi-heart' %>"></i>
-      </button>
+<button 
+  class="btn btn-outline wishlist-btn" 
+  data-id="<%= product._id %>"
+  data-incart="<%= isInCart ? 'true' : 'false' %>">
 
-      <% if (product.discountPrice && product.discountPrice < product.price) { %>
-       <button 
-  class="btn btn-primary btn-sm mt-2 w-100"
-  style="background-color:#070505; border:none;"
-  data-bs-toggle="modal"
-  data-bs-target="#offerModal"
-  data-title="<%= product.appliedOffer?.title || 'Special Discount' %>"
-  data-type="<%= product.appliedOffer?.offerType === 'product' ? 'Product' : 'Category' %>"
-  data-discount="<%= 
-    product.appliedOffer 
-      ? (product.appliedOffer.discountType === 'percentage' 
-          ? product.appliedOffer.discountValue + '%' 
-          : '₹' + product.appliedOffer.discountValue)
-      : Math.floor(((product.price - product.discountPrice) / product.price) * 100) + '%'
-  %>"
-  data-start="<%= product.appliedOffer?.startDate ? new Date(product.appliedOffer.startDate).toLocaleDateString() : 'Ongoing' %>"
-  data-end="<%= product.appliedOffer?.endDate ? new Date(product.appliedOffer.endDate).toLocaleDateString() : 'Limited Time' %>">
-  View Offer
+  <i class="bi 
+    <%= user && user.wishlist && user.wishlist.includes(product._id.toString())
+        ? 'bi-heart-fill text-danger'
+        : 'bi-heart'
+    %>">
+  </i>
+
 </button>
 
+
+
+
+
+      <% if (appliedOfferFields) { %>
+      <button 
+        class="btn btn-primary btn-sm mt-2 w-100"
+        style="background-color:#070505; border:none;"
+        data-bs-toggle="modal"
+        data-bs-target="#offerModal"
+        data-title="<%= appliedOfferFields.title %>"
+        data-type="<%= appliedOfferFields.offerType %>"
+        data-discount="<%= appliedOfferFields.discountString %>"
+        data-start="<%= appliedOfferFields.startDateStr %>"
+        data-end="<%= appliedOfferFields.endDateStr %>"
+      >
+        View Offer
+      </button>
       <% } %>
     </div>
   </div>
@@ -414,25 +416,13 @@
   </div>
 </div>
 
-<div 
-  class="toast align-items-center text-white bg-success border-0 position-fixed top-0 end-0 m-3"
-  id="toastMessage"
-  role="alert"
-  aria-live="assertive"
-  aria-atomic="true"
->
-  <div class="d-flex">
-    <div class="toast-body">Message here</div>
-    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-  </div>
-</div>
-
+<!-- Offer Modal -->
 <div class="modal fade" id="offerModal" tabindex="-1" aria-labelledby="offerModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content rounded-3 shadow">
       <div class="modal-header bg-dark text-white">
         <h5 class="modal-title" id="offerModalLabel">Offer Details</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
         <p><strong>Title:</strong> <span id="offerTitle"></span></p>
@@ -441,14 +431,12 @@
         <p><strong>Start Date:</strong> <span id="offerStart"></span></p>
         <p><strong>End Date:</strong> <span id="offerEnd"></span></p>
       </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-      </div>
     </div>
   </div>
 </div>
 
 <%- include("../partials/user/footer") %>
+
 
 <!-- SweetAlert2 -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -546,12 +534,10 @@
       const firstSize = document.querySelector('.size-option.active');
       if(firstSize) selectSize(firstSize);
 
-      // Attach click handlers to size options
       document.querySelectorAll('.size-option').forEach(option => {
         option.addEventListener('click', () => selectSize(option));
       });
 
-      // --- ADD TO CART ---
       window.addToCart = async (productId) => {
         if (!selectedSize) {
           Swal.fire({
@@ -636,13 +622,29 @@
 
 
 document.addEventListener("DOMContentLoaded", () => {
+
   const wishlistBtn = document.querySelector('.wishlist-btn');
   const heartIcon = wishlistBtn?.querySelector('i');
+  const productId = "<%= product._id %>";
 
   if (!wishlistBtn) return;
 
-  wishlistBtn.addEventListener('click', async () => {
-    const productId = wishlistBtn.dataset.id;
+  wishlistBtn.addEventListener("click", async () => {
+
+    const inCart = wishlistBtn.dataset.incart === "true";
+
+    if (inCart) {
+      Swal.fire({
+        icon: "info",
+        title: "Already in Cart",
+        text: "This product is already in your cart.",
+        toast: true,
+        position: "top-end",
+        timer: 1500,
+        showConfirmButton: false
+      });
+      return;
+    }
 
     const activeOption = document.querySelector('.size-option.active');
     if (!activeOption) {
@@ -652,8 +654,8 @@ document.addEventListener("DOMContentLoaded", () => {
         text: "Please select a size before adding to wishlist.",
         toast: true,
         position: "top-end",
-        showConfirmButton: false,
         timer: 1500,
+        showConfirmButton: false
       });
       return;
     }
@@ -668,86 +670,78 @@ document.addEventListener("DOMContentLoaded", () => {
         text: "This size is currently out of stock.",
         toast: true,
         position: "top-end",
-        showConfirmButton: false,
         timer: 1500,
+        showConfirmButton: false
       });
       return;
     }
 
     try {
-      const isInWishlist = heartIcon.classList.contains('bi-heart-fill');
+      const isInWishlist = heartIcon.classList.contains("bi-heart-fill");
 
       if (!isInWishlist) {
         const res = await fetch(`/wishlist/add/${productId}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({ productId, size: selectedSize })
+          body: JSON.stringify({ size: selectedSize })
         });
 
         const data = await res.json();
 
         if (data.success) {
+          // change icon
           heartIcon.classList.remove("bi-heart");
           heartIcon.classList.add("bi-heart-fill", "text-danger");
+
+          // toast
           Swal.fire({
             icon: "success",
-            title: "Added to Wishlist",
+            title: "Added to Wishlist!",
             toast: true,
             position: "top-end",
-            showConfirmButton: false,
-            timer: 1200,
+            timer: 1300,
+            showConfirmButton: false
           });
-        } else if (data.message?.includes("already")) {
-          Swal.fire({
-            icon: "info",
-            title: "Already in Wishlist",
-            toast: true,
-            position: "top-end",
-            showConfirmButton: false,
-            timer: 1200,
-          });
+
         } else {
           Swal.fire({
-            icon: "error",
-            title: "Error",
-            text: data.message || "Failed to add to wishlist.",
+            icon: "info",
+            title: data.message || "Already in Wishlist",
             toast: true,
             position: "top-end",
-            showConfirmButton: false,
-            timer: 1500,
+            timer: 1300,
+            showConfirmButton: false
           });
         }
-      } else {
-        const res = await fetch(`/wishlist/remove/${productId}`, {
-          method: "DELETE",
-          credentials: "include",
-        });
-        const data = await res.json();
 
-        if (data.success) {
-          heartIcon.classList.remove("bi-heart-fill", "text-danger");
-          heartIcon.classList.add("bi-heart");
-          Swal.fire({
-            icon: "success",
-            title: "Removed from Wishlist",
-            toast: true,
-            position: "top-end",
-            showConfirmButton: false,
-            timer: 1200,
-          });
-        }
+      } else {
+        await fetch(`/wishlist/remove/${productId}`, { method: "DELETE" });
+
+        // change icon
+        heartIcon.classList.remove("bi-heart-fill", "text-danger");
+        heartIcon.classList.add("bi-heart");
+
+        // toast
+        Swal.fire({
+          icon: "success",
+          title: "Removed From Wishlist",
+          toast: true,
+          position: "top-end",
+          timer: 1300,
+          showConfirmButton: false
+        });
       }
-    } catch (error) {
-      console.error("Wishlist Error:", error);
+
+    } catch (err) {
+      console.error("Wishlist error:", err);
       Swal.fire({
         icon: "error",
         title: "Server Error",
-        text: "Something went wrong. Please try again later.",
+        text: "Please try again later.",
         toast: true,
         position: "top-end",
-        showConfirmButton: false,
         timer: 1500,
+        showConfirmButton: false
       });
     }
   });

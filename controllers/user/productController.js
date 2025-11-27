@@ -175,6 +175,22 @@ const categoryOffer = await Offer.findOne({
       }
     }
 
+    let isInCart = false;
+if (userId) {
+  const cart = await Cart.findOne({ user: userId }).lean();
+  if (cart && cart.items) {
+    isInCart = cart.items.some(item => item.product.toString() === product._id.toString());
+  }
+}
+
+let isInWishlist = false;
+if (userdata && userdata.wishlist) {
+  isInWishlist = userdata.wishlist
+    .map(id => id.toString())
+    .includes(product._id.toString());
+}
+
+
     res.render("product-details", {
       user: userdata,
       product,
@@ -182,7 +198,9 @@ const categoryOffer = await Offer.findOne({
       quantity: product.quantity,
       category: product.category,
       relatedProducts,
-      appliedOfferFields 
+      appliedOfferFields,
+      isInCart,          
+  isInWishlist
     });
   } catch (error) {
     console.error(" Error fetching product details:", error);
@@ -467,10 +485,10 @@ const getKidsProducts = async (req, res) => {
 const menDetails = async (req, res) => {
   try {
     const userId = req.session.user;
-    const userdata = await User.findById(userId);
+    const userdata = userId ? await User.findById(userId).lean() : null;
     const productId = req.query.id;
 
-    const product = await Product.findById(productId).populate("category");
+    const product = await Product.findById(productId).populate("category").lean();
 
     if (!product || product.isDeleted || !product.isListed || product.isBlocked) {
       return res.redirect("/");
@@ -484,25 +502,47 @@ const menDetails = async (req, res) => {
       _id: { $ne: product._id },
       isDeleted: false,
       isListed: true,
-      price: { $gte: minPrice, $lte: maxPrice },
-    }).limit(4);
+      price: { $gte: minPrice, $lte: maxPrice }
+    }).lean().limit(4);
 
+    // ---------- CART COUNT ----------
     let cartCount = 0;
+    let isInCart = false;
+
     if (userId) {
-      const cart = await Cart.findOne({ userId });
-      cartCount = cart ? cart.items.length : 0;
+      const cart = await Cart.findOne({ user: userId }).lean();
+      if (cart && cart.items) {
+        cartCount = cart.items.reduce((acc, item) => acc + item.quantity, 0);
+        isInCart = cart.items.some(item => item.product.toString() === product._id.toString());
+      }
     }
 
-    res.render("men-details", {
+    // ---------- WISHLIST ----------
+    let isInWishlist = false;
+    if (userdata && userdata.wishlist) {
+      isInWishlist = userdata.wishlist
+        .map(id => id.toString())
+        .includes(product._id.toString());
+    }
+
+    // --------- offers not used here but needed for EJS --------
+    const appliedOfferFields = null;
+
+    return res.render("men-details", {
       user: userdata,
       product,
       quantity: product.quantity,
       category: product.category,
       relatedProducts,
-      cartCount, 
+      cartCount,
+      isInCart,
+      isInWishlist,
+      appliedOfferFields,   // <-- FIXED!
+      reviews: []
     });
+
   } catch (error) {
-    console.error(" menDetails ERROR:", error);
+    console.error("menDetails ERROR:", error);
     res.redirect("/pageNotFound");
   }
 };
@@ -510,13 +550,15 @@ const menDetails = async (req, res) => {
 
 
 
+
+
 const womenDetails = async (req, res) => {
   try {
     const userId = req.session.user;
-    const userdata = userId ? await User.findById(userId) : null;
+    const userdata = userId ? await User.findById(userId).lean() : null;
     const productId = req.query.id;
 
-    const product = await Product.findById(productId).populate('category');
+    const product = await Product.findById(productId).populate('category').lean();
 
     if (!product || product.isDeleted || !product.isListed || product.isBlocked) {
       return res.redirect('/');
@@ -531,15 +573,37 @@ const womenDetails = async (req, res) => {
       isDeleted: false,
       isListed: true,
       price: { $gte: minPrice, $lte: maxPrice }
-    }).limit(4);
+    })
+      .lean()
+      .limit(4);
 
+    // CART COUNT
     let cartCount = 0;
+    let isInCart = false;
+
     if (userId) {
-      const cart = await Cart.findOne({ user: userId });
-      if (cart && cart.items.length > 0) {
-        cartCount = cart.items.reduce((acc, item) => acc + item.quantity, 0);
+      const cart = await Cart.findOne({ user: userId }).lean();
+
+      if (cart) {
+        cartCount = cart.items.reduce((acc, item) => acc + (item.quantity || 0), 0);
+
+        // Check if this product is already in cart
+        isInCart = cart.items.some(
+          (item) => item.product.toString() === product._id.toString()
+        );
       }
     }
+
+    // WISHLIST CHECK
+    let isInWishlist = false;
+    if (userdata?.wishlist) {
+      isInWishlist = userdata.wishlist
+        .map((id) => id.toString())
+        .includes(product._id.toString());
+    }
+
+    // Ensure appliedOfferFields exists to avoid EJS error
+    const appliedOfferFields = null;
 
     res.render("women-details", {
       user: userdata,
@@ -547,13 +611,17 @@ const womenDetails = async (req, res) => {
       quantity: product.quantity,
       category: product.category,
       relatedProducts,
-      cartCount
+      cartCount,
+      isInCart,
+      isInWishlist,
+      appliedOfferFields,
     });
   } catch (error) {
     console.error("Error fetching women product details:", error);
     res.redirect("/pageNotFound");
   }
 };
+
 
 
 
@@ -571,6 +639,80 @@ const kidsDetails = async (req, res) => {
       return res.redirect('/');
     }
 
+    
+
+    const now = new Date();
+
+    const productOffer = await Offer.findOne({
+      offerType: "product",
+      product: product._id,
+      startDate: { $lte: now },
+      endDate: { $gte: now },
+      isActive: true
+    });
+
+    const categoryOffer = await Offer.findOne({
+      offerType: "category",
+      category: product.category?._id,
+      startDate: { $lte: now },
+      endDate: { $gte: now },
+      isActive: true
+    });
+
+    let appliedOffer = null;
+
+    if (productOffer && categoryOffer) {
+      const productDiscountPercent =
+        productOffer.discountType === "percentage"
+          ? productOffer.discountValue
+          : (productOffer.discountValue / product.price) * 100;
+
+      const categoryDiscountPercent =
+        categoryOffer.discountType === "percentage"
+          ? categoryOffer.discountValue
+          : (categoryOffer.discountValue / product.price) * 100;
+
+      appliedOffer = productDiscountPercent >= categoryDiscountPercent 
+        ? productOffer 
+        : categoryOffer;
+    } else {
+      appliedOffer = productOffer || categoryOffer || null;
+    }
+
+    let appliedOfferFields = null;
+
+    if (appliedOffer) {
+      let discountPrice = product.price;
+
+      if (appliedOffer.discountType === "percentage") {
+        discountPrice = product.price - (product.price * appliedOffer.discountValue) / 100;
+      } else {
+        discountPrice = product.price - appliedOffer.discountValue;
+      }
+
+      product.discountPrice = Math.max(0, Math.floor(discountPrice));
+
+      appliedOfferFields = {
+        id: appliedOffer._id.toString(),
+        title: appliedOffer.title,
+        offerType: appliedOffer.offerType,
+        discountType: appliedOffer.discountType,
+        discountValue: appliedOffer.discountValue,
+        discountString:
+          appliedOffer.discountType === "percentage"
+            ? `${Math.floor(appliedOffer.discountValue)}%`
+            : `₹${Math.floor(appliedOffer.discountValue)}`,
+        startDateStr: appliedOffer.startDate.toLocaleDateString("en-IN"),
+        endDateStr: appliedOffer.endDate.toLocaleDateString("en-IN"),
+      };
+    } else {
+      product.discountPrice =
+        product.discountPrice && product.discountPrice < product.price
+          ? Math.floor(product.discountPrice)
+          : product.price;
+    }
+
+
     const minPrice = product.price - 1000;
     const maxPrice = product.price + 1000;
 
@@ -583,11 +725,22 @@ const kidsDetails = async (req, res) => {
     }).limit(4);
 
     let cartCount = 0;
+    let isInCart = false;
+
     if (userId) {
       const cart = await Cart.findOne({ user: userId });
-      if (cart && cart.items.length > 0) {
+
+      if (cart) {
         cartCount = cart.items.reduce((acc, item) => acc + item.quantity, 0);
+        isInCart = cart.items.some(item => item.product.toString() === product._id.toString());
       }
+    }
+
+    let isInWishlist = false;
+    if (userdata && userdata.wishlist) {
+      isInWishlist = userdata.wishlist
+        .map(id => id.toString())
+        .includes(product._id.toString());
     }
 
     res.render("kids-details", {
@@ -597,13 +750,18 @@ const kidsDetails = async (req, res) => {
       category: product.category,
       relatedProducts,
       cartCount,
+      isInCart,
+      isInWishlist,
+      appliedOfferFields, 
       reviews: []
     });
+
   } catch (error) {
-    console.error("Error fetching product details:", error);
+    console.error("Error in kidsDetails:", error);
     res.redirect("/pageNotFound");
   }
 };
+
 
 
 
