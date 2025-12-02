@@ -2,13 +2,22 @@ const Coupon = require('../../models/couponSchema');
 
 const getAllCoupons = async (req, res) => {
   try {
+    const now = new Date();
+
+    await Coupon.updateMany(
+      { expiryDate: { $lt: now }, isActive: true },
+      { $set: { isActive: false } }
+    );
+
     const coupons = await Coupon.find().sort({ createdAt: -1 });
+
     res.render('coupons', { coupons });
   } catch (error) {
     console.error(error);
     res.status(500).send('Error fetching coupons');
   }
 };
+
 
 const createCoupon = async (req, res) => {
   try {

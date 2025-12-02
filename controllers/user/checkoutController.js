@@ -460,14 +460,26 @@ order.items.forEach(i => {
 });
 
 const tax = subtotal * 0.05;
-const shipping = 50; 
+const shipping = 50;
 
 let discount = 0;
-if (order.coupon?.discountAmount) {
-  discount = order.coupon.discountAmount;
+
+if (order.coupon) {
+  if (order.coupon.discountAmount) {
+    discount = order.coupon.discountAmount;
+  } else if (order.coupon.discountType === "percentage") {
+    discount = (subtotal * order.coupon.discountValue) / 100;
+
+    if (order.coupon.maxDiscount) {
+      discount = Math.min(discount, order.coupon.maxDiscount);
+    }
+  } else if (order.coupon.discountType === "flat") {
+    discount = order.coupon.discountValue;
+  }
 }
 
 const refundAmount = subtotal + tax + shipping - discount;
+
 
 
     if (refundAmount > 0) {
@@ -542,30 +554,42 @@ const cancelItem = async (req, res) => {
     }
 
 
+const subtotalAll = order.items
+  .filter(i => i.status !== "Cancelled")
+  .reduce((sum, i) => sum + i.price * i.quantity, 0);
 
-    const subtotalAll = order.items.reduce((sum, i) => sum + (i.price * i.quantity), 0);
+const taxAll = subtotalAll * 0.05;
+const shippingAll = 50;
 
-    const taxAll = subtotalAll * 0.05;
-    const shippingAll = 50; 
+const itemSubtotal = item.price * item.quantity;
+const itemTax = itemSubtotal * 0.05;
 
-    const itemSubtotal = item.price * item.quantity;
+const totalQty = order.items.reduce((sum, i) => sum + i.quantity, 0);
+const itemShippingShare = (shippingAll / totalQty) * item.quantity;
 
-    const itemTax = itemSubtotal * 0.05;
+let itemCouponShare = 0;
 
-    const totalQty = order.items.reduce((sum, i) => sum + i.quantity, 0);
-    const itemShippingShare = shippingAll / totalQty * item.quantity;
+if (order.coupon) {
+  let totalDiscount = 0;
 
-    let itemCouponShare = 0;
+  if (order.coupon.discountAmount) {
+    totalDiscount = order.coupon.discountAmount;
+  } else if (order.coupon.discountType === "percentage") {
+    totalDiscount = (subtotalAll * order.coupon.discountValue) / 100;
 
-    if (order.coupon?.discountAmount > 0) {
-      const couponTotal = order.coupon.discountAmount;
-      const proportion = itemSubtotal / subtotalAll;
-      itemCouponShare = couponTotal * proportion;
+    if (order.coupon.maxDiscount) {
+      totalDiscount = Math.min(totalDiscount, order.coupon.maxDiscount);
     }
+  } else if (order.coupon.discountType === "flat") {
+    totalDiscount = order.coupon.discountValue;
+  }
 
-    const refundAmount = Math.round(
-      itemSubtotal + itemTax + itemShippingShare - itemCouponShare
-    );
+  itemCouponShare = (itemSubtotal / subtotalAll) * totalDiscount;
+}
+
+const refundAmount = Math.round(
+  itemSubtotal + itemTax + itemShippingShare - itemCouponShare
+);
 
   
     if (refundAmount > 0) {
@@ -1246,7 +1270,6 @@ const payWithWallet = async (req, res) => {
       sizeObj.stock -= item.quantity;
       await product.save();
     }
-
 
     const order = new Order({
       user: userId,

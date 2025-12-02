@@ -96,11 +96,14 @@
                     <td>₹<%= c.maxAmount %></td>
                     <td><%= new Date(c.expiryDate).toLocaleDateString() %></td>
                     <td>
-                      <% if (c.isActive) { %>
-                        <span class="badge bg-success">Active</span>
-                      <% } else { %>
-                        <span class="badge bg-secondary">Inactive</span>
-                      <% } %>
+                     <% if (new Date(c.expiryDate) < new Date()) { %>
+   <span class="badge bg-danger">Expired</span>
+<% } else if (c.isActive) { %>
+   <span class="badge bg-success">Active</span>
+<% } else { %>
+   <span class="badge bg-secondary">Inactive</span>
+<% } %>
+
                     </td>
                     <td>
                       <div class="d-flex justify-content-center gap-2">

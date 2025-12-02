@@ -149,25 +149,40 @@ const viewOrderDetails = async (req, res) => {
 
     if (!order) return res.redirect("/admin/orders");
 
-    let subtotal = 0;
-    order.items.forEach(item => {
-      if (item.status !== "Cancelled") {
-        subtotal += item.price * item.quantity;
-      }
-    });
+    let subtotal = order.items.reduce((sum, item) => {
+      return item.status !== "Cancelled"
+        ? sum + item.price * item.quantity
+        : sum;
+    }, 0);
 
     const tax = subtotal * 0.05;
     const shipping = order.status === "Cancelled" ? 0 : 50;
-    const discount = order.coupon?.discountAmount || 0;
-    const total = subtotal + tax + shipping - discount;
 
+
+    let discount = 0;
+
+    if (order.coupon) {
+      if (order.coupon.discountAmount) {
+        discount = order.coupon.discountAmount;
+      } else if (order.coupon.discountType === "percentage") {
+        discount = (subtotal * order.coupon.discountValue) / 100;
+
+        if (order.coupon.maxDiscount) {
+          discount = Math.min(discount, order.coupon.maxDiscount);
+        }
+      } else if (order.coupon.discountType === "flat") {
+        discount = order.coupon.discountValue;
+      }
+    }
+
+    const total = subtotal + tax + shipping - discount;
     res.render("orderDetails", {
       order,
       subtotal,
       tax,
       shipping,
       discount,
-      total,
+      total
     });
 
   } catch (err) {
@@ -175,6 +190,7 @@ const viewOrderDetails = async (req, res) => {
     res.redirect("/admin/orders");
   }
 };
+
 
 
 const updateOrderStatus = async (req, res) => {
@@ -365,24 +381,37 @@ const approveReturn = async (req, res) => {
       }
     }
 
-    const itemBaseTotal = item.price * item.quantity;
+const itemBaseTotal = item.price * item.quantity;
 
-    const subtotal = order.items
-      .filter(i => i.status !== "Cancelled")
-      .reduce((sum, i) => sum + i.price * i.quantity, 0);
+const subtotal = order.items
+  .filter(i => i.status !== "Cancelled")
+  .reduce((sum, i) => sum + (i.price * i.quantity), 0);
 
-    const safeSubtotal = subtotal > 0 ? subtotal : 1;
+const safeSubtotal = subtotal > 0 ? subtotal : 1;
 
-    const orderTax = +(safeSubtotal * 0.05).toFixed(0);
+const orderTax = +(safeSubtotal * 0.05).toFixed(0);
+const itemTaxShare = +((itemBaseTotal / safeSubtotal) * orderTax).toFixed(0);
 
-    const itemTaxShare = +((itemBaseTotal / safeSubtotal) * orderTax).toFixed(2);
+let couponDiscountTotal = 0;
 
-    let couponRefund = 0;
-    if (order.coupon && order.coupon.discountAmount > 0) {
-      couponRefund = +((itemBaseTotal / safeSubtotal) * order.coupon.discountAmount).toFixed(2);
-    }
+if (order.coupon?.discountType === "percentage") {
+  couponDiscountTotal = (subtotal * order.coupon.discountValue) / 100;
 
-    const refundAmount = +(itemBaseTotal + itemTaxShare - couponRefund).toFixed(2);
+  if (order.coupon.maxAmount) {
+    couponDiscountTotal = Math.min(
+      couponDiscountTotal,
+      order.coupon.maxAmount
+    );
+  }
+}
+
+else if (order.coupon?.discountType === "flat") {
+  couponDiscountTotal = order.coupon.discountValue;
+}
+
+const couponRefundShare = +((itemBaseTotal / safeSubtotal) * couponDiscountTotal).toFixed(0);
+
+const refundAmount = +(itemBaseTotal + itemTaxShare - couponRefundShare).toFixed(0);
 
     const finalRefund = refundAmount > 0 ? refundAmount : 0;
 
