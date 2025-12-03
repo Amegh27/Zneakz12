@@ -50,10 +50,10 @@ Manage coupons, discounts & offers
 
 Banner and homepage content management
 
-🤝 Contributing
+ Contributing
 
 For major updates or feature suggestions, please open an issue first to discuss what you would like to enhance.
 
-📜 License
+ License
 
 No license included.
